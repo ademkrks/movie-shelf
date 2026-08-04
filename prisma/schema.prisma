@@ -1,12 +1,12 @@
 // Prisma Client oluşturur
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 // PostgreSQL veri kaynağı
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Film tablosu

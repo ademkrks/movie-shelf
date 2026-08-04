@@ -1,60 +1,72 @@
-//service katmanını dahil eder
-const movieService =require("../services/movie.service");
+// Service katmanını içe aktarır
+const movieService = require("../services/movie.service");
 
-//Tüm filmleri getirme
-const getMovies=(req,res,next)=>{
-    try{
-        const movies =movieService.getMovies();
+// Tüm filmleri getirir
+const getMovies = async (req, res, next) => {
+    try {
+        const movies = await movieService.getMovies();
         res.json(movies);
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 };
-//ID'ye göre film getirme
-const getMovieById=(req,res)=>{
-    const movie =movieService.getMovieById(req.params.id);
-    if(!movie){
-        return res.status(404).json({
-            message :"Film Bulunamadı"
-        });
+
+// ID'ye göre film getirir
+const getMovieById = async (req, res, next) => {
+    try {
+        const movie = await movieService.getMovieById(req.params.id);
+
+        if (!movie) {
+            return res.status(404).json({
+                message: "Film bulunamadı",
+            });
+        }
+
+        res.json(movie);
+    } catch (error) {
+        next(error);
     }
-    res.json(movie);
-}
-//Yeni film oluşturma
-const createMovie=(req,res)=>{
-    const movie = movieService.createMovie(req.body);
-    res.status(201).json(movie);
-}
-//Film güncelleme
-const updateMovie=(req,res)=>{
-    const movie = movieService.updateMovie(
-        req.params.id,
-        req.body
-    );
-    if(!movie){
-        return res.status(404).json({
-            message :"Film Bulunamadı"
-        });
+};
+
+// Yeni film oluşturur
+const createMovie = async (req, res, next) => {
+    try {
+        const movie = await movieService.createMovie(req.body);
+        res.status(201).json(movie);
+    } catch (error) {
+        next(error);
     }
-    res.json(movie);
-    
-}
-//Film silme
-const deleteMovie =(req,res)=>{
-    const movie =movieService.deleteMovie(
-        req.params.id
-    );
-    if(!movie){
-        return res.status(404).json({
-            message :"Film Bulunamadı"
-        });
+};
+
+// Filmi günceller
+const updateMovie = async (req, res, next) => {
+    try {
+        const movie = await movieService.updateMovie(
+            req.params.id,
+            req.body
+        );
+
+        res.json(movie);
+    } catch (error) {
+        next(error);
     }
-    res.json({
-        message :"film Silindi"
-    });
-}
-//Fonksiyonları dışa aktarır
-module.exports ={
+};
+
+// Filmi siler
+const deleteMovie = async (req, res, next) => {
+    try {
+        await movieService.deleteMovie(req.params.id);
+
+        res.json({
+            message: "Film silindi",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Fonksiyonları dışa aktarır
+module.exports = {
     getMovies,
     getMovieById,
     createMovie,

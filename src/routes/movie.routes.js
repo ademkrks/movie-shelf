@@ -1,20 +1,29 @@
-//express routerı kullanacağız 
-const express = require('express');
-//yeni router oluşturur
+// Express Router'ı içe aktarır
+const express = require("express");
+
+// Router oluşturur
 const router = express.Router();
-  //controller dosyasını dahil eder 
-  const movieController = require('../controllers/movie.controller');
-  //validation middlewar'i
-  const validateMovie =require('../middleware/validateMovie');
 
-  router.get("/",movieController.getMovies);
+// Controller katmanını içe aktarır
+const movieController = require("../controllers/movie.controller");
 
-  router.post("/",validateMovie,movieController.createMovie);
-  
-  router.get("/:id",movieController.getMovieById);
+// Doğrulama (Validation) middleware'ini içe aktarır
+const validateMovie = require("../middleware/validateMovie");
 
-  router.put("/:id",validateMovie,movieController.updateMovie);
+// Tüm filmleri getirir
+router.get("/", movieController.getMovies);
 
-  router.delete("/:id",movieController.deleteMovie);
-  //routerı dışa aktarır
-    module.exports = router;
+// ID'ye göre film getirir
+router.get("/:id", movieController.getMovieById);
+
+// Yeni film oluşturur
+router.post("/", validateMovie, movieController.createMovie);
+
+// Filmi günceller
+router.put("/:id", validateMovie, movieController.updateMovie);
+
+// Filmi siler
+router.delete("/:id", movieController.deleteMovie);
+
+// Router'ı dışa aktarır
+module.exports = router;
