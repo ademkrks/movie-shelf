@@ -1,3 +1,9 @@
 node_modules/
 .env
 /src/generated/prisma
+
+# AI araçlarına ait dosyalar
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
