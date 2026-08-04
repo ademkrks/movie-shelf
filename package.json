@@ -1,13 +1,20 @@
 {
-  "name": "film-library",
+  "name": "movie-shelf",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "REST API for Movie Shelf application",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "nodejs",
+    "express",
+    "rest-api",
+    "movies"
+  ],
+  "author": "Ali",
   "license": "ISC",
   "dependencies": {
     "express": "^5.2.1"
