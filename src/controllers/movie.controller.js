@@ -2,9 +2,13 @@
 const movieService =require("../services/movie.service");
 
 //Tüm filmleri getirme
-const getMovies=(req,res)=>{
-    const result = movieService.getMovies();
-    res.json(result);
+const getMovies=(req,res,next)=>{
+    try{
+        const movies =movieService.getMovies();
+        res.json(movies);
+    }catch(error){
+        next(error);
+    }
 };
 //ID'ye göre film getirme
 const getMovieById=(req,res)=>{
