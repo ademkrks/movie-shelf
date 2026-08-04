@@ -14,7 +14,12 @@ const getMovieById=(req,res)=>{
     }
     res.json(movie);
 }
+const createMovie=(req,res)=>{
+    const movie = movieService.createMovie(req.body);
+    res.status(201).json(movie);
+}
 module.exports ={
     getMovies,
     getMovieById,
+    createMovie,
 };

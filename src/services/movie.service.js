@@ -21,9 +21,18 @@ const getMovies=()=>{
 const getMovieById=(id)=>{
     return movies.find(movie => movie.id === Number(id));
 }
+const createMovie=(movie)=>{
+    const newMovie ={
+        id: movies.length+1,
+        ...movie,
+    };
+    movies.push(newMovie);
+    return newMovie;
+}
 
 
 module.exports={
     getMovies,
     getMovieById,
+    createMovie,
 };
