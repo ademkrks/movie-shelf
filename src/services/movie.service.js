@@ -15,12 +15,15 @@ const movies =[
         year:2008
     }
 ];
+//Bütün filmleri döndürür
 const getMovies=()=>{
     return movies;
 };
+//ID'ye göre film döndürür
 const getMovieById=(id)=>{
     return movies.find(movie => movie.id === Number(id));
 }
+//Yeni film oluşturur
 const createMovie=(movie)=>{
     const newMovie ={
         id: movies.length+1,
@@ -29,6 +32,7 @@ const createMovie=(movie)=>{
     movies.push(newMovie);
     return newMovie;
 }
+//Film güncellemesi yapar
 const updateMovie=(id,data)=>{
     const movie =movies.find(movie=> movie.id === Number(id));
     if(!movie){
@@ -38,6 +42,7 @@ const updateMovie=(id,data)=>{
     movie.year=data.year;
     return movie;
 };
+//Film silme
 const deleteMovie= (id)=>{
     const index = movies.findIndex(
         movie => movie.id === Number(id)
@@ -50,7 +55,7 @@ const deleteMovie= (id)=>{
 };
 
 
-
+//Fonksiyonları dışa aktarır
 module.exports={
     getMovies,
     getMovieById,
