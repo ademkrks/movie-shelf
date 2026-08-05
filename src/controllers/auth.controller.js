@@ -17,6 +17,22 @@ const register = async (req, res, next) => {
     }
 };
 
+//Kullanıcı Girişi
+const login =async (req,res,next)=>{
+    try{
+        const result =await authService.login(req.body);
+
+        response.success(
+            res,
+            result,
+            "Giriş Başarılı."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
 module.exports = {
     register,
+    login,
 };
