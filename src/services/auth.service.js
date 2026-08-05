@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
 const AppError = require("../utils/AppError");
+const generateToken = require("../utils/generateToken");
 
 //Yeni Kullanıcı Oluşturur
 const register =async (data)=>{
@@ -34,6 +35,46 @@ const register =async (data)=>{
     return user;
 };
 
+    //Kullanıcı Girişi
+    const login = async(data)=>{
+        //Kullanıcıyı e-posta ile Bulur
+        const user = await prisma.user.findUnique({
+            where:{
+                email:data.email,
+            },
+        });
+
+        if(!user){
+            throw new AppError(
+                "E-posta Veya Şifre Hatalı.",
+                401
+            );
+        }
+        //Şifreyi Kontrol Eder
+        const passwordMatch =await bcrypt.compare(
+            data.password,
+            user.password
+        );
+
+        if(!passwordMatch){
+            throw new AppError(
+                "E-posta Veya Şifre Hatalı.",
+                401
+            );
+        }
+
+        //JWT Oluşturur
+        const token =generateToken(user.id);
+
+        //Şifreyi API Cevabından Kaldırır
+        delete user.password;
+        return{
+            user,
+            token,
+        };
+    };
+
 module.exports ={
     register,
+    login,
 };
