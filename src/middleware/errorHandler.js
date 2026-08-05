@@ -1,15 +1,12 @@
-/*Beklenmeyen hataları yakalar.
-Kullanıcıya teknik hata göstermez.
-Sadece geliştirici terminalde görür. */
-const errorHandler = (err,req,res,next)=>{
-    //Hatanın detayını terminale yazdırır
-    console.error(err.stack);
-    //Kullanıcıya güvenli bir hata mesajı döndürür
-    res.status(500).json({
-        success :false,
-        message :"Sunucuda Beklenmeyen Bir Hata Oluştu"
-    });
+//Global Hata Yakalama Middleware'i
+const errorHandler =(err,req,res,next)=>{
+    const statusCode =err.statusCode || 500;
 
+    res.status(statusCode).json({
+        success: false,
+        status: err.status || "error",
+        message: err.message || "Sunucu Hatası Oluştu"
+    });
 };
-//Fonksiyonları dışa aktarır
+
 module.exports =errorHandler;
