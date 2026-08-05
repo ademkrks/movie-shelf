@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
+const AppError = require("../utils/AppError");
 
 //Yeni Kullanıcı Oluşturur
 const register =async (data)=>{
@@ -11,7 +12,10 @@ const register =async (data)=>{
     });
 
     if(existingUser){
-        throw new Error("Bu e-posta Adresi Zaten Kullanılıyor.");
+        throw new AppError(
+            "Bu e-posta Adresi Zaten Kayıtlı.",
+            400
+        );
     }
     //Şifreyi Hashler
     const hashedPassword = await bcrypt.hash(data.password,10);

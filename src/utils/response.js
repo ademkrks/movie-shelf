@@ -1,30 +1,31 @@
-//Başarılı İşlemler İçin Standart API Cevabı
-const successResponse=(
+// Başarılı işlem cevabı
+const success = (
     res,
     data,
-    message="İşlem Başarılı",
+    message = "İşlem başarılı",
     statusCode = 200
-)=>{
+) => {
     return res.status(statusCode).json({
-        succes: true,
+        success: true,
         message,
         data,
     });
 };
-//Liste Döndürmek İçin Standart cevap
-const listResponse =(
+
+// Liste cevabı
+const list = (
     res,
     data,
     statusCode = 200
-)=> {
+) => {
     return res.status(statusCode).json({
-        succes : true,
-        count:data.lenght,
+        success: true,
+        count: data.length,
         data,
     });
 };
 
-module.exports ={
-    successResponse,
-    listResponse,
+module.exports = {
+    success,
+    list,
 };

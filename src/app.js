@@ -1,29 +1,26 @@
-const express = require('express');
+const express = require("express");
 
-const movieRoutes = require('./routes/movie.routes');
+const movieRoutes = require("./routes/movie.routes");
+const authRoutes = require("./routes/auth.routes");
 
-const logger =require('./middleware/logger');
+const logger = require("./middleware/logger");
+const notFound = require("./middleware/notFound");
+const errorHandler = require("./middleware/errorHandler");
 
-const notFound =require("./middleware/notFound");
+const app = express();
 
-const errorHandler =require("./middleware/errorHandler");
-
-//express uygulamasını oluşturur
-const app =express();
-
-//Json verilerini okuyabilmek için 
 app.use(express.json());
 
-//gelen istekleri loglamak için
 app.use(logger);
 
-//film route'ları
+// Route'lar
+app.use("/auth", authRoutes);
 app.use("/movies", movieRoutes);
 
-//Tanımlanamayan Endpoint'leri Yakalar
+// Bulunamayan endpointler
 app.use(notFound);
 
-//Global hata yakalayıcı
+// Global hata yakalayıcı
 app.use(errorHandler);
 
 module.exports = app;
