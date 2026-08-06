@@ -20,17 +20,30 @@ model Movie {
 
 // Kullanıcı tablosu
 model User {
-  id        Int        @id @default(autoincrement())
-  name      String
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
+  id         Int         @id @default(autoincrement())
+  name       String
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
 
-  favorites Favorite[]
+  favorites  Favorite[]
+  watchlists Watchlist[]
 }
 
 // Favoriler tablosu
 model Favorite {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  tmdbMovieId Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbMovieId])
+}
+
+// İzleme listesi tablosu
+model Watchlist {
   id          Int      @id @default(autoincrement())
   userId      Int
   tmdbMovieId Int
