@@ -1,10 +1,13 @@
 const express = require("express");
 
-const tmdbRoutes= require("./routes/tmdb.routes");
+// Route'lar
 const movieRoutes = require("./routes/movie.routes");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const tmdbRoutes = require("./routes/tmdb.routes");
+const favoriteRoutes = require("./routes/favorite.routes");
 
+// Middleware
 const logger = require("./middleware/logger");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
@@ -18,18 +21,14 @@ app.use(express.json());
 // Gelen istekleri loglar
 app.use(logger);
 
-// Authentication route'ları
+// Route'lar
 app.use("/auth", authRoutes);
-
-// User route'ları
 app.use("/users", userRoutes);
-
-// Movie route'ları
 app.use("/movies", movieRoutes);
+app.use("/tmdb", tmdbRoutes);
+app.use("/favorites", favoriteRoutes);
 
-app.use("/tmdb",tmdbRoutes);
-
-// Tanımlanamayan endpoint'leri yakalar
+// Tanımlanamayan endpointleri yakalar
 app.use(notFound);
 
 // Global hata yakalayıcı
