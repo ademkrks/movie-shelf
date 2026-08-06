@@ -28,9 +28,43 @@ const getTopRatedMovies =async ()=>{
     return response.data.result;
 };
 
+//Yakında Vizyona Girecekler
+const getUpcomingMovies =async()=>{
+    const response = await api.get("/movie/upcoming");
+
+    return response.data.result;
+};
+
+//Film Arar
+const searchMovies = async(query)=>{
+    const response =await api.get("/search/movie",{
+        params:{
+            query,
+        },
+    });
+    return response.data.result;
+};
+
+//Film Detayını Getir
+const getMovieDetails = async (movieId)=>{
+    const response = await api.get(`/movie/${movieId}`);
+
+    return response.data;
+};
+
+//Film Oyuncu Kadrosunu Getirir
+const getMovieCast = async (movieId)=>{
+    const response = await api.get(`/movie/${movieId}/credits`);
+
+    return response.data.cast;
+};
 
 module.exports={
     getTrendingMovies,
     getPopularMovies,
     getTopRatedMovies,
+    getUpcomingMovies,
+    searchMovies,
+    getMovieDetails,
+    getMovieCast,
 };

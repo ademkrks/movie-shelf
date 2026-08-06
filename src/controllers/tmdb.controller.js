@@ -1,4 +1,3 @@
-const { get } = require("../app");
 const tmdbService =require("../services/tmdb.service");
 const response = require("../utils/response");
 
@@ -47,9 +46,73 @@ const getTopRatedMovies =async(req,res,next)=>{
     }
 };
 
+//Yakında Vizyona Girecek Filmleri Getirir
+const getUpcomingMovies = async (req,res,next)=>{
+    try{
+        const movies =await tmdbService.getUpcomingMovies();
+
+        response.success(
+            res,
+            movies,
+            "Yakında Vizyona Girecek Filmler Getirildi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
+//Film Arar
+const searchMovie= async(req,res,next)=>{
+    try{
+        const movies =await tmdbService.searchMovies(req.query.q);
+
+        response.success(
+            res,
+            movies,
+            "Arama Sonuçları Getirildi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
+//Film Detaylarını Getirir
+const getMovieDetails =async (req,res,next)=>{
+    try{
+        const movie = await tmdbService.getMovieDetails(req.params.id);
+
+        response.success(
+            res,
+            movie,
+            "Film Detayları Getirildi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
+//Film Oyuncu Kadrosunu Getirir
+const getMovieCast =async (req,res,next)=>{
+    try{
+        const cast = await tmdbService.getMovieCast(req.params.id);
+
+        response.success(
+            res,
+            cast,
+            "Film Oyuncu Kadrosu Getirildi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
 
 module.exports={
     getTrendingMovies,
     getPopularMovies,
     getTopRatedMovies,
+    getUpcomingMovies,
+    searchMovie,
+    getMovieDetails,
+    getMovieCast,
 };
