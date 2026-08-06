@@ -1,3 +1,5 @@
+const auth =require("../middleware/auth");
+
 // Express Router'ı içe aktarır
 const express = require("express");
 
@@ -17,13 +19,13 @@ router.get("/", movieController.getMovies);
 router.get("/:id", movieController.getMovieById);
 
 // Yeni film oluşturur
-router.post("/", validateMovie, movieController.createMovie);
+router.post("/",auth,validateMovie,movieController.createMovie);
 
 // Filmi günceller
-router.put("/:id", validateMovie, movieController.updateMovie);
+router.put("/:id",auth,validateMovie, movieController.updateMovie);
 
 // Filmi siler
-router.delete("/:id", movieController.deleteMovie);
+router.delete("/:id",auth, movieController.deleteMovie);
 
 // Router'ı dışa aktarır
 module.exports = router;
