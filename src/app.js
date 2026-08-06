@@ -1,5 +1,6 @@
 const express = require("express");
 
+const tmdbRoutes= require("./routes/tmdb.routes");
 const movieRoutes = require("./routes/movie.routes");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
@@ -25,6 +26,8 @@ app.use("/users", userRoutes);
 
 // Movie route'ları
 app.use("/movies", movieRoutes);
+
+app.use("/tmdb",tmdbRoutes);
 
 // Tanımlanamayan endpoint'leri yakalar
 app.use(notFound);
