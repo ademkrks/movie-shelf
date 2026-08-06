@@ -6,7 +6,7 @@ const getProfile =async (req,res,next)=>{
     try{
         const user =await userService.getProfile(req.user.id);
 
-        response.successResponse(
+        response.success(
             res,
             user,
             "Profil Bilgileri Getirildi."
@@ -16,6 +16,24 @@ const getProfile =async (req,res,next)=>{
     }
 };
 
+//Profil Bilgilerini Günceller 
+const updateProfile =async (req,res,next)=>{
+    try{
+        const user =await userService.updateProfile(
+            req.user.id,
+            req.body,
+        );
+        response.success(
+            res,
+            user,
+            "Profil Başarıyla Güncellendi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
 module.exports={
     getProfile,
+    updateProfile,
 };
