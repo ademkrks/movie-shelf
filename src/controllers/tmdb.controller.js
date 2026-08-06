@@ -106,6 +106,22 @@ const getMovieCast =async (req,res,next)=>{
     }
 };
 
+//Film fragmanlarını getirir
+const getMovieTrailers =async (req,res,next)=>{
+    try{
+        const trailers = await tmdbService.getMovieTrailers(req.params.id);
+
+        response.success(
+            res,
+            trailers,
+            "Film Fragmanları Getirildi."
+        );
+    }catch(error){
+        next(error);
+    }
+};
+
+
 
 module.exports={
     getTrendingMovies,
@@ -115,4 +131,5 @@ module.exports={
     searchMovie,
     getMovieDetails,
     getMovieCast,
+    getMovieTrailers,
 };

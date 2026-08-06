@@ -1,65 +1,78 @@
-const axios = require ("axios");
+const axios = require("axios");
 
-const api =axios.create({
+const api = axios.create({
     baseURL: process.env.TMDB_BASE_URL,
     headers: {
-        Authorization :`Bearer ${process.env.TMDB_API_KEY}`,
-        Accept:"application/json",
+        Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+        Accept: "application/json",
     },
 });
 
-//Haftalık Trend Filmler
-const getTrendingMovies =async()=>{
-    const response =await api.get("/trending/movie/week");
+// Haftalık trend filmleri getirir
+const getTrendingMovies = async () => {
+    const response = await api.get("/trending/movie/week");
 
-    return response.data.result;
+    return response.data.results;
 };
 
-//Popüler Filmleri Getirir
-const getPopularMovies=async()=>{
-    const response =await api.get("/movie/popular");
-    return response.data.result;
+// Popüler filmleri getirir
+const getPopularMovies = async () => {
+    const response = await api.get("/movie/popular");
+
+    return response.data.results;
 };
 
-//En Yüksek Puanlı Filmleri Getirir
-const getTopRatedMovies =async ()=>{
+// En yüksek puanlı filmleri getirir
+const getTopRatedMovies = async () => {
     const response = await api.get("/movie/top_rated");
 
-    return response.data.result;
+    return response.data.results;
 };
 
-//Yakında Vizyona Girecekler
-const getUpcomingMovies =async()=>{
+// Yakında vizyona girecek filmleri getirir
+const getUpcomingMovies = async () => {
     const response = await api.get("/movie/upcoming");
 
-    return response.data.result;
+    return response.data.results;
 };
 
-//Film Arar
-const searchMovies = async(query)=>{
-    const response =await api.get("/search/movie",{
-        params:{
+// Film arar
+const searchMovies = async (query) => {
+    const response = await api.get("/search/movie", {
+        params: {
             query,
         },
     });
-    return response.data.result;
+
+    return response.data.results;
 };
 
-//Film Detayını Getir
-const getMovieDetails = async (movieId)=>{
+// Film detayını getirir
+const getMovieDetails = async (movieId) => {
     const response = await api.get(`/movie/${movieId}`);
 
     return response.data;
 };
 
-//Film Oyuncu Kadrosunu Getirir
-const getMovieCast = async (movieId)=>{
+// Film oyuncu kadrosunu getirir
+const getMovieCast = async (movieId) => {
     const response = await api.get(`/movie/${movieId}/credits`);
 
     return response.data.cast;
 };
 
-module.exports={
+// Film fragmanlarını getirir
+const getMovieTrailers = async (movieId) => {
+    const response = await api.get(`/movie/${movieId}/videos`);
+
+    return response.data.results.filter(
+        (video) =>
+            video.site === "YouTube" &&
+            video.type === "Trailer"
+    );
+};
+
+module.exports = {
     getTrendingMovies,
     getPopularMovies,
     getTopRatedMovies,
@@ -67,4 +80,5 @@ module.exports={
     searchMovies,
     getMovieDetails,
     getMovieCast,
+    getMovieTrailers,
 };

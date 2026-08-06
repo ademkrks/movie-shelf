@@ -26,4 +26,7 @@ router.get("/movie/:id",tmdbController.getMovieDetails);
 //Film Kadrosu
 router.get("/movie/:id/cast",tmdbController.getMovieCast);
 
+//Film Fragmanları
+router.get("/movie/:id/trailers",tmdbController.getMovieTrailers);
+
 module.exports=router;
