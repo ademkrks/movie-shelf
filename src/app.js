@@ -7,6 +7,7 @@ const userRoutes = require("./routes/user.routes");
 const tmdbRoutes = require("./routes/tmdb.routes");
 const favoriteRoutes = require("./routes/favorite.routes");
 const watchlistRoutes = require("./routes/watchlist.routes");
+const reviewRoutes = require("./routes/review.routes");
 
 // Middleware
 const logger = require("./middleware/logger");
@@ -29,6 +30,7 @@ app.use("/movies", movieRoutes);
 app.use("/tmdb", tmdbRoutes);
 app.use("/favorites", favoriteRoutes);
 app.use("/watchlist", watchlistRoutes);
+app.use("/reviews", reviewRoutes);
 
 // Tanımlanamayan endpointleri yakalar
 app.use(notFound);
