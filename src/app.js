@@ -1,4 +1,6 @@
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 
 // Route'lar
 const movieRoutes = require("./routes/movie.routes");
@@ -23,6 +25,9 @@ app.use(express.json());
 
 // Gelen istekleri loglar
 app.use(logger);
+
+// Swagger API dokümantasyonu
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Route'lar
 app.use("/auth", authRoutes);

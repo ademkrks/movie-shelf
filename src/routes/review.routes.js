@@ -4,27 +4,145 @@ const router = express.Router();
 const reviewController = require("../controllers/review.controller");
 const auth = require("../middleware/auth");
 
-// Yorum ekle
+/**
+ * @swagger
+ * tags:
+ *   name: Reviews
+ *   description: Film yorumları işlemleri
+ */
+
+/**
+ * @swagger
+ * /reviews:
+ *   post:
+ *     summary: Filme yorum ekler
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tmdbMovieId
+ *               - content
+ *             properties:
+ *               tmdbMovieId:
+ *                 type: integer
+ *                 description: TMDB film ID'si
+ *                 example: 157336
+ *               content:
+ *                 type: string
+ *                 description: Film yorumu
+ *                 example: Muhteşem bir bilim kurgu filmi.
+ *     responses:
+ *       201:
+ *         description: Yorum başarıyla eklendi
+ *       400:
+ *         description: Geçersiz yorum verisi
+ *       401:
+ *         description: Yetkilendirme gerekli
+ */
 router.post(
     "/",
     auth,
     reviewController.addReview
 );
 
-// Filmin yorumlarını getir
+/**
+ * @swagger
+ * /reviews/movie/{tmdbMovieId}:
+ *   get:
+ *     summary: Filmin yorumlarını getirir
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: tmdbMovieId
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Film yorumları başarıyla getirildi
+ *       404:
+ *         description: Film yorumları bulunamadı
+ */
 router.get(
     "/movie/:tmdbMovieId",
     reviewController.getMovieReviews
 );
 
-// Yorumu güncelle
+/**
+ * @swagger
+ * /reviews/{id}:
+ *   put:
+ *     summary: Kullanıcının yorumunu günceller
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Yorum ID'si
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: Güncellenmiş yorum
+ *                 example: Filmi tekrar izledim ve hâlâ çok başarılı buluyorum.
+ *     responses:
+ *       200:
+ *         description: Yorum başarıyla güncellendi
+ *       403:
+ *         description: Kullanıcının bu yorumu güncelleme yetkisi yok
+ *       404:
+ *         description: Yorum bulunamadı
+ */
 router.put(
     "/:id",
     auth,
     reviewController.updateReview
 );
 
-// Yorumu sil
+/**
+ * @swagger
+ * /reviews/{id}:
+ *   delete:
+ *     summary: Kullanıcının yorumunu siler
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Yorum ID'si
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Yorum başarıyla silindi
+ *       403:
+ *         description: Kullanıcının bu yorumu silme yetkisi yok
+ *       404:
+ *         description: Yorum bulunamadı
+ */
 router.delete(
     "/:id",
     auth,

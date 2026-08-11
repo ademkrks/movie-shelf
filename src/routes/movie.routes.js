@@ -1,4 +1,4 @@
-const auth =require("../middleware/auth");
+const auth = require("../middleware/auth");
 
 // Express Router'ı içe aktarır
 const express = require("express");
@@ -12,20 +12,174 @@ const movieController = require("../controllers/movie.controller");
 // Doğrulama (Validation) middleware'ini içe aktarır
 const validateMovie = require("../middleware/validateMovie");
 
-// Tüm filmleri getirir
-router.get("/", movieController.getMovies);
+/**
+ * @swagger
+ * tags:
+ *   name: Movies
+ *   description: Film yönetimi işlemleri
+ */
 
-// ID'ye göre film getirir
-router.get("/:id", movieController.getMovieById);
+/**
+ * @swagger
+ * /movies:
+ *   get:
+ *     summary: Tüm filmleri getirir
+ *     tags: [Movies]
+ *     responses:
+ *       200:
+ *         description: Filmler başarıyla getirildi
+ */
+router.get(
+    "/",
+    movieController.getMovies
+);
 
-// Yeni film oluşturur
-router.post("/",auth,validateMovie,movieController.createMovie);
+/**
+ * @swagger
+ * /movies/{id}:
+ *   get:
+ *     summary: ID'ye göre film getirir
+ *     tags: [Movies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Film başarıyla getirildi
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.get(
+    "/:id",
+    movieController.getMovieById
+);
 
-// Filmi günceller
-router.put("/:id",auth,validateMovie, movieController.updateMovie);
+/**
+ * @swagger
+ * /movies:
+ *   post:
+ *     summary: Yeni film oluşturur
+ *     tags: [Movies]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - year
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Film adı
+ *                 example: Interstellar
+ *               year:
+ *                 type: integer
+ *                 description: Filmin vizyon yılı
+ *                 example: 2014
+ *     responses:
+ *       201:
+ *         description: Film başarıyla oluşturuldu
+ *       400:
+ *         description: Geçersiz film verisi
+ *       401:
+ *         description: Yetkilendirme gerekli
+ */
+router.post(
+    "/",
+    auth,
+    validateMovie,
+    movieController.createMovie
+);
 
-// Filmi siler
-router.delete("/:id",auth, movieController.deleteMovie);
+/**
+ * @swagger
+ * /movies/{id}:
+ *   put:
+ *     summary: Filmi günceller
+ *     tags: [Movies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Güncellenecek film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - year
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Film adı
+ *                 example: Interstellar
+ *               year:
+ *                 type: integer
+ *                 description: Filmin vizyon yılı
+ *                 example: 2014
+ *     responses:
+ *       200:
+ *         description: Film başarıyla güncellendi
+ *       400:
+ *         description: Geçersiz film verisi
+ *       401:
+ *         description: Yetkilendirme gerekli
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.put(
+    "/:id",
+    auth,
+    validateMovie,
+    movieController.updateMovie
+);
+
+/**
+ * @swagger
+ * /movies/{id}:
+ *   delete:
+ *     summary: Filmi siler
+ *     tags: [Movies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Silinecek film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Film başarıyla silindi
+ *       401:
+ *         description: Yetkilendirme gerekli
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.delete(
+    "/:id",
+    auth,
+    movieController.deleteMovie
+);
 
 // Router'ı dışa aktarır
 module.exports = router;

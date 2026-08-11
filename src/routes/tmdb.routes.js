@@ -1,32 +1,174 @@
-const express =require("express");
+const express = require("express");
 
-const router =express.Router();
+const router = express.Router();
 
 const tmdbController = require("../controllers/tmdb.controller");
-const { getTopRatedMovies } = require("../services/tmdb.service");
 
-//Trend Filmler
-router.get("/trending",tmdbController.getTrendingMovies);
+/**
+ * @swagger
+ * tags:
+ *   name: TMDB
+ *   description: TMDB film verileri işlemleri
+ */
 
-//Popüler Filmler 
-router.get("/popular",tmdbController.getPopularMovies);
+/**
+ * @swagger
+ * /tmdb/trending:
+ *   get:
+ *     summary: Trend filmleri getirir
+ *     tags: [TMDB]
+ *     responses:
+ *       200:
+ *         description: Trend filmler başarıyla getirildi
+ */
+router.get(
+    "/trending",
+    tmdbController.getTrendingMovies
+);
 
-//En Yüksek Puanlı Filmler
-router.get("/top-rated",tmdbController.getTopRatedMovies);
+/**
+ * @swagger
+ * /tmdb/popular:
+ *   get:
+ *     summary: Popüler filmleri getirir
+ *     tags: [TMDB]
+ *     responses:
+ *       200:
+ *         description: Popüler filmler başarıyla getirildi
+ */
+router.get(
+    "/popular",
+    tmdbController.getPopularMovies
+);
 
-//Yakında Vizyona Girecek Filmler
-router.get("/upcoming",tmdbController.getUpcomingMovies);
+/**
+ * @swagger
+ * /tmdb/top-rated:
+ *   get:
+ *     summary: En yüksek puanlı filmleri getirir
+ *     tags: [TMDB]
+ *     responses:
+ *       200:
+ *         description: En yüksek puanlı filmler başarıyla getirildi
+ */
+router.get(
+    "/top-rated",
+    tmdbController.getTopRatedMovies
+);
 
-//Film Arar
-router.get("/search",tmdbController.searchMovie);
+/**
+ * @swagger
+ * /tmdb/upcoming:
+ *   get:
+ *     summary: Yakında vizyona girecek filmleri getirir
+ *     tags: [TMDB]
+ *     responses:
+ *       200:
+ *         description: Yakında vizyona girecek filmler başarıyla getirildi
+ */
+router.get(
+    "/upcoming",
+    tmdbController.getUpcomingMovies
+);
 
-//Film Detayı
-router.get("/movie/:id",tmdbController.getMovieDetails);
+/**
+ * @swagger
+ * /tmdb/search:
+ *   get:
+ *     summary: Film araması yapar
+ *     tags: [TMDB]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         description: Aranacak film adı
+ *         schema:
+ *           type: string
+ *         example: Interstellar
+ *     responses:
+ *       200:
+ *         description: Arama sonuçları başarıyla getirildi
+ *       400:
+ *         description: Arama sorgusu gerekli
+ */
+router.get(
+    "/search",
+    tmdbController.searchMovie
+);
 
-//Film Kadrosu
-router.get("/movie/:id/cast",tmdbController.getMovieCast);
+/**
+ * @swagger
+ * /tmdb/movie/{id}:
+ *   get:
+ *     summary: Film detaylarını getirir
+ *     tags: [TMDB]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Film detayları başarıyla getirildi
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.get(
+    "/movie/:id",
+    tmdbController.getMovieDetails
+);
 
-//Film Fragmanları
-router.get("/movie/:id/trailers",tmdbController.getMovieTrailers);
+/**
+ * @swagger
+ * /tmdb/movie/{id}/cast:
+ *   get:
+ *     summary: Filmin oyuncu kadrosunu getirir
+ *     tags: [TMDB]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Film oyuncu kadrosu başarıyla getirildi
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.get(
+    "/movie/{id}/cast",
+    tmdbController.getMovieCast
+);
 
-module.exports=router;
+/**
+ * @swagger
+ * /tmdb/movie/{id}/trailers:
+ *   get:
+ *     summary: Filmin fragmanlarını getirir
+ *     tags: [TMDB]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Film fragmanları başarıyla getirildi
+ *       404:
+ *         description: Film bulunamadı
+ */
+router.get(
+    "/movie/:id/trailers",
+    tmdbController.getMovieTrailers
+);
+
+module.exports = router;
