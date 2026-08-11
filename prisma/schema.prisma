@@ -29,6 +29,7 @@ model User {
   favorites  Favorite[]
   watchlists Watchlist[]
   reviews    Review[]
+  ratings    Rating[]
 }
 
 // Favoriler tablosu
@@ -65,4 +66,18 @@ model Review {
   updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Film puanları tablosu
+model Rating {
+  id          Int      @id @default(autoincrement())
+  rating      Int
+  userId      Int
+  tmdbMovieId Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbMovieId])
 }
