@@ -3,6 +3,21 @@ const express = require("express");
 const router = express.Router();
 
 const authController = require("../controllers/auth.controller");
+const rateLimit = require("express-rate-limit");
+
+// Authentication işlemleri için sıkı rate limit
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        success: false,
+        status: "error",
+        message:
+            "Çok fazla giriş veya kayıt denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin.",
+    },
+});
 
 /**
  * @swagger
@@ -30,17 +45,14 @@ const authController = require("../controllers/auth.controller");
  *             properties:
  *               name:
  *                 type: string
- *                 description: Kullanıcının adı
  *                 example: Ali Demir
  *               email:
  *                 type: string
  *                 format: email
- *                 description: Kullanıcının e-posta adresi
  *                 example: ali@example.com
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Kullanıcının şifresi
  *                 example: Password123
  *     responses:
  *       201:
@@ -50,6 +62,7 @@ const authController = require("../controllers/auth.controller");
  */
 router.post(
     "/register",
+    authLimiter,
     authController.register
 );
 
@@ -72,12 +85,10 @@ router.post(
  *               email:
  *                 type: string
  *                 format: email
- *                 description: Kullanıcının e-posta adresi
  *                 example: ali@example.com
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Kullanıcının şifresi
  *                 example: Password123
  *     responses:
  *       200:
@@ -87,6 +98,7 @@ router.post(
  */
 router.post(
     "/login",
+    authLimiter,
     authController.login
 );
 

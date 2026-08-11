@@ -3,78 +3,143 @@ const bcrypt = require("bcrypt");
 const AppError = require("../utils/AppError");
 const generateToken = require("../utils/generateToken");
 
-//Yeni Kullanıcı Oluşturur
-const register =async (data)=>{
-    //Aynı e-posta Kayıtlı mı Kontrol Eder 
-    const existingUser = await prisma.user.findUnique({
-        where: {
-            email:data.email,
-        },
-    });
+// Timing attack riskini azaltmak için kullanılan sabit hash.
+// Gerçek bir kullanıcı parolası değildir.
+const DUMMY_PASSWORD_HASH =
+    "$2b$10$WUWZz/cGkVo4XjhqqV9Cq.PgqcZnt3KqFloBn3tFjcPINGGTO/NvS";
 
-    if(existingUser){
+// Yeni kullanıcı oluşturur
+const register = async (data) => {
+    const { name, email, password } = data;
+
+    // Temel alan kontrolü
+    if (!name || !email || !password) {
         throw new AppError(
-            "Bu e-posta Adresi Zaten Kayıtlı.",
+            "Ad, e-posta ve şifre alanları zorunludur.",
             400
         );
     }
-    //Şifreyi Hashler
-    const hashedPassword = await bcrypt.hash(data.password,10);
 
-    //Kulanıcıyı Oluşturur
-    const user =await prisma.user.create({
-        data:{
-            name:data.name,
-            email:data.email,
-            password:hashedPassword,
+    // Minimum parola uzunluğu
+    if (password.length < 8) {
+        throw new AppError(
+            "Şifre en az 8 karakter olmalıdır.",
+            400
+        );
+    }
+
+    // E-posta formatı
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+        throw new AppError(
+            "Geçerli bir e-posta adresi giriniz.",
+            400
+        );
+    }
+
+    // Aynı e-posta kayıtlı mı kontrol eder
+    const existingUser = await prisma.user.findUnique({
+        where: {
+            email,
         },
     });
 
-    //Şifreyi İstemciye Göndermez
+    if (existingUser) {
+        throw new AppError(
+            "Bu e-posta adresi zaten kayıtlı.",
+            400
+        );
+    }
+
+    // Şifreyi hashler
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Kullanıcıyı oluşturur
+    const user = await prisma.user.create({
+        data: {
+            name,
+            email,
+            password: hashedPassword,
+        },
+    });
+
+    // Şifreyi istemciye göndermez
     delete user.password;
+
     return user;
 };
 
-    //Kullanıcı Girişi
-    const login = async(data)=>{
-        //Kullanıcıyı e-posta ile Bulur
-        const user = await prisma.user.findUnique({
-            where:{
-                email:data.email,
-            },
-        });
+// Kullanıcı girişi
+const login = async (data) => {
+    const { email, password } = data;
 
-        if(!user){
-            throw new AppError(
-                "E-posta Veya Şifre Hatalı.",
-                401
-            );
-        }
-        //Şifreyi Kontrol Eder
-        const passwordMatch =await bcrypt.compare(
-            data.password,
-            user.password
+    // Temel alan kontrolü
+    if (!email || !password) {
+        throw new AppError(
+            "E-posta ve şifre zorunludur.",
+            400
+        );
+    }
+
+    // E-posta formatı
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+        throw new AppError(
+            "Geçerli bir e-posta adresi giriniz.",
+            400
+        );
+    }
+
+    // Kullanıcıyı e-posta ile bulur
+    const user = await prisma.user.findUnique({
+        where: {
+            email,
+        },
+    });
+
+    // Kullanıcı bulunamadığında da bcrypt çalıştırılır.
+    // Böylece "kullanıcı var/yok" durumları arasındaki
+    // işlem süresi farkını azaltır.
+    if (!user) {
+        await bcrypt.compare(
+            password,
+            DUMMY_PASSWORD_HASH
         );
 
-        if(!passwordMatch){
-            throw new AppError(
-                "E-posta Veya Şifre Hatalı.",
-                401
-            );
-        }
+        throw new AppError(
+            "E-posta veya şifre hatalı.",
+            401
+        );
+    }
 
-        //JWT Oluşturur
-        const token =generateToken(user.id);
+    // Şifreyi kontrol eder
+    const passwordMatch = await bcrypt.compare(
+        password,
+        user.password
+    );
 
-        //Şifreyi API Cevabından Kaldırır
-        delete user.password;
-        return{
-            user,
-            token,
-        };
+    if (!passwordMatch) {
+        throw new AppError(
+            "E-posta veya şifre hatalı.",
+            401
+        );
+    }
+
+    // JWT oluşturur
+    const token = generateToken(user.id);
+
+    // Şifreyi API cevabından kaldırır
+    delete user.password;
+
+    return {
+        user,
+        token,
     };
+};
 
-module.exports ={
+module.exports = {
     register,
     login,
 };
