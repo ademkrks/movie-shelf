@@ -1,10 +1,15 @@
-//Ortam değişkenlerini yükler
+// Ortam değişkenlerini yükler
 require("dotenv").config();
-//app.js dosyasındaki express uygulamasını içe aktarır
-const app = require('./app');
-//sunucunun çalışacağı port
-const PORT =process.env.PORT || 3000;
-    //sunucuyu başlatır
-    app.listen(PORT,()=>{
-        console.log(`Server http://localhost:${PORT} adresinde çalışıyor`);
-    });
+
+// Environment variable kontrolünü çalıştırır
+const env = require("./config/env");
+
+// app.js dosyasındaki Express uygulamasını içe aktarır
+const app = require("./app");
+
+// Sunucuyu başlatır
+app.listen(env.port, () => {
+    console.log(
+        `Server http://localhost:${env.port} adresinde çalışıyor`
+    );
+});
