@@ -1,6 +1,7 @@
 const authService = require("../services/auth.service");
 const response = require("../utils/response");
 
+
 // Yeni kullanıcı kaydı
 const register = async (req, res, next) => {
     try {
@@ -17,6 +18,7 @@ const register = async (req, res, next) => {
     }
 };
 
+
 // Kullanıcı girişi
 const login = async (req, res, next) => {
     try {
@@ -25,12 +27,13 @@ const login = async (req, res, next) => {
         response.success(
             res,
             result,
-            "Giriş Başarılı."
+            "Giriş başarılı."
         );
     } catch (error) {
         next(error);
     }
 };
+
 
 module.exports = {
     register,

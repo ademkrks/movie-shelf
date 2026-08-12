@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const swaggerSpec = require("./config/swagger");
+const env = require("./config/env");
 
 // Route'lar
 const movieRoutes = require("./routes/movie.routes");
@@ -33,9 +34,19 @@ app.use(helmet());
 // CORS
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+        origin: env.corsOrigin,
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH",
+            "OPTIONS",
+        ],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+        ],
     })
 );
 
@@ -48,14 +59,19 @@ const apiLimiter = rateLimit({
     message: {
         success: false,
         status: "error",
-        message: "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+        message:
+            "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
     },
 });
 
 app.use(apiLimiter);
 
 // JSON body boyutunu sınırlar
-app.use(express.json({ limit: "100kb" }));
+app.use(
+    express.json({
+        limit: "100kb",
+    })
+);
 
 // Gelen istekleri loglar
 app.use(logger);

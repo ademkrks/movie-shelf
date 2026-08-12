@@ -1,24 +1,26 @@
 const prisma = require("../config/prisma");
 const AppError = require("../utils/AppError");
 
+
 // Yorum ekler
 const addReview = async (userId, tmdbMovieId, content) => {
     const review = await prisma.review.create({
         data: {
             userId,
-            tmdbMovieId,
-            content,
+            tmdbMovieId: Number(tmdbMovieId),
+            content: content.trim(),
         },
     });
 
     return review;
 };
 
+
 // Filmin yorumlarını getirir
 const getMovieReviews = async (tmdbMovieId) => {
     return await prisma.review.findMany({
         where: {
-            tmdbMovieId,
+            tmdbMovieId: Number(tmdbMovieId),
         },
         include: {
             user: {
@@ -34,11 +36,14 @@ const getMovieReviews = async (tmdbMovieId) => {
     });
 };
 
+
 // Yorumu günceller
 const updateReview = async (reviewId, userId, content) => {
+    const normalizedReviewId = Number(reviewId);
+
     const review = await prisma.review.findUnique({
         where: {
-            id: reviewId,
+            id: normalizedReviewId,
         },
     });
 
@@ -49,6 +54,7 @@ const updateReview = async (reviewId, userId, content) => {
         );
     }
 
+    // Kullanıcı sadece kendi yorumunu güncelleyebilir
     if (review.userId !== userId) {
         throw new AppError(
             "Bu yorumu güncelleme yetkiniz yok.",
@@ -58,19 +64,22 @@ const updateReview = async (reviewId, userId, content) => {
 
     return await prisma.review.update({
         where: {
-            id: reviewId,
+            id: normalizedReviewId,
         },
         data: {
-            content,
+            content: content.trim(),
         },
     });
 };
 
+
 // Yorumu siler
 const deleteReview = async (reviewId, userId) => {
+    const normalizedReviewId = Number(reviewId);
+
     const review = await prisma.review.findUnique({
         where: {
-            id: reviewId,
+            id: normalizedReviewId,
         },
     });
 
@@ -81,6 +90,7 @@ const deleteReview = async (reviewId, userId) => {
         );
     }
 
+    // Kullanıcı sadece kendi yorumunu silebilir
     if (review.userId !== userId) {
         throw new AppError(
             "Bu yorumu silme yetkiniz yok.",
@@ -90,11 +100,13 @@ const deleteReview = async (reviewId, userId) => {
 
     await prisma.review.delete({
         where: {
-            id: reviewId,
+            id: normalizedReviewId,
         },
     });
 };
 
+
+// Fonksiyonları dışa aktarır
 module.exports = {
     addReview,
     getMovieReviews,

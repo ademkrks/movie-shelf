@@ -1,11 +1,11 @@
-//Özel Hata Sınıfını İçe Aktarır
-const AppError =require("../utils/AppError");
+// Özel hata sınıfını içe aktarır
+const AppError = require("../utils/AppError");
 
-//Bulunamayan Endpoint'leri Yakalar
-const notFound =(req,res,next)=>{
+// Bulunamayan endpoint'leri yakalar
+const notFound = (req, res, next) => {
     next(
         new AppError(
-            `Endpoint Bulunamadı : ${req.originalUrl}`,
+            `Endpoint bulunamadı: ${req.originalUrl}`,
             404
         )
     );

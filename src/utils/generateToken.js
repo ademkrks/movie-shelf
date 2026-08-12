@@ -1,14 +1,19 @@
-const jwt= require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const env = require("../config/env");
 
-//JWT Oluşturur
-const generateToken =(userId)=>{
+
+// JWT oluşturur
+const generateToken = (userId) => {
     return jwt.sign(
-        {id:userId},
-        process.env.JWT_SECRET,
         {
-            expiresIn: process.env.JWT_EXPIRES_IN,
+            id: userId,
+        },
+        env.jwtSecret,
+        {
+            expiresIn: env.jwtExpiresIn,
         }
     );
 };
+
 
 module.exports = generateToken;

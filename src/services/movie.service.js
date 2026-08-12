@@ -1,6 +1,7 @@
 // Prisma bağlantısını içe aktarır
 const prisma = require("../config/prisma");
 
+
 // Tüm filmleri veritabanından getirir
 const getMovies = async () => {
     return await prisma.movie.findMany({
@@ -9,6 +10,7 @@ const getMovies = async () => {
         },
     });
 };
+
 
 // ID'ye göre film getirir
 const getMovieById = async (id) => {
@@ -19,15 +21,17 @@ const getMovieById = async (id) => {
     });
 };
 
+
 // Yeni film oluşturur
 const createMovie = async (movie) => {
     return await prisma.movie.create({
         data: {
             title: movie.title,
-            year: movie.year,
+            year: Number(movie.year),
         },
     });
 };
+
 
 // Filmi günceller
 const updateMovie = async (id, data) => {
@@ -37,10 +41,11 @@ const updateMovie = async (id, data) => {
         },
         data: {
             title: data.title,
-            year: data.year,
+            year: Number(data.year),
         },
     });
 };
+
 
 // Filmi siler
 const deleteMovie = async (id) => {
@@ -50,6 +55,7 @@ const deleteMovie = async (id) => {
         },
     });
 };
+
 
 // Fonksiyonları dışa aktarır
 module.exports = {

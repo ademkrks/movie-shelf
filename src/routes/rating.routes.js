@@ -1,8 +1,18 @@
 const express = require("express");
+
 const router = express.Router();
 
 const ratingController = require("../controllers/rating.controller");
 const auth = require("../middleware/auth");
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    ratingBodyValidation,
+    ratingIdValidation,
+    ratingMovieIdValidation,
+    ratingUpdateValidation,
+} = require("../validations/rating.validation");
+
 
 /**
  * @swagger
@@ -10,6 +20,7 @@ const auth = require("../middleware/auth");
  *   name: Ratings
  *   description: Film puanlama işlemleri
  */
+
 
 /**
  * @swagger
@@ -31,23 +42,31 @@ const auth = require("../middleware/auth");
  *             properties:
  *               tmdbMovieId:
  *                 type: integer
+ *                 description: TMDB film ID'si
  *                 example: 157336
  *               rating:
  *                 type: integer
  *                 minimum: 1
  *                 maximum: 10
+ *                 description: Filme verilen puan
  *                 example: 9
  *     responses:
  *       201:
  *         description: Film başarıyla puanlandı
  *       400:
  *         description: Geçersiz puan veya film zaten puanlanmış
+ *       401:
+ *         description: Yetkilendirme gerekli
  */
 router.post(
     "/",
     auth,
+    validateRequest({
+        body: ratingBodyValidation,
+    }),
     ratingController.addRating
 );
+
 
 /**
  * @swagger
@@ -59,17 +78,24 @@ router.post(
  *       - in: path
  *         name: tmdbMovieId
  *         required: true
+ *         description: TMDB film ID'si
  *         schema:
  *           type: integer
  *         example: 157336
  *     responses:
  *       200:
  *         description: Film puanları başarıyla getirildi
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
  */
 router.get(
     "/movie/:tmdbMovieId",
+    validateRequest({
+        params: ratingMovieIdValidation,
+    }),
     ratingController.getMovieRatings
 );
+
 
 /**
  * @swagger
@@ -83,6 +109,7 @@ router.get(
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Puan ID'si
  *         schema:
  *           type: integer
  *         example: 1
@@ -103,6 +130,10 @@ router.get(
  *     responses:
  *       200:
  *         description: Film puanı güncellendi
+ *       400:
+ *         description: Geçersiz puan
+ *       401:
+ *         description: Yetkilendirme gerekli
  *       403:
  *         description: Kullanıcının bu puanı güncelleme yetkisi yok
  *       404:
@@ -111,8 +142,13 @@ router.get(
 router.put(
     "/:id",
     auth,
+    validateRequest({
+        params: ratingIdValidation,
+        body: ratingUpdateValidation,
+    }),
     ratingController.updateRating
 );
+
 
 /**
  * @swagger
@@ -126,12 +162,17 @@ router.put(
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Puan ID'si
  *         schema:
  *           type: integer
  *         example: 1
  *     responses:
  *       200:
  *         description: Film puanı silindi
+ *       400:
+ *         description: Geçersiz puan ID'si
+ *       401:
+ *         description: Yetkilendirme gerekli
  *       403:
  *         description: Kullanıcının bu puanı silme yetkisi yok
  *       404:
@@ -140,7 +181,11 @@ router.put(
 router.delete(
     "/:id",
     auth,
+    validateRequest({
+        params: ratingIdValidation,
+    }),
     ratingController.deleteRating
 );
+
 
 module.exports = router;

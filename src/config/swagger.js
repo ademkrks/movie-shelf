@@ -1,5 +1,7 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 
+const env = require("./env");
+
 const options = {
     definition: {
         openapi: "3.0.0",
@@ -7,12 +9,13 @@ const options = {
         info: {
             title: "MovieShelf API",
             version: "1.0.0",
-            description: "MovieShelf film yönetim ve kullanıcı API'si",
+            description:
+                "MovieShelf film yönetim ve kullanıcı API'si",
         },
 
         servers: [
             {
-                url: "http://localhost:5000",
+                url: `http://localhost:${env.port}`,
                 description: "Local Development Server",
             },
         ],

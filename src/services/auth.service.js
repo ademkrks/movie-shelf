@@ -20,6 +20,27 @@ const register = async (data) => {
         );
     }
 
+    // İsim kontrolü
+    if (typeof name !== "string" || name.trim().length === 0) {
+        throw new AppError(
+            "Ad alanı geçerli olmalıdır.",
+            400
+        );
+    }
+
+    // E-posta normalize edilir
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // E-posta formatı
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+        throw new AppError(
+            "Geçerli bir e-posta adresi giriniz.",
+            400
+        );
+    }
+
     // Minimum parola uzunluğu
     if (password.length < 8) {
         throw new AppError(
@@ -28,20 +49,10 @@ const register = async (data) => {
         );
     }
 
-    // E-posta formatı
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-        throw new AppError(
-            "Geçerli bir e-posta adresi giriniz.",
-            400
-        );
-    }
-
     // Aynı e-posta kayıtlı mı kontrol eder
     const existingUser = await prisma.user.findUnique({
         where: {
-            email,
+            email: normalizedEmail,
         },
     });
 
@@ -58,17 +69,21 @@ const register = async (data) => {
     // Kullanıcıyı oluşturur
     const user = await prisma.user.create({
         data: {
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
         },
     });
 
-    // Şifreyi istemciye göndermez
-    delete user.password;
-
     return user;
 };
+
 
 // Kullanıcı girişi
 const login = async (data) => {
@@ -82,10 +97,13 @@ const login = async (data) => {
         );
     }
 
+    // E-posta normalize edilir
+    const normalizedEmail = email.trim().toLowerCase();
+
     // E-posta formatı
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
         throw new AppError(
             "Geçerli bir e-posta adresi giriniz.",
             400
@@ -95,13 +113,13 @@ const login = async (data) => {
     // Kullanıcıyı e-posta ile bulur
     const user = await prisma.user.findUnique({
         where: {
-            email,
+            email: normalizedEmail,
         },
     });
 
     // Kullanıcı bulunamadığında da bcrypt çalıştırılır.
-    // Böylece "kullanıcı var/yok" durumları arasındaki
-    // işlem süresi farkını azaltır.
+    // Böylece kullanıcı var/yok durumları arasındaki
+    // işlem süresi farkı azaltılmaya çalışılır.
     if (!user) {
         await bcrypt.compare(
             password,
@@ -130,14 +148,20 @@ const login = async (data) => {
     // JWT oluşturur
     const token = generateToken(user.id);
 
-    // Şifreyi API cevabından kaldırır
-    delete user.password;
+    // API cevabında password gönderilmez
+    const safeUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+    };
 
     return {
-        user,
+        user: safeUser,
         token,
     };
 };
+
 
 module.exports = {
     register,

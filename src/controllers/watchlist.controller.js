@@ -20,6 +20,7 @@ const addWatchlist = async (req, res, next) => {
     }
 };
 
+
 // Kullanıcının izleme listesini getirir
 const getWatchlist = async (req, res, next) => {
     try {
@@ -36,6 +37,7 @@ const getWatchlist = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // İzleme listesinden film kaldırır
 const removeWatchlist = async (req, res, next) => {
@@ -54,6 +56,7 @@ const removeWatchlist = async (req, res, next) => {
         next(error);
     }
 };
+
 
 module.exports = {
     addWatchlist,

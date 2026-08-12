@@ -1,22 +1,23 @@
-//Uygulama Genelinde Kullanılacak Hata Sınıfı
-class AppError extends Error{
-    constructor(message ,statusCode){
+// Uygulama genelinde kullanılacak özel hata sınıfı
+class AppError extends Error {
+    constructor(message, statusCode) {
         super(message);
 
-        //HTTP Durum Kodu
+        // HTTP durum kodu
         this.statusCode = statusCode;
 
-        //Hatanın Tipi
-        this.status = `${statusCode}`.startsWith("4")
-        ? "Fail"
-        : "Error";
+        // Hata tipi
+        this.status = String(statusCode).startsWith("4")
+            ? "fail"
+            : "error";
 
-        //Operasyonel Hata Oldupunu Belirtir
-        this.isOperationel = true;
+        // Operasyonel hata olduğunu belirtir
+        this.isOperational = true;
 
+        // Stack trace oluşturur
         Error.captureStackTrace(this, this.constructor);
     }
 }
 
-//Dışa Aktarır
-module.exports=AppError;
+// Dışa aktarır
+module.exports = AppError;

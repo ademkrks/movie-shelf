@@ -1,32 +1,54 @@
+// Zorunlu environment variable'ları tanımlar
 const requiredEnvVariables = [
     "DATABASE_URL",
     "JWT_SECRET",
     "JWT_EXPIRES_IN",
     "TMDB_API_KEY",
+    "TMDB_BASE_URL",
 ];
 
+// Eksik environment variable'ları kontrol eder
 const missingVariables = requiredEnvVariables.filter(
     (variable) => !process.env[variable]
 );
 
+// Eksik variable varsa uygulamanın başlamasını engeller
 if (missingVariables.length > 0) {
     throw new Error(
         `Eksik environment variable: ${missingVariables.join(", ")}`
     );
 }
 
+// Port değerini kontrol eder
 const port = Number(process.env.PORT || 5000);
 
-if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    throw new Error("PORT geçerli bir değer olmalıdır.");
+if (
+    !Number.isInteger(port) ||
+    port <= 0 ||
+    port > 65535
+) {
+    throw new Error(
+        "PORT geçerli bir değer olmalıdır."
+    );
 }
 
+// Environment ayarlarını dışa aktarır
 module.exports = {
     nodeEnv: process.env.NODE_ENV || "development",
+
     port,
+
     databaseUrl: process.env.DATABASE_URL,
+
     jwtSecret: process.env.JWT_SECRET,
+
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+
     tmdbApiKey: process.env.TMDB_API_KEY,
-    corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+
+    tmdbBaseUrl: process.env.TMDB_BASE_URL,
+
+    corsOrigin:
+        process.env.CORS_ORIGIN ||
+        "http://localhost:3000",
 };

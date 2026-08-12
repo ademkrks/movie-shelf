@@ -1,13 +1,14 @@
 const prisma = require("../config/prisma");
 const AppError = require("../utils/AppError");
 
+
 // Favoriye film ekler
 const addFavorite = async (userId, tmdbMovieId) => {
     const existingFavorite = await prisma.favorite.findUnique({
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: Number(tmdbMovieId),
             },
         },
     });
@@ -22,12 +23,13 @@ const addFavorite = async (userId, tmdbMovieId) => {
     const favorite = await prisma.favorite.create({
         data: {
             userId,
-            tmdbMovieId,
+            tmdbMovieId: Number(tmdbMovieId),
         },
     });
 
     return favorite;
 };
+
 
 // Kullanıcının favorilerini getirir
 const getFavorites = async (userId) => {
@@ -41,13 +43,14 @@ const getFavorites = async (userId) => {
     });
 };
 
+
 // Favoriden film kaldırır
 const removeFavorite = async (userId, tmdbMovieId) => {
     const favorite = await prisma.favorite.findUnique({
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: Number(tmdbMovieId),
             },
         },
     });
@@ -63,12 +66,14 @@ const removeFavorite = async (userId, tmdbMovieId) => {
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: Number(tmdbMovieId),
             },
         },
     });
 };
 
+
+// Fonksiyonları dışa aktarır
 module.exports = {
     addFavorite,
     getFavorites,

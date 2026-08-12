@@ -1,6 +1,10 @@
 // TMDB film ID validation'ı
 const tmdbIdValidation = (params) => {
-    if (!params || !params.id) {
+    if (
+        !params ||
+        params.id === undefined ||
+        params.id === null
+    ) {
         return "Film ID zorunludur.";
     }
 
@@ -18,25 +22,35 @@ const tmdbIdValidation = (params) => {
 
 // Film arama query validation'ı
 const movieSearchValidation = (query) => {
-    if (!query || typeof query !== "object") {
+    if (
+        !query ||
+        typeof query !== "object" ||
+        Array.isArray(query)
+    ) {
         return "Arama parametreleri geçersiz.";
     }
 
     const { q } = query;
 
-    if (!q || typeof q !== "string") {
+    if (q === undefined || q === null) {
         return "Arama sorgusu zorunludur.";
     }
 
-    if (q.trim().length === 0) {
+    if (typeof q !== "string") {
+        return "Arama sorgusu metin olmalıdır.";
+    }
+
+    const trimmedQuery = q.trim();
+
+    if (trimmedQuery.length === 0) {
         return "Arama sorgusu boş bırakılamaz.";
     }
 
-    if (q.trim().length < 2) {
+    if (trimmedQuery.length < 2) {
         return "Arama sorgusu en az 2 karakter olmalıdır.";
     }
 
-    if (q.trim().length > 100) {
+    if (trimmedQuery.length > 100) {
         return "Arama sorgusu en fazla 100 karakter olabilir.";
     }
 

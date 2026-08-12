@@ -1,13 +1,16 @@
 const prisma = require("../config/prisma");
 const AppError = require("../utils/AppError");
 
+
 // İzleme listesine film ekler
 const addWatchlist = async (userId, tmdbMovieId) => {
+    const normalizedMovieId = Number(tmdbMovieId);
+
     const existingWatchlist = await prisma.watchlist.findUnique({
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: normalizedMovieId,
             },
         },
     });
@@ -22,12 +25,13 @@ const addWatchlist = async (userId, tmdbMovieId) => {
     const watchlist = await prisma.watchlist.create({
         data: {
             userId,
-            tmdbMovieId,
+            tmdbMovieId: normalizedMovieId,
         },
     });
 
     return watchlist;
 };
+
 
 // Kullanıcının izleme listesini getirir
 const getWatchlist = async (userId) => {
@@ -41,13 +45,16 @@ const getWatchlist = async (userId) => {
     });
 };
 
+
 // İzleme listesinden film kaldırır
 const removeWatchlist = async (userId, tmdbMovieId) => {
+    const normalizedMovieId = Number(tmdbMovieId);
+
     const watchlist = await prisma.watchlist.findUnique({
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: normalizedMovieId,
             },
         },
     });
@@ -63,12 +70,14 @@ const removeWatchlist = async (userId, tmdbMovieId) => {
         where: {
             userId_tmdbMovieId: {
                 userId,
-                tmdbMovieId,
+                tmdbMovieId: normalizedMovieId,
             },
         },
     });
 };
 
+
+// Fonksiyonları dışa aktarır
 module.exports = {
     addWatchlist,
     getWatchlist,

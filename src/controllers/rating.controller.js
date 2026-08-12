@@ -1,27 +1,28 @@
 const ratingService = require("../services/rating.service");
 const response = require("../utils/response");
 
-//Filme Puan Ekler
-const addRating =async (req,res,next)=>{
-    try{
-        const rating =await ratingService.addRating(
+// Filme puan ekler
+const addRating = async (req, res, next) => {
+    try {
+        const rating = await ratingService.addRating(
             req.user.id,
             Number(req.body.tmdbMovieId),
             Number(req.body.rating)
         );
-        
+
         response.success(
             res,
             rating,
-            "Film Başarıyla Puanlandı.",
+            "Film başarıyla puanlandı.",
             201
         );
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 };
 
-//Filmin Puanını Getirir
+
+// Filmin puanlarını getirir
 const getMovieRatings = async (req, res, next) => {
     try {
         const ratings = await ratingService.getMovieRatings(
@@ -37,6 +38,7 @@ const getMovieRatings = async (req, res, next) => {
         next(error);
     }
 };
+
 
 // Kullanıcının puanını günceller
 const updateRating = async (req, res, next) => {
@@ -57,6 +59,7 @@ const updateRating = async (req, res, next) => {
     }
 };
 
+
 // Kullanıcının puanını siler
 const deleteRating = async (req, res, next) => {
     try {
@@ -74,6 +77,7 @@ const deleteRating = async (req, res, next) => {
         next(error);
     }
 };
+
 
 module.exports = {
     addRating,
