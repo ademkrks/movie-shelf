@@ -1,16 +1,23 @@
-const auth = require("../middleware/auth");
-
 // Express Router'ı içe aktarır
 const express = require("express");
 
 // Router oluşturur
 const router = express.Router();
 
-// Controller katmanını içe aktarır
+// Authentication middleware'i
+const auth = require("../middleware/auth");
+
+// Controller katmanı
 const movieController = require("../controllers/movie.controller");
 
-// Doğrulama (Validation) middleware'ini içe aktarır
-const validateMovie = require("../middleware/validateMovie");
+// Global validation middleware'i
+const validateRequest = require("../middleware/validateRequest");
+
+// Movie validation'ları
+const {
+    movieValidation,
+    movieIdValidation,
+} = require("../validations/movie.validation");
 
 /**
  * @swagger
@@ -51,11 +58,16 @@ router.get(
  *     responses:
  *       200:
  *         description: Film başarıyla getirildi
+ *       400:
+ *         description: Geçersiz film ID'si
  *       404:
  *         description: Film bulunamadı
  */
 router.get(
     "/:id",
+    validateRequest({
+        params: movieIdValidation,
+    }),
     movieController.getMovieById
 );
 
@@ -96,7 +108,9 @@ router.get(
 router.post(
     "/",
     auth,
-    validateMovie,
+    validateRequest({
+        body: movieValidation,
+    }),
     movieController.createMovie
 );
 
@@ -147,7 +161,10 @@ router.post(
 router.put(
     "/:id",
     auth,
-    validateMovie,
+    validateRequest({
+        params: movieIdValidation,
+        body: movieValidation,
+    }),
     movieController.updateMovie
 );
 
@@ -170,6 +187,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Film başarıyla silindi
+ *       400:
+ *         description: Geçersiz film ID'si
  *       401:
  *         description: Yetkilendirme gerekli
  *       404:
@@ -178,6 +197,9 @@ router.put(
 router.delete(
     "/:id",
     auth,
+    validateRequest({
+        params: movieIdValidation,
+    }),
     movieController.deleteMovie
 );
 

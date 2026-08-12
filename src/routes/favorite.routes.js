@@ -1,8 +1,17 @@
 const express = require("express");
+
 const router = express.Router();
 
 const favoriteController = require("../controllers/favorite.controller");
 const auth = require("../middleware/auth");
+
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    tmdbMovieIdValidation,
+    tmdbMovieBodyValidation,
+} = require("../validations/common.validation");
+
 
 /**
  * @swagger
@@ -10,6 +19,7 @@ const auth = require("../middleware/auth");
  *   name: Favorites
  *   description: Film favori işlemleri
  */
+
 
 /**
  * @swagger
@@ -30,20 +40,25 @@ const auth = require("../middleware/auth");
  *             properties:
  *               tmdbMovieId:
  *                 type: integer
+ *                 description: TMDB film ID'si
  *                 example: 157336
  *     responses:
  *       201:
  *         description: Film favorilere başarıyla eklendi
  *       400:
- *         description: Film zaten favorilerde
+ *         description: Geçersiz film ID'si veya film zaten favorilerde
  *       401:
  *         description: Yetkilendirme gerekli
  */
 router.post(
     "/",
     auth,
+    validateRequest({
+        body: tmdbMovieBodyValidation,
+    }),
     favoriteController.addFavorite
 );
+
 
 /**
  * @swagger
@@ -65,6 +80,7 @@ router.get(
     favoriteController.getFavorites
 );
 
+
 /**
  * @swagger
  * /favorites/{tmdbMovieId}:
@@ -84,15 +100,21 @@ router.get(
  *     responses:
  *       200:
  *         description: Film favorilerden başarıyla kaldırıldı
- *       404:
- *         description: Favori kayıt bulunamadı
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
  *       401:
  *         description: Yetkilendirme gerekli
+ *       404:
+ *         description: Favori kayıt bulunamadı
  */
 router.delete(
     "/:tmdbMovieId",
     auth,
+    validateRequest({
+        params: tmdbMovieIdValidation,
+    }),
     favoriteController.removeFavorite
 );
+
 
 module.exports = router;

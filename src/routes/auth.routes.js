@@ -5,6 +5,13 @@ const router = express.Router();
 const authController = require("../controllers/auth.controller");
 const rateLimit = require("express-rate-limit");
 
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    registerValidation,
+    loginValidation,
+} = require("../validations/auth.validation");
+
 // Authentication işlemleri için sıkı rate limit
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -63,6 +70,9 @@ const authLimiter = rateLimit({
 router.post(
     "/register",
     authLimiter,
+    validateRequest({
+        body: registerValidation,
+    }),
     authController.register
 );
 
@@ -99,6 +109,9 @@ router.post(
 router.post(
     "/login",
     authLimiter,
+    validateRequest({
+        body: loginValidation,
+    }),
     authController.login
 );
 

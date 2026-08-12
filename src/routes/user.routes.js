@@ -6,12 +6,20 @@ const auth = require("../middleware/auth");
 
 const userController = require("../controllers/user.controller");
 
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    updateProfileValidation,
+} = require("../validations/user.validation");
+
+
 /**
  * @swagger
  * tags:
  *   name: Users
  *   description: Kullanıcı profil işlemleri
  */
+
 
 /**
  * @swagger
@@ -34,6 +42,7 @@ router.get(
     auth,
     userController.getProfile
 );
+
 
 /**
  * @swagger
@@ -72,7 +81,11 @@ router.get(
 router.put(
     "/me",
     auth,
+    validateRequest({
+        body: updateProfileValidation,
+    }),
     userController.updateProfile
 );
+
 
 module.exports = router;

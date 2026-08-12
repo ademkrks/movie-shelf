@@ -1,8 +1,17 @@
 const express = require("express");
+
 const router = express.Router();
 
 const watchlistController = require("../controllers/watchlist.controller");
 const auth = require("../middleware/auth");
+
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    tmdbMovieIdValidation,
+    tmdbMovieBodyValidation,
+} = require("../validations/common.validation");
+
 
 /**
  * @swagger
@@ -10,6 +19,7 @@ const auth = require("../middleware/auth");
  *   name: Watchlist
  *   description: Film izleme listesi işlemleri
  */
+
 
 /**
  * @swagger
@@ -36,15 +46,19 @@ const auth = require("../middleware/auth");
  *       201:
  *         description: Film izleme listesine başarıyla eklendi
  *       400:
- *         description: Film zaten izleme listesinde
+ *         description: Geçersiz film ID'si veya film zaten izleme listesinde
  *       401:
  *         description: Yetkilendirme gerekli
  */
 router.post(
     "/",
     auth,
+    validateRequest({
+        body: tmdbMovieBodyValidation,
+    }),
     watchlistController.addWatchlist
 );
+
 
 /**
  * @swagger
@@ -66,6 +80,7 @@ router.get(
     watchlistController.getWatchlist
 );
 
+
 /**
  * @swagger
  * /watchlist/{tmdbMovieId}:
@@ -85,15 +100,21 @@ router.get(
  *     responses:
  *       200:
  *         description: Film izleme listesinden başarıyla kaldırıldı
- *       404:
- *         description: Film izleme listesinde bulunamadı
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
  *       401:
  *         description: Yetkilendirme gerekli
+ *       404:
+ *         description: Film izleme listesinde bulunamadı
  */
 router.delete(
     "/:tmdbMovieId",
     auth,
+    validateRequest({
+        params: tmdbMovieIdValidation,
+    }),
     watchlistController.removeWatchlist
 );
+
 
 module.exports = router;

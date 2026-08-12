@@ -1,8 +1,19 @@
 const express = require("express");
+
 const router = express.Router();
 
 const reviewController = require("../controllers/review.controller");
 const auth = require("../middleware/auth");
+
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    reviewBodyValidation,
+    reviewUpdateValidation,
+    reviewIdValidation,
+    reviewMovieIdValidation,
+} = require("../validations/review.validation");
+
 
 /**
  * @swagger
@@ -10,6 +21,7 @@ const auth = require("../middleware/auth");
  *   name: Reviews
  *   description: Film yorumları işlemleri
  */
+
 
 /**
  * @swagger
@@ -48,8 +60,12 @@ const auth = require("../middleware/auth");
 router.post(
     "/",
     auth,
+    validateRequest({
+        body: reviewBodyValidation,
+    }),
     reviewController.addReview
 );
+
 
 /**
  * @swagger
@@ -68,13 +84,19 @@ router.post(
  *     responses:
  *       200:
  *         description: Film yorumları başarıyla getirildi
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
  *       404:
  *         description: Film yorumları bulunamadı
  */
 router.get(
     "/movie/:tmdbMovieId",
+    validateRequest({
+        params: reviewMovieIdValidation,
+    }),
     reviewController.getMovieReviews
 );
+
 
 /**
  * @swagger
@@ -108,6 +130,10 @@ router.get(
  *     responses:
  *       200:
  *         description: Yorum başarıyla güncellendi
+ *       400:
+ *         description: Geçersiz yorum verisi
+ *       401:
+ *         description: Yetkilendirme gerekli
  *       403:
  *         description: Kullanıcının bu yorumu güncelleme yetkisi yok
  *       404:
@@ -116,8 +142,13 @@ router.get(
 router.put(
     "/:id",
     auth,
+    validateRequest({
+        params: reviewIdValidation,
+        body: reviewUpdateValidation,
+    }),
     reviewController.updateReview
 );
+
 
 /**
  * @swagger
@@ -138,6 +169,10 @@ router.put(
  *     responses:
  *       200:
  *         description: Yorum başarıyla silindi
+ *       400:
+ *         description: Geçersiz yorum ID'si
+ *       401:
+ *         description: Yetkilendirme gerekli
  *       403:
  *         description: Kullanıcının bu yorumu silme yetkisi yok
  *       404:
@@ -146,7 +181,11 @@ router.put(
 router.delete(
     "/:id",
     auth,
+    validateRequest({
+        params: reviewIdValidation,
+    }),
     reviewController.deleteReview
 );
+
 
 module.exports = router;

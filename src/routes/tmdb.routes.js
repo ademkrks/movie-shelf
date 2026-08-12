@@ -4,12 +4,21 @@ const router = express.Router();
 
 const tmdbController = require("../controllers/tmdb.controller");
 
+const validateRequest = require("../middleware/validateRequest");
+
+const {
+    tmdbIdValidation,
+    movieSearchValidation,
+} = require("../validations/tmdb.validation");
+
+
 /**
  * @swagger
  * tags:
  *   name: TMDB
  *   description: TMDB film verileri işlemleri
  */
+
 
 /**
  * @swagger
@@ -26,6 +35,7 @@ router.get(
     tmdbController.getTrendingMovies
 );
 
+
 /**
  * @swagger
  * /tmdb/popular:
@@ -40,6 +50,7 @@ router.get(
     "/popular",
     tmdbController.getPopularMovies
 );
+
 
 /**
  * @swagger
@@ -56,6 +67,7 @@ router.get(
     tmdbController.getTopRatedMovies
 );
 
+
 /**
  * @swagger
  * /tmdb/upcoming:
@@ -70,6 +82,7 @@ router.get(
     "/upcoming",
     tmdbController.getUpcomingMovies
 );
+
 
 /**
  * @swagger
@@ -89,12 +102,16 @@ router.get(
  *       200:
  *         description: Arama sonuçları başarıyla getirildi
  *       400:
- *         description: Arama sorgusu gerekli
+ *         description: Arama sorgusu gerekli veya geçersiz
  */
 router.get(
     "/search",
+    validateRequest({
+        query: movieSearchValidation,
+    }),
     tmdbController.searchMovie
 );
+
 
 /**
  * @swagger
@@ -113,13 +130,19 @@ router.get(
  *     responses:
  *       200:
  *         description: Film detayları başarıyla getirildi
+ *       400:
+ *         description: Geçersiz film ID'si
  *       404:
  *         description: Film bulunamadı
  */
 router.get(
     "/movie/:id",
+    validateRequest({
+        params: tmdbIdValidation,
+    }),
     tmdbController.getMovieDetails
 );
+
 
 /**
  * @swagger
@@ -138,13 +161,19 @@ router.get(
  *     responses:
  *       200:
  *         description: Film oyuncu kadrosu başarıyla getirildi
+ *       400:
+ *         description: Geçersiz film ID'si
  *       404:
  *         description: Film bulunamadı
  */
 router.get(
-    "/movie/{id}/cast",
+    "/movie/:id/cast",
+    validateRequest({
+        params: tmdbIdValidation,
+    }),
     tmdbController.getMovieCast
 );
+
 
 /**
  * @swagger
@@ -163,12 +192,18 @@ router.get(
  *     responses:
  *       200:
  *         description: Film fragmanları başarıyla getirildi
+ *       400:
+ *         description: Geçersiz film ID'si
  *       404:
  *         description: Film bulunamadı
  */
 router.get(
     "/movie/:id/trailers",
+    validateRequest({
+        params: tmdbIdValidation,
+    }),
     tmdbController.getMovieTrailers
 );
+
 
 module.exports = router;
