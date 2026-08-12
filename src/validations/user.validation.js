@@ -1,6 +1,11 @@
 // Kullanıcı profil güncelleme validation'ı
 const updateProfileValidation = (body) => {
-    if (!body || typeof body !== "object") {
+    // Request body kontrolü
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
         return "İstek gövdesi geçersiz.";
     }
 
@@ -35,20 +40,25 @@ const updateProfileValidation = (body) => {
             return "E-posta alanı metin olmalıdır.";
         }
 
-        if (email.trim().length === 0) {
+        const trimmedEmail = email.trim();
+
+        if (trimmedEmail.length === 0) {
             return "E-posta alanı boş bırakılamaz.";
+        }
+
+        if (trimmedEmail.length > 255) {
+            return "E-posta alanı en fazla 255 karakter olabilir.";
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(trimmedEmail)) {
             return "Geçerli bir e-posta adresi giriniz.";
         }
     }
 
     return true;
 };
-
 
 module.exports = {
     updateProfileValidation,

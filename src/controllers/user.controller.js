@@ -1,39 +1,42 @@
 const userService = require("../services/user.service");
-const response =require ("../utils/response");
+const response = require("../utils/response");
 
-//Profil Bilgileri
-const getProfile =async (req,res,next)=>{
-    try{
-        const user =await userService.getProfile(req.user.id);
+// Kullanıcı profil bilgilerini getirir
+const getProfile = async (req, res, next) => {
+    try {
+        const user = await userService.getProfile(req.user.id);
 
         response.success(
             res,
             user,
             "Profil Bilgileri Getirildi."
         );
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 };
 
-//Profil Bilgilerini Günceller 
-const updateProfile =async (req,res,next)=>{
-    try{
-        const user =await userService.updateProfile(
+
+// Kullanıcı profil bilgilerini günceller
+const updateProfile = async (req, res, next) => {
+    try {
+        const user = await userService.updateProfile(
             req.user.id,
-            req.body,
+            req.body
         );
+
         response.success(
             res,
             user,
             "Profil Başarıyla Güncellendi."
         );
-    }catch(error){
+    } catch (error) {
         next(error);
     }
 };
 
-module.exports={
+
+module.exports = {
     getProfile,
     updateProfile,
 };

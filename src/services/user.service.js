@@ -1,41 +1,50 @@
-const prisma =require("../config/prisma");
+const prisma = require("../config/prisma");
 
-//Giriş Yapan Kullanıcıın Profilini Getirir
-const getProfile = async (userId)=>{
+// Giriş yapan kullanıcının profilini getirir
+const getProfile = async (userId) => {
     return await prisma.user.findUnique({
-        where:{
+        where: {
             id: userId,
         },
-        select:{
-            id: true,
-            name:true,
-            email:true,
-            createdAt:true,
-        },
-    });
-};
-
-//Profil Bilgilerini Güncel Tutar
-const updateProfile =async (userId,data)=>{
-    return await prisma.user.update({
-        where:{
-            id:userId,
-        },
-        data:{
-            name : data.name,
-            email: data.email,
-        },
         select: {
-            id :true,
-            name:true,
-            email:true,
-            createdAt:true,
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
         },
     });
 };
 
 
-module.exports ={
+// Profil bilgilerini günceller
+const updateProfile = async (userId, data) => {
+    const updateData = {};
+
+    // Sadece gönderilen alanları güncelle
+    if (data.name !== undefined) {
+        updateData.name = data.name.trim();
+    }
+
+    if (data.email !== undefined) {
+        updateData.email = data.email.trim().toLowerCase();
+    }
+
+    return await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: updateData,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+        },
+    });
+};
+
+
+module.exports = {
     getProfile,
     updateProfile,
 };
