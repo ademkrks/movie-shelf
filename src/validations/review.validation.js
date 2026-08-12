@@ -1,13 +1,17 @@
-// Yorum ekleme ve güncelleme validation'ı
+// Yorum ekleme validation'ı
 const reviewBodyValidation = (body) => {
-    if (!body || typeof body !== "object") {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
         return "İstek gövdesi geçersiz.";
     }
 
     const { tmdbMovieId, content } = body;
 
     // TMDB film ID kontrolü
-    if (!tmdbMovieId) {
+    if (tmdbMovieId === undefined || tmdbMovieId === null) {
         return "tmdbMovieId alanı zorunludur.";
     }
 
@@ -20,7 +24,7 @@ const reviewBodyValidation = (body) => {
     }
 
     // Yorum içeriği kontrolü
-    if (!content || typeof content !== "string") {
+    if (typeof content !== "string") {
         return "Yorum içeriği zorunludur.";
     }
 
@@ -36,16 +40,19 @@ const reviewBodyValidation = (body) => {
 };
 
 
-// Sadece yorum içeriğinin validation'ı
-// PUT işleminde kullanılabilir.
+// Yorum güncelleme validation'ı
 const reviewUpdateValidation = (body) => {
-    if (!body || typeof body !== "object") {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
         return "İstek gövdesi geçersiz.";
     }
 
     const { content } = body;
 
-    if (!content || typeof content !== "string") {
+    if (typeof content !== "string") {
         return "Yorum içeriği zorunludur.";
     }
 
@@ -63,7 +70,11 @@ const reviewUpdateValidation = (body) => {
 
 // Yorum ID validation'ı
 const reviewIdValidation = (params) => {
-    if (!params || !params.id) {
+    if (
+        !params ||
+        params.id === undefined ||
+        params.id === null
+    ) {
         return "Yorum ID zorunludur.";
     }
 
@@ -81,7 +92,11 @@ const reviewIdValidation = (params) => {
 
 // TMDB film ID validation'ı
 const reviewMovieIdValidation = (params) => {
-    if (!params || !params.tmdbMovieId) {
+    if (
+        !params ||
+        params.tmdbMovieId === undefined ||
+        params.tmdbMovieId === null
+    ) {
         return "TMDB film ID zorunludur.";
     }
 
