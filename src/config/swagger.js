@@ -1,6 +1,9 @@
-const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerJsdoc = require(
+    "swagger-jsdoc"
+);
 
 const env = require("./env");
+
 
 const options = {
     definition: {
@@ -15,8 +18,11 @@ const options = {
 
         servers: [
             {
-                url: `http://localhost:${env.port}`,
-                description: "Local Development Server",
+                url: env.apiBaseUrl,
+                description:
+                    env.isProduction
+                        ? "Production Server"
+                        : "Development Server",
             },
         ],
 
@@ -37,6 +43,9 @@ const options = {
     ],
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+
+const swaggerSpec =
+    swaggerJsdoc(options);
+
 
 module.exports = swaggerSpec;

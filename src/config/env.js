@@ -1,4 +1,29 @@
-// Zorunlu environment variable'ları tanımlar
+require("dotenv").config();
+
+
+// Desteklenen çalışma ortamları
+const allowedNodeEnvs = [
+    "development",
+    "test",
+    "production",
+];
+
+
+// Çalışma ortamını belirler
+const nodeEnv =
+    process.env.NODE_ENV ||
+    "development";
+
+
+// NODE_ENV kontrolü
+if (!allowedNodeEnvs.includes(nodeEnv)) {
+    throw new Error(
+        "NODE_ENV development, test veya production olmalıdır."
+    );
+}
+
+
+// Her ortamda zorunlu environment variable'lar
 const requiredEnvVariables = [
     "DATABASE_URL",
     "JWT_SECRET",
@@ -13,10 +38,31 @@ const requiredEnvVariables = [
     "EMAIL_FROM",
 ];
 
+
+// Production ortamında ayrıca zorunlu olan değişkenler
+const productionRequiredEnvVariables = [
+    "CORS_ORIGIN",
+    "API_BASE_URL",
+];
+
+
+// Kontrol edilecek environment variable listesini oluşturur
+const envVariablesToCheck = [
+    ...requiredEnvVariables,
+    ...(nodeEnv === "production"
+        ? productionRequiredEnvVariables
+        : []),
+];
+
+
 // Eksik environment variable'ları kontrol eder
-const missingVariables = requiredEnvVariables.filter(
-    (variable) => !process.env[variable]
-);
+const missingVariables =
+    envVariablesToCheck.filter(
+        (variable) =>
+            !process.env[variable] ||
+            process.env[variable].trim() === ""
+    );
+
 
 // Eksik variable varsa uygulamanın başlamasını engeller
 if (missingVariables.length > 0) {
@@ -25,8 +71,11 @@ if (missingVariables.length > 0) {
     );
 }
 
+
 // Uygulama portunu kontrol eder
-const port = Number(process.env.PORT || 5000);
+const port = Number(
+    process.env.PORT || 5000
+);
 
 if (
     !Number.isInteger(port) ||
@@ -37,6 +86,7 @@ if (
         "PORT geçerli bir değer olmalıdır."
     );
 }
+
 
 // E-posta portunu kontrol eder
 const emailPort = Number(
@@ -53,16 +103,148 @@ if (
     );
 }
 
+
+// Boolean environment variable değerini doğrular
+const parseBoolean = (
+    value,
+    variableName,
+    defaultValue = false
+) => {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
+
+    if (value === "true") {
+        return true;
+    }
+
+    if (value === "false") {
+        return false;
+    }
+
+    throw new Error(
+        `${variableName} true veya false olmalıdır.`
+    );
+};
+
+
+// URL değerini doğrular
+const validateUrl = (
+    value,
+    variableName
+) => {
+    try {
+        return new URL(value).toString();
+    } catch (error) {
+        throw new Error(
+            `${variableName} geçerli bir URL olmalıdır.`
+        );
+    }
+};
+
+
+// PostgreSQL bağlantı adresini doğrular
+const validateDatabaseUrl = (value) => {
+    let databaseUrl;
+
+    try {
+        databaseUrl = new URL(value);
+    } catch (error) {
+        throw new Error(
+            "DATABASE_URL geçerli bir PostgreSQL bağlantı adresi olmalıdır."
+        );
+    }
+
+    if (
+        databaseUrl.protocol !== "postgresql:" &&
+        databaseUrl.protocol !== "postgres:"
+    ) {
+        throw new Error(
+            "DATABASE_URL PostgreSQL bağlantısı olmalıdır."
+        );
+    }
+
+    return value;
+};
+
+
+// CORS origin listesini hazırlar
+const corsOrigins = (
+    process.env.CORS_ORIGIN ||
+    "http://localhost:3000"
+)
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+
+// CORS adreslerini doğrular
+corsOrigins.forEach((origin) => {
+    validateUrl(
+        origin,
+        "CORS_ORIGIN"
+    );
+});
+
+
+// Production ortamında zayıf JWT secret kullanımını engeller
+if (
+    nodeEnv === "production" &&
+    process.env.JWT_SECRET.length < 32
+) {
+    throw new Error(
+        "Production ortamında JWT_SECRET en az 32 karakter olmalıdır."
+    );
+}
+
+
+// Kritik URL ayarlarını doğrular
+const databaseUrl =
+    validateDatabaseUrl(
+        process.env.DATABASE_URL
+    );
+
+const tmdbBaseUrl =
+    validateUrl(
+        process.env.TMDB_BASE_URL,
+        "TMDB_BASE_URL"
+    );
+
+const frontendUrl =
+    validateUrl(
+        process.env.FRONTEND_URL,
+        "FRONTEND_URL"
+    );
+
+const apiBaseUrl =
+    process.env.API_BASE_URL
+        ? validateUrl(
+            process.env.API_BASE_URL,
+            "API_BASE_URL"
+        )
+        : `http://localhost:${port}`;
+
+
 // Environment ayarlarını dışa aktarır
 module.exports = {
-    nodeEnv:
-        process.env.NODE_ENV ||
-        "development",
+    nodeEnv,
+
+    isDevelopment:
+        nodeEnv === "development",
+
+    isTest:
+        nodeEnv === "test",
+
+    isProduction:
+        nodeEnv === "production",
 
     port,
 
-    databaseUrl:
-        process.env.DATABASE_URL,
+    databaseUrl,
 
     jwtSecret:
         process.env.JWT_SECRET,
@@ -73,15 +255,13 @@ module.exports = {
     tmdbApiKey:
         process.env.TMDB_API_KEY,
 
-    tmdbBaseUrl:
-        process.env.TMDB_BASE_URL,
+    tmdbBaseUrl,
 
-    corsOrigin:
-        process.env.CORS_ORIGIN ||
-        "http://localhost:3000",
+    corsOrigins,
 
-    frontendUrl:
-        process.env.FRONTEND_URL,
+    frontendUrl,
+
+    apiBaseUrl,
 
     emailHost:
         process.env.EMAIL_HOST,
@@ -89,7 +269,10 @@ module.exports = {
     emailPort,
 
     emailSecure:
-        process.env.EMAIL_SECURE === "true",
+        parseBoolean(
+            process.env.EMAIL_SECURE,
+            "EMAIL_SECURE"
+        ),
 
     emailUser:
         process.env.EMAIL_USER,

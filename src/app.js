@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const swaggerSpec = require("./config/swagger");
 const env = require("./config/env");
 
+
 // Route'lar
 const movieRoutes = require("./routes/movie.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -17,24 +18,29 @@ const watchlistRoutes = require("./routes/watchlist.routes");
 const reviewRoutes = require("./routes/review.routes");
 const ratingRoutes = require("./routes/rating.routes");
 
+
 // Middleware
 const logger = require("./middleware/logger");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
+
 // Express uygulamasını oluşturur
 const app = express();
+
 
 // Express'in teknoloji bilgisini response header'ında göstermesini engeller
 app.disable("x-powered-by");
 
+
 // HTTP güvenlik header'ları
 app.use(helmet());
+
 
 // CORS
 app.use(
     cors({
-        origin: env.corsOrigin,
+        origin: env.corsOrigins,
         methods: [
             "GET",
             "POST",
@@ -49,6 +55,19 @@ app.use(
         ],
     })
 );
+
+
+// Health check
+app.get(
+    "/health",
+    (req, res) => {
+        res.status(200).json({
+            success: true,
+            status: "ok",
+        });
+    }
+);
+
 
 // Genel API rate limit
 const apiLimiter = rateLimit({
@@ -66,6 +85,7 @@ const apiLimiter = rateLimit({
 
 app.use(apiLimiter);
 
+
 // JSON body boyutunu sınırlar
 app.use(
     express.json({
@@ -73,8 +93,10 @@ app.use(
     })
 );
 
+
 // Gelen istekleri loglar
 app.use(logger);
+
 
 // Swagger API dokümantasyonu
 app.use(
@@ -82,6 +104,7 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec)
 );
+
 
 // Route'lar
 app.use("/auth", authRoutes);
@@ -93,10 +116,13 @@ app.use("/watchlist", watchlistRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/ratings", ratingRoutes);
 
+
 // Tanımlanamayan endpointleri yakalar
 app.use(notFound);
 
+
 // Global hata yakalayıcı
 app.use(errorHandler);
+
 
 module.exports = app;
