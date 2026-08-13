@@ -1,12 +1,22 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+
 const AppError = require("../utils/AppError");
 const generateToken = require("../utils/generateToken");
+const emailService = require("./email.service");
+
 
 // Timing attack riskini azaltmak için kullanılan sabit hash.
 // Gerçek bir kullanıcı parolası değildir.
 const DUMMY_PASSWORD_HASH =
     "$2b$10$WUWZz/cGkVo4XjhqqV9Cq.PgqcZnt3KqFloBn3tFjcPINGGTO/NvS";
+
+
+// Password reset token geçerlilik süresi
+const PASSWORD_RESET_EXPIRES_IN =
+    15 * 60 * 1000;
+
 
 // Yeni kullanıcı oluşturur
 const register = async (data) => {
@@ -21,7 +31,10 @@ const register = async (data) => {
     }
 
     // İsim kontrolü
-    if (typeof name !== "string" || name.trim().length === 0) {
+    if (
+        typeof name !== "string" ||
+        name.trim().length === 0
+    ) {
         throw new AppError(
             "Ad alanı geçerli olmalıdır.",
             400
@@ -29,10 +42,13 @@ const register = async (data) => {
     }
 
     // E-posta normalize edilir
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
     // E-posta formatı
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(normalizedEmail)) {
         throw new AppError(
@@ -50,11 +66,12 @@ const register = async (data) => {
     }
 
     // Aynı e-posta kayıtlı mı kontrol eder
-    const existingUser = await prisma.user.findUnique({
-        where: {
-            email: normalizedEmail,
-        },
-    });
+    const existingUser =
+        await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            },
+        });
 
     if (existingUser) {
         throw new AppError(
@@ -64,7 +81,8 @@ const register = async (data) => {
     }
 
     // Şifreyi hashler
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword =
+        await bcrypt.hash(password, 10);
 
     // Kullanıcıyı oluşturur
     const user = await prisma.user.create({
@@ -98,10 +116,13 @@ const login = async (data) => {
     }
 
     // E-posta normalize edilir
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
     // E-posta formatı
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(normalizedEmail)) {
         throw new AppError(
@@ -117,9 +138,7 @@ const login = async (data) => {
         },
     });
 
-    // Kullanıcı bulunamadığında da bcrypt çalıştırılır.
-    // Böylece kullanıcı var/yok durumları arasındaki
-    // işlem süresi farkı azaltılmaya çalışılır.
+    // Kullanıcı bulunamadığında da bcrypt çalıştırılır
     if (!user) {
         await bcrypt.compare(
             password,
@@ -133,10 +152,11 @@ const login = async (data) => {
     }
 
     // Şifreyi kontrol eder
-    const passwordMatch = await bcrypt.compare(
-        password,
-        user.password
-    );
+    const passwordMatch =
+        await bcrypt.compare(
+            password,
+            user.password
+        );
 
     if (!passwordMatch) {
         throw new AppError(
@@ -163,7 +183,176 @@ const login = async (data) => {
 };
 
 
+// Şifre sıfırlama isteği oluşturur
+const forgotPassword = async (data) => {
+    const normalizedEmail = data.email
+        .trim()
+        .toLowerCase();
+
+    // Kullanıcıyı bulur
+    const user = await prisma.user.findUnique({
+        where: {
+            email: normalizedEmail,
+        },
+        select: {
+            id: true,
+            email: true,
+        },
+    });
+
+    // Kullanıcı yoksa bilgi sızdırmadan işlem sonlandırılır
+    if (!user) {
+        return null;
+    }
+
+    // Güvenli reset token oluşturur
+    const resetToken = crypto
+        .randomBytes(32)
+        .toString("hex");
+
+    // Gerçek token yerine hash'i DB'de tutulur
+    const tokenHash = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+    // Token 15 dakika geçerlidir
+    const expiresAt = new Date(
+        Date.now() +
+        PASSWORD_RESET_EXPIRES_IN
+    );
+
+    // Eski tokenları siler ve yenisini oluşturur
+    await prisma.$transaction([
+        prisma.passwordResetToken.deleteMany({
+            where: {
+                userId: user.id,
+            },
+        }),
+
+        prisma.passwordResetToken.create({
+            data: {
+                userId: user.id,
+                tokenHash,
+                expiresAt,
+            },
+        }),
+    ]);
+
+    try {
+        // Gerçek token yalnızca e-posta servisine gönderilir
+        await emailService.sendPasswordResetEmail(
+            user.email,
+            resetToken
+        );
+    } catch (error) {
+        // Mail gönderilemezse oluşturulan token temizlenir
+        await prisma.passwordResetToken.deleteMany({
+            where: {
+                userId: user.id,
+                tokenHash,
+            },
+        });
+
+        // Gerçek hata yalnızca sunucu tarafında loglanır
+        console.error(
+            "Password reset email error:",
+            error.message
+        );
+
+        // Kullanıcının sistemde kayıtlı olup olmadığı
+        // response üzerinden anlaşılmasın diye hata dışarı aktarılmaz
+        return null;
+    }
+
+    return null;
+};
+
+
+// Kullanıcının şifresini sıfırlar
+const resetPassword = async (data) => {
+    const { token, password } = data;
+
+    // Yeni şifre kontrolü
+    if (
+        typeof password !== "string" ||
+        password.length < 8
+    ) {
+        throw new AppError(
+            "Yeni şifre en az 8 karakter olmalıdır.",
+            400
+        );
+    }
+
+    // Gelen token tekrar hashlenir
+    const tokenHash = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+    // Token DB'de aranır
+    const passwordResetToken =
+        await prisma.passwordResetToken.findUnique({
+            where: {
+                tokenHash,
+            },
+        });
+
+    // Token bulunamadı
+    if (!passwordResetToken) {
+        throw new AppError(
+            "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+            400
+        );
+    }
+
+    // Token süresi dolmuş
+    if (
+        passwordResetToken.expiresAt <
+        new Date()
+    ) {
+        await prisma.passwordResetToken.delete({
+            where: {
+                id: passwordResetToken.id,
+            },
+        });
+
+        throw new AppError(
+            "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
+            400
+        );
+    }
+
+    // Yeni şifre hashlenir
+    const hashedPassword =
+        await bcrypt.hash(password, 10);
+
+    // Şifre güncellenir ve tüm reset tokenları silinir
+    await prisma.$transaction([
+        prisma.user.update({
+            where: {
+                id: passwordResetToken.userId,
+            },
+            data: {
+                password: hashedPassword,
+            },
+        }),
+
+        prisma.passwordResetToken.deleteMany({
+            where: {
+                userId:
+                    passwordResetToken.userId,
+            },
+        }),
+    ]);
+
+    return null;
+};
+
+
 module.exports = {
     register,
     login,
+    forgotPassword,
+    resetPassword,
 };

@@ -5,7 +5,9 @@ const response = require("../utils/response");
 // Yeni kullanıcı kaydı
 const register = async (req, res, next) => {
     try {
-        const user = await authService.register(req.body);
+        const user = await authService.register(
+            req.body
+        );
 
         response.success(
             res,
@@ -22,7 +24,9 @@ const register = async (req, res, next) => {
 // Kullanıcı girişi
 const login = async (req, res, next) => {
     try {
-        const result = await authService.login(req.body);
+        const result = await authService.login(
+            req.body
+        );
 
         response.success(
             res,
@@ -35,7 +39,55 @@ const login = async (req, res, next) => {
 };
 
 
+// Şifre sıfırlama isteği oluşturur
+const forgotPassword = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        // Service reset token oluşturur.
+        // Token istemciye gönderilmez.
+        await authService.forgotPassword(
+            req.body
+        );
+
+        response.success(
+            res,
+            null,
+            "Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderilecektir."
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// Kullanıcının şifresini sıfırlar
+const resetPassword = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        await authService.resetPassword(
+            req.body
+        );
+
+        response.success(
+            res,
+            null,
+            "Şifreniz başarıyla güncellendi."
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 module.exports = {
     register,
     login,
+    forgotPassword,
+    resetPassword,
 };

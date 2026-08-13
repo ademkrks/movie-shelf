@@ -1,6 +1,10 @@
 // Kullanıcı kayıt validation'ı
 const registerValidation = (body) => {
-    if (!body || typeof body !== "object") {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
         return "İstek gövdesi geçersiz.";
     }
 
@@ -15,14 +19,24 @@ const registerValidation = (body) => {
         return "Ad alanı boş bırakılamaz.";
     }
 
+    if (name.trim().length > 100) {
+        return "Ad alanı en fazla 100 karakter olabilir.";
+    }
+
     // E-posta kontrolü
     if (!email || typeof email !== "string") {
         return "E-posta alanı zorunludur.";
     }
 
+    const trimmedEmail = email.trim();
+
+    if (trimmedEmail.length > 255) {
+        return "E-posta alanı en fazla 255 karakter olabilir.";
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
         return "Geçerli bir e-posta adresi giriniz.";
     }
 
@@ -41,26 +55,101 @@ const registerValidation = (body) => {
 
 // Kullanıcı giriş validation'ı
 const loginValidation = (body) => {
-    if (!body || typeof body !== "object") {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
         return "İstek gövdesi geçersiz.";
     }
 
     const { email, password } = body;
 
-    // E-posta kontrolü
     if (!email || typeof email !== "string") {
         return "E-posta alanı zorunludur.";
     }
 
+    const trimmedEmail = email.trim();
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
         return "Geçerli bir e-posta adresi giriniz.";
     }
 
-    // Şifre kontrolü
     if (!password || typeof password !== "string") {
         return "Şifre alanı zorunludur.";
+    }
+
+    return true;
+};
+
+
+// Şifremi unuttum validation'ı
+const forgotPasswordValidation = (body) => {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
+        return "İstek gövdesi geçersiz.";
+    }
+
+    const { email } = body;
+
+    if (!email || typeof email !== "string") {
+        return "E-posta alanı zorunludur.";
+    }
+
+    const trimmedEmail = email.trim();
+
+    if (trimmedEmail.length === 0) {
+        return "E-posta alanı boş bırakılamaz.";
+    }
+
+    if (trimmedEmail.length > 255) {
+        return "E-posta alanı en fazla 255 karakter olabilir.";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(trimmedEmail)) {
+        return "Geçerli bir e-posta adresi giriniz.";
+    }
+
+    return true;
+};
+
+
+// Şifre sıfırlama validation'ı
+const resetPasswordValidation = (body) => {
+    if (
+        !body ||
+        typeof body !== "object" ||
+        Array.isArray(body)
+    ) {
+        return "İstek gövdesi geçersiz.";
+    }
+
+    const { token, password } = body;
+
+    // Reset token kontrolü
+    if (!token || typeof token !== "string") {
+        return "Şifre sıfırlama token'ı zorunludur.";
+    }
+
+    // 32 byte random token -> 64 karakter hexadecimal
+    if (!/^[a-fA-F0-9]{64}$/.test(token)) {
+        return "Şifre sıfırlama token'ı geçersiz.";
+    }
+
+    // Yeni şifre kontrolü
+    if (!password || typeof password !== "string") {
+        return "Yeni şifre zorunludur.";
+    }
+
+    if (password.length < 8) {
+        return "Yeni şifre en az 8 karakter olmalıdır.";
     }
 
     return true;
@@ -70,4 +159,6 @@ const loginValidation = (body) => {
 module.exports = {
     registerValidation,
     loginValidation,
+    forgotPasswordValidation,
+    resetPasswordValidation,
 };
