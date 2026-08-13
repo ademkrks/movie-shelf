@@ -31,15 +31,18 @@ const errorHandler = (err, req, res, next) => {
 
 
     // Gerçek hata detayları yalnızca sunucu tarafında loglanır
-    console.error("ERROR:", {
-        message: err.message,
-        code: err.code,
-        statusCode,
-        status,
-        method: req.method,
-        url: req.originalUrl,
-        stack: err.stack,
-    });
+    // Test ortamında beklenen hata senaryoları terminali kirletmez
+    if (process.env.NODE_ENV !== "test") {
+        console.error("ERROR:", {
+            message: err.message,
+            code: err.code,
+            statusCode,
+            status,
+            method: req.method,
+            url: req.originalUrl,
+            stack: err.stack,
+        });
+    }
 
 
     // Güvenli API hata cevabı
