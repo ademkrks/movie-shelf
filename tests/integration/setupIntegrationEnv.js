@@ -1,33 +1,43 @@
+const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
 
 
-// Integration test environment dosyasını yükler
+// Integration test environment dosyasının yolunu belirler
 const envPath = path.resolve(
     process.cwd(),
     ".env.test"
 );
 
-const result = dotenv.config({
-    path: envPath,
-    override: true,
-});
 
+// Lokal ortamda .env.test varsa yükler
+if (fs.existsSync(envPath)) {
+    const result = dotenv.config({
+        path: envPath,
+        override: true,
+    });
 
-if (result.error) {
-    throw new Error(
-        ".env.test dosyası bulunamadı. Integration testleri çalıştırılamaz."
-    );
+    if (result.error) {
+        throw new Error(
+            ".env.test dosyası yüklenemedi."
+        );
+    }
 }
 
 
-// Test ortamını belirler
+/*
+ * CI ortamında .env.test bulunmaz.
+ * Bu durumda GitHub Actions tarafından sağlanan
+ * process.env değerleri kullanılır.
+ */
 process.env.NODE_ENV = "test";
 
 
-// Testlerin yanlışlıkla development DB üzerinde çalışmasını engeller
+// Testlerin yanlışlıkla development veya production
+// veritabanında çalışmasını engeller
 const databaseUrl =
     process.env.DATABASE_URL;
+
 
 if (!databaseUrl) {
     throw new Error(
@@ -52,14 +62,25 @@ try {
 }
 
 
+// Veritabanı adı boş olamaz
+if (!databaseName) {
+    throw new Error(
+        "Integration test DATABASE_URL içinde veritabanı adı bulunamadı."
+    );
+}
+
+
 // Yalnızca *_test veya *-test isimli DB'lere izin verir
+const normalizedDatabaseName =
+    databaseName.toLowerCase();
+
 const isTestDatabase =
-    databaseName
-        .toLowerCase()
-        .endsWith("_test") ||
-    databaseName
-        .toLowerCase()
-        .endsWith("-test");
+    normalizedDatabaseName.endsWith(
+        "_test"
+    ) ||
+    normalizedDatabaseName.endsWith(
+        "-test"
+    );
 
 
 if (!isTestDatabase) {
