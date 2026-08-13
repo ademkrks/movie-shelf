@@ -3,10 +3,14 @@ const env = require("../config/env");
 
 
 // JWT oluşturur
-const generateToken = (userId) => {
+const generateToken = (
+    userId,
+    tokenVersion = 0
+) => {
     return jwt.sign(
         {
             id: userId,
+            tokenVersion,
         },
         env.jwtSecret,
         {

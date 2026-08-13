@@ -85,19 +85,20 @@ const register = async (data) => {
         await bcrypt.hash(password, 10);
 
     // Kullanıcıyı oluşturur
-    const user = await prisma.user.create({
-        data: {
-            name: name.trim(),
-            email: normalizedEmail,
-            password: hashedPassword,
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            createdAt: true,
-        },
-    });
+    const user =
+        await prisma.user.create({
+            data: {
+                name: name.trim(),
+                email: normalizedEmail,
+                password: hashedPassword,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
+            },
+        });
 
     return user;
 };
@@ -132,13 +133,17 @@ const login = async (data) => {
     }
 
     // Kullanıcıyı e-posta ile bulur
-    const user = await prisma.user.findUnique({
-        where: {
-            email: normalizedEmail,
-        },
-    });
+    const user =
+        await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            },
+        });
 
-    // Kullanıcı bulunamadığında da bcrypt çalıştırılır
+    /*
+     * Kullanıcı bulunamadığında da bcrypt
+     * çalıştırılarak timing farkı azaltılır.
+     */
     if (!user) {
         await bcrypt.compare(
             password,
@@ -151,7 +156,7 @@ const login = async (data) => {
         );
     }
 
-    // Şifreyi kontrol eder
+    // Şifreyi doğrular
     const passwordMatch =
         await bcrypt.compare(
             password,
@@ -165,8 +170,11 @@ const login = async (data) => {
         );
     }
 
-    // JWT oluşturur
-    const token = generateToken(user.id);
+    // Güncel tokenVersion ile JWT oluşturur
+    const token = generateToken(
+        user.id,
+        user.tokenVersion ?? 0
+    );
 
     // API cevabında password gönderilmez
     const safeUser = {
@@ -190,17 +198,21 @@ const forgotPassword = async (data) => {
         .toLowerCase();
 
     // Kullanıcıyı bulur
-    const user = await prisma.user.findUnique({
-        where: {
-            email: normalizedEmail,
-        },
-        select: {
-            id: true,
-            email: true,
-        },
-    });
+    const user =
+        await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            },
+            select: {
+                id: true,
+                email: true,
+            },
+        });
 
-    // Kullanıcı yoksa bilgi sızdırmadan işlem sonlandırılır
+    /*
+     * Kullanıcı yoksa bilgi sızdırmadan
+     * işlem sonlandırılır.
+     */
     if (!user) {
         return null;
     }
@@ -240,28 +252,44 @@ const forgotPassword = async (data) => {
     ]);
 
     try {
-        // Gerçek token yalnızca e-posta servisine gönderilir
-        await emailService.sendPasswordResetEmail(
-            user.email,
-            resetToken
-        );
+        /*
+         * Gerçek token yalnızca e-posta
+         * servisine gönderilir.
+         */
+        await emailService
+            .sendPasswordResetEmail(
+                user.email,
+                resetToken
+            );
     } catch (error) {
-        // Mail gönderilemezse oluşturulan token temizlenir
-        await prisma.passwordResetToken.deleteMany({
-            where: {
-                userId: user.id,
-                tokenHash,
-            },
-        });
+        /*
+         * Mail gönderilemezse oluşturulan
+         * token temizlenir.
+         */
+        await prisma.passwordResetToken
+            .deleteMany({
+                where: {
+                    userId: user.id,
+                    tokenHash,
+                },
+            });
 
-        // Gerçek hata yalnızca sunucu tarafında loglanır
-        console.error(
-            "Password reset email error:",
-            error.message
-        );
+        // Test ortamında terminal çıktısını kirletmez
+        if (
+            process.env.NODE_ENV !==
+            "test"
+        ) {
+            console.error(
+                "Password reset email error:",
+                error.message
+            );
+        }
 
-        // Kullanıcının sistemde kayıtlı olup olmadığı
-        // response üzerinden anlaşılmasın diye hata dışarı aktarılmaz
+        /*
+         * Kullanıcının sistemde kayıtlı olup
+         * olmadığı response üzerinden
+         * anlaşılmasın diye hata dışarı aktarılmaz.
+         */
         return null;
     }
 
@@ -292,11 +320,12 @@ const resetPassword = async (data) => {
 
     // Token DB'de aranır
     const passwordResetToken =
-        await prisma.passwordResetToken.findUnique({
-            where: {
-                tokenHash,
-            },
-        });
+        await prisma.passwordResetToken
+            .findUnique({
+                where: {
+                    tokenHash,
+                },
+            });
 
     // Token bulunamadı
     if (!passwordResetToken) {
@@ -311,11 +340,12 @@ const resetPassword = async (data) => {
         passwordResetToken.expiresAt <
         new Date()
     ) {
-        await prisma.passwordResetToken.delete({
-            where: {
-                id: passwordResetToken.id,
-            },
-        });
+        await prisma.passwordResetToken
+            .delete({
+                where: {
+                    id: passwordResetToken.id,
+                },
+            });
 
         throw new AppError(
             "Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.",
@@ -327,23 +357,36 @@ const resetPassword = async (data) => {
     const hashedPassword =
         await bcrypt.hash(password, 10);
 
-    // Şifre güncellenir ve tüm reset tokenları silinir
+    /*
+     * Şifre güncellenir.
+     *
+     * tokenVersion artırılarak kullanıcıya
+     * daha önce verilmiş JWT'ler geçersiz
+     * hale getirilir.
+     *
+     * Ardından tüm reset tokenları silinir.
+     */
     await prisma.$transaction([
         prisma.user.update({
             where: {
-                id: passwordResetToken.userId,
+                id:
+                    passwordResetToken.userId,
             },
             data: {
                 password: hashedPassword,
+                tokenVersion: {
+                    increment: 1,
+                },
             },
         }),
 
-        prisma.passwordResetToken.deleteMany({
-            where: {
-                userId:
-                    passwordResetToken.userId,
-            },
-        }),
+        prisma.passwordResetToken
+            .deleteMany({
+                where: {
+                    userId:
+                        passwordResetToken.userId,
+                },
+            }),
     ]);
 
     return null;
