@@ -9,7 +9,10 @@
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:integration": "node scripts/runIntegrationTests.js",
-    "test:all": "npm test && npm run test:integration"
+    "test:all": "npm test && npm run test:integration",
+    "db:generate": "prisma generate",
+    "db:status": "prisma migrate status",
+    "db:deploy": "prisma migrate deploy"
   },
   "keywords": [
     "nodejs",
