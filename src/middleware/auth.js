@@ -69,8 +69,13 @@ const auth = async (req, res, next) => {
             );
         }
 
-        // Kullanıcıyı veritabanında arar
-        // Password alanı özellikle seçilmez
+        /*
+         * Kullanıcı DB'den bulunur.
+         *
+         * password seçilmez.
+         * role yetkilendirme kontrolü için kullanılır.
+         * tokenVersion eski JWT'leri iptal etmek için kullanılır.
+         */
         const user =
             await prisma.user.findUnique({
                 where: {
@@ -80,6 +85,7 @@ const auth = async (req, res, next) => {
                     id: true,
                     name: true,
                     email: true,
+                    role: true,
                     tokenVersion: true,
                     createdAt: true,
                 },
@@ -94,9 +100,8 @@ const auth = async (req, res, next) => {
         }
 
         /*
-         * Eski JWT'lerde tokenVersion alanı
-         * bulunmayabilir. Bu tokenlar sürüm 0
-         * olarak kabul edilir.
+         * Eski JWT'lerde tokenVersion bulunmuyorsa
+         * sürüm 0 kabul edilir.
          */
         const tokenVersion =
             Number.isInteger(
@@ -105,10 +110,6 @@ const auth = async (req, res, next) => {
                 ? decoded.tokenVersion
                 : 0;
 
-        /*
-         * Testler ve migration öncesi uyumluluk
-         * için eksik değer 0 kabul edilir.
-         */
         const currentTokenVersion =
             Number.isInteger(
                 user.tokenVersion
@@ -128,16 +129,24 @@ const auth = async (req, res, next) => {
         }
 
         /*
-         * tokenVersion yalnızca güvenlik
-         * kontrolünde kullanılır.
-         * Request üzerindeki kullanıcı verisine
-         * eklenmez.
+         * Uygulamanın kullandığı kullanıcı bilgileri.
+         *
+         * role burada özellikle tutulmaz.
+         * Yetkilendirme bilgisi req.auth altında tutulur.
          */
         req.user = {
             id: user.id,
             name: user.name,
             email: user.email,
             createdAt: user.createdAt,
+        };
+
+        /*
+         * Yetkilendirme bilgileri ayrı tutulur.
+         * Kullanıcı rolü JWT'den değil DB'den gelir.
+         */
+        req.auth = {
+            role: user.role || "USER",
         };
 
         next();

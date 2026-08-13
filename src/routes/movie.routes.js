@@ -7,11 +7,20 @@ const router = express.Router();
 // Authentication middleware'i
 const auth = require("../middleware/auth");
 
+// Rol kontrolü middleware'i
+const requireRole = require(
+    "../middleware/requireRole"
+);
+
 // Controller katmanı
-const movieController = require("../controllers/movie.controller");
+const movieController = require(
+    "../controllers/movie.controller"
+);
 
 // Global validation middleware'i
-const validateRequest = require("../middleware/validateRequest");
+const validateRequest = require(
+    "../middleware/validateRequest"
+);
 
 // Movie validation'ları
 const {
@@ -19,12 +28,14 @@ const {
     movieIdValidation,
 } = require("../validations/movie.validation");
 
+
 /**
  * @swagger
  * tags:
  *   name: Movies
  *   description: Film yönetimi işlemleri
  */
+
 
 /**
  * @swagger
@@ -40,6 +51,7 @@ router.get(
     "/",
     movieController.getMovies
 );
+
 
 /**
  * @swagger
@@ -71,11 +83,13 @@ router.get(
     movieController.getMovieById
 );
 
+
 /**
  * @swagger
  * /movies:
  *   post:
  *     summary: Yeni film oluşturur
+ *     description: Bu işlem yalnızca ADMIN rolündeki kullanıcılar tarafından yapılabilir.
  *     tags: [Movies]
  *     security:
  *       - bearerAuth: []
@@ -104,21 +118,26 @@ router.get(
  *         description: Geçersiz film verisi
  *       401:
  *         description: Yetkilendirme gerekli
+ *       403:
+ *         description: Admin yetkisi gerekli
  */
 router.post(
     "/",
     auth,
+    requireRole("ADMIN"),
     validateRequest({
         body: movieValidation,
     }),
     movieController.createMovie
 );
 
+
 /**
  * @swagger
  * /movies/{id}:
  *   put:
  *     summary: Filmi günceller
+ *     description: Bu işlem yalnızca ADMIN rolündeki kullanıcılar tarafından yapılabilir.
  *     tags: [Movies]
  *     security:
  *       - bearerAuth: []
@@ -155,12 +174,15 @@ router.post(
  *         description: Geçersiz film verisi
  *       401:
  *         description: Yetkilendirme gerekli
+ *       403:
+ *         description: Admin yetkisi gerekli
  *       404:
  *         description: Film bulunamadı
  */
 router.put(
     "/:id",
     auth,
+    requireRole("ADMIN"),
     validateRequest({
         params: movieIdValidation,
         body: movieValidation,
@@ -168,11 +190,13 @@ router.put(
     movieController.updateMovie
 );
 
+
 /**
  * @swagger
  * /movies/{id}:
  *   delete:
  *     summary: Filmi siler
+ *     description: Bu işlem yalnızca ADMIN rolündeki kullanıcılar tarafından yapılabilir.
  *     tags: [Movies]
  *     security:
  *       - bearerAuth: []
@@ -191,17 +215,21 @@ router.put(
  *         description: Geçersiz film ID'si
  *       401:
  *         description: Yetkilendirme gerekli
+ *       403:
+ *         description: Admin yetkisi gerekli
  *       404:
  *         description: Film bulunamadı
  */
 router.delete(
     "/:id",
     auth,
+    requireRole("ADMIN"),
     validateRequest({
         params: movieIdValidation,
     }),
     movieController.deleteMovie
 );
+
 
 // Router'ı dışa aktarır
 module.exports = router;

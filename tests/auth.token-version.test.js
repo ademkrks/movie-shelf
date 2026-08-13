@@ -78,6 +78,7 @@ describe(
                         name: "Ali",
                         email:
                             "ali@example.com",
+                        role: "USER",
                         tokenVersion: 2,
                         createdAt:
                             new Date(
@@ -111,6 +112,7 @@ describe(
                         id: true,
                         name: true,
                         email: true,
+                        role: true,
                         tokenVersion: true,
                         createdAt: true,
                     },
@@ -124,7 +126,7 @@ describe(
                 expect(next)
                     .toHaveBeenCalledWith();
 
-                // tokenVersion request kullanıcısına taşınmaz
+                // tokenVersion kullanıcı verisine taşınmaz
                 expect(req.user).toEqual({
                     id: 1,
                     name: "Ali",
@@ -139,6 +141,11 @@ describe(
                 expect(
                     req.user.tokenVersion
                 ).toBeUndefined();
+
+                // Rol ayrı authorization alanında tutulur
+                expect(req.auth).toEqual({
+                    role: "USER",
+                });
             }
         );
 
@@ -171,6 +178,7 @@ describe(
                         name: "Ali",
                         email:
                             "ali@example.com",
+                        role: "USER",
                         tokenVersion: 1,
                         createdAt:
                             new Date(),
@@ -209,6 +217,10 @@ describe(
 
                 expect(
                     req.user
+                ).toBeUndefined();
+
+                expect(
+                    req.auth
                 ).toBeUndefined();
             }
         );

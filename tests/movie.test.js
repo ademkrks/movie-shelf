@@ -27,6 +27,7 @@ const createAuthToken = () => {
     return jwt.sign(
         {
             id: 1,
+            tokenVersion: 0,
         },
         process.env.JWT_SECRET,
         {
@@ -36,18 +37,30 @@ const createAuthToken = () => {
 };
 
 
+// Auth middleware'in bulacağı kullanıcıyı hazırlar
+const mockAuthUser = (
+    role = "ADMIN"
+) => {
+    prisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        name: "Test User",
+        email: "test@example.com",
+        role,
+        tokenVersion: 0,
+        createdAt: new Date(),
+    });
+};
+
+
 describe("Movie API", () => {
     let authToken;
 
 
     beforeEach(() => {
-        // Auth middleware'in bulacağı sahte kullanıcı
-        prisma.user.findUnique.mockResolvedValue({
-            id: 1,
-            name: "Test User",
-            email: "test@example.com",
-            createdAt: new Date(),
-        });
+        jest.clearAllMocks();
+
+        // Yazma testleri varsayılan olarak ADMIN kullanır
+        mockAuthUser("ADMIN");
 
         authToken = createAuthToken();
     });
@@ -168,7 +181,7 @@ describe("Movie API", () => {
 
 
     test(
-        "POST /movies - filmi başarıyla oluşturmalı",
+        "POST /movies - ADMIN filmi başarıyla oluşturmalı",
         async () => {
             const createdMovie = {
                 id: 1,
@@ -213,11 +226,12 @@ describe("Movie API", () => {
 
 
     test(
-        "PUT /movies/1 - filmi başarıyla güncellemeli",
+        "PUT /movies/1 - ADMIN filmi başarıyla güncellemeli",
         async () => {
             const updatedMovie = {
                 id: 1,
-                title: "Interstellar Updated",
+                title:
+                    "Interstellar Updated",
                 year: 2014,
             };
 
@@ -232,7 +246,8 @@ describe("Movie API", () => {
                     `Bearer ${authToken}`
                 )
                 .send({
-                    title: "Interstellar Updated",
+                    title:
+                        "Interstellar Updated",
                     year: 2014,
                 });
 
@@ -262,7 +277,7 @@ describe("Movie API", () => {
 
 
     test(
-        "DELETE /movies/1 - filmi başarıyla silmeli",
+        "DELETE /movies/1 - ADMIN filmi başarıyla silmeli",
         async () => {
             prisma.movie.delete.mockResolvedValue({
                 id: 1,
@@ -293,6 +308,104 @@ describe("Movie API", () => {
                     id: 1,
                 },
             });
+        }
+    );
+
+
+    /*
+     * RBAC testleri
+     */
+
+
+    test(
+        "POST /movies - USER film oluşturamamalı ve 403 dönmeli",
+        async () => {
+            mockAuthUser("USER");
+
+            const response = await request(app)
+                .post("/movies")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                )
+                .send({
+                    title: "Interstellar",
+                    year: 2014,
+                });
+
+            expect(response.statusCode).toBe(403);
+
+            expect(response.body).toEqual({
+                success: false,
+                status: "fail",
+                message:
+                    "Bu işlem için yetkiniz yok.",
+            });
+
+            expect(
+                prisma.movie.create
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "PUT /movies/1 - USER film güncelleyememeli ve 403 dönmeli",
+        async () => {
+            mockAuthUser("USER");
+
+            const response = await request(app)
+                .put("/movies/1")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                )
+                .send({
+                    title:
+                        "Interstellar Updated",
+                    year: 2014,
+                });
+
+            expect(response.statusCode).toBe(403);
+
+            expect(response.body).toEqual({
+                success: false,
+                status: "fail",
+                message:
+                    "Bu işlem için yetkiniz yok.",
+            });
+
+            expect(
+                prisma.movie.update
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "DELETE /movies/1 - USER film silememeli ve 403 dönmeli",
+        async () => {
+            mockAuthUser("USER");
+
+            const response = await request(app)
+                .delete("/movies/1")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(403);
+
+            expect(response.body).toEqual({
+                success: false,
+                status: "fail",
+                message:
+                    "Bu işlem için yetkiniz yok.",
+            });
+
+            expect(
+                prisma.movie.delete
+            ).not.toHaveBeenCalled();
         }
     );
 
