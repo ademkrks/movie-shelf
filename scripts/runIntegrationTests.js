@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require(
     "child_process"
@@ -5,24 +6,40 @@ const { spawnSync } = require(
 const dotenv = require("dotenv");
 
 
-// Integration test environment dosyasını yükler
+// Integration test environment dosyasının yolunu belirler
 const envPath = path.resolve(
     process.cwd(),
     ".env.test"
 );
 
-const result = dotenv.config({
-    path: envPath,
-    override: true,
-});
 
+// Lokal ortamda .env.test varsa yükler
+if (fs.existsSync(envPath)) {
+    const result = dotenv.config({
+        path: envPath,
+        override: true,
+    });
 
-if (result.error) {
-    console.error(
-        ".env.test dosyası bulunamadı."
+    if (result.error) {
+        console.error(
+            ".env.test dosyası yüklenemedi."
+        );
+
+        process.exit(1);
+    }
+
+    console.log(
+        "Integration test environment: .env.test"
     );
-
-    process.exit(1);
+} else {
+    /*
+     * GitHub Actions gibi CI ortamlarında
+     * environment variable'lar workflow
+     * tarafından doğrudan sağlanır.
+     */
+    console.log(
+        "Integration test environment: process.env"
+    );
 }
 
 
@@ -61,6 +78,16 @@ try {
 }
 
 
+// Veritabanı adı boş olamaz
+if (!databaseName) {
+    console.error(
+        "DATABASE_URL içinde veritabanı adı bulunamadı."
+    );
+
+    process.exit(1);
+}
+
+
 const normalizedDatabaseName =
     databaseName.toLowerCase();
 
@@ -73,6 +100,7 @@ const isTestDatabase =
     );
 
 
+// Production veya development DB üzerinde test çalışmasını engeller
 if (!isTestDatabase) {
     console.error(
         `Güvenlik kontrolü başarısız: "${databaseName}" test veritabanı olarak kullanılamaz.`
@@ -124,6 +152,7 @@ const runCommand = (
         );
     }
 
+
     // Process başlatılamadıysa gerçek hatayı gösterir
     if (commandResult.error) {
         console.error(
@@ -132,12 +161,14 @@ const runCommand = (
         );
     }
 
+
     // Signal nedeniyle kapandıysa gösterir
     if (commandResult.signal) {
         console.error(
             `\nKomut "${commandResult.signal}" sinyali ile sonlandı.`
         );
     }
+
 
     return commandResult;
 };
