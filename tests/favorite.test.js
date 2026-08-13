@@ -11,13 +11,17 @@ jest.mock("../src/config/prisma", () => ({
     favorite: {
         findUnique: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         create: jest.fn(),
         delete: jest.fn(),
     },
 }));
 
 
-const prisma = require("../src/config/prisma");
+const prisma = require(
+    "../src/config/prisma"
+);
+
 const app = require("../src/app");
 
 
@@ -154,7 +158,7 @@ describe("Favorite API", () => {
 
 
     test(
-        "GET /favorites - kullanıcının favorilerini başarıyla getirmeli",
+        "GET /favorites - varsayılan pagination ile favorileri getirmeli",
         async () => {
             const favorites = [
                 {
@@ -173,6 +177,10 @@ describe("Favorite API", () => {
                 favorites
             );
 
+            prisma.favorite.count.mockResolvedValue(
+                2
+            );
+
             const response = await request(app)
                 .get("/favorites")
                 .set(
@@ -186,7 +194,17 @@ describe("Favorite API", () => {
                 success: true,
                 message:
                     "Favoriler getirildi.",
-                data: favorites,
+                data: {
+                    items: favorites,
+                    pagination: {
+                        page: 1,
+                        limit: 20,
+                        totalItems: 2,
+                        totalPages: 1,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                    },
+                },
             });
 
             expect(
@@ -198,6 +216,74 @@ describe("Favorite API", () => {
                 orderBy: {
                     createdAt: "desc",
                 },
+                skip: 0,
+                take: 20,
+            });
+
+            expect(
+                prisma.favorite.count
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId: 1,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /favorites?page=2&limit=1 - doğru sayfayı istemeli",
+        async () => {
+            const favorites = [
+                {
+                    id: 1,
+                    userId: 1,
+                    tmdbMovieId: 157336,
+                },
+            ];
+
+            prisma.favorite.findMany.mockResolvedValue(
+                favorites
+            );
+
+            prisma.favorite.count.mockResolvedValue(
+                2
+            );
+
+            const response = await request(app)
+                .get(
+                    "/favorites?page=2&limit=1"
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.data).toEqual({
+                items: favorites,
+                pagination: {
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                },
+            });
+
+            expect(
+                prisma.favorite.findMany
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId: 1,
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+                skip: 1,
+                take: 1,
             });
         }
     );
@@ -278,7 +364,8 @@ describe("Favorite API", () => {
             expect(response.body).toEqual({
                 success: false,
                 status: "fail",
-                message: "Favori bulunamadı.",
+                message:
+                    "Favori bulunamadı.",
             });
 
             expect(
@@ -423,6 +510,90 @@ describe("Favorite API", () => {
             expect(
                 prisma.favorite.delete
             ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /favorites?page=0 - geçersiz page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/favorites?page=0")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.favorite.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.favorite.count
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /favorites?page=abc - metin page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/favorites?page=abc")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası geçerli bir tam sayı olmalıdır."
+            );
+        }
+    );
+
+
+    test(
+        "GET /favorites?limit=101 - maksimum limit aşılırsa 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/favorites?limit=101")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit en fazla 100 olabilir."
+            );
+        }
+    );
+
+
+    test(
+        "GET /favorites?limit=abc - metin limit için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/favorites?limit=abc")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit geçerli bir tam sayı olmalıdır."
+            );
         }
     );
 

@@ -1,14 +1,25 @@
-const reviewService = require("../services/review.service");
-const response = require("../utils/response");
+const reviewService = require(
+    "../services/review.service"
+);
+
+const response = require(
+    "../utils/response"
+);
+
 
 // Yorum ekler
-const addReview = async (req, res, next) => {
+const addReview = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const review = await reviewService.addReview(
-            req.user.id,
-            req.body.tmdbMovieId,
-            req.body.content
-        );
+        const review =
+            await reviewService.addReview(
+                req.user.id,
+                req.body.tmdbMovieId,
+                req.body.content
+            );
 
         response.success(
             res,
@@ -21,16 +32,37 @@ const addReview = async (req, res, next) => {
     }
 };
 
+
 // Filmin yorumlarını getirir
-const getMovieReviews = async (req, res, next) => {
+const getMovieReviews = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const reviews = await reviewService.getMovieReviews(
-            Number(req.params.tmdbMovieId)
-        );
+        const page =
+            req.query.page !== undefined
+                ? Number(req.query.page)
+                : 1;
+
+        const limit =
+            req.query.limit !== undefined
+                ? Number(req.query.limit)
+                : 20;
+
+
+        const result =
+            await reviewService.getMovieReviews(
+                Number(
+                    req.params.tmdbMovieId
+                ),
+                page,
+                limit
+            );
 
         response.success(
             res,
-            reviews,
+            result,
             "Film yorumları getirildi."
         );
     } catch (error) {
@@ -38,14 +70,20 @@ const getMovieReviews = async (req, res, next) => {
     }
 };
 
+
 // Yorumu günceller
-const updateReview = async (req, res, next) => {
+const updateReview = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const review = await reviewService.updateReview(
-            Number(req.params.id),
-            req.user.id,
-            req.body.content
-        );
+        const review =
+            await reviewService.updateReview(
+                Number(req.params.id),
+                req.user.id,
+                req.body.content
+            );
 
         response.success(
             res,
@@ -57,8 +95,13 @@ const updateReview = async (req, res, next) => {
     }
 };
 
+
 // Yorumu siler
-const deleteReview = async (req, res, next) => {
+const deleteReview = async (
+    req,
+    res,
+    next
+) => {
     try {
         await reviewService.deleteReview(
             Number(req.params.id),
@@ -74,6 +117,7 @@ const deleteReview = async (req, res, next) => {
         next(error);
     }
 };
+
 
 module.exports = {
     addReview,

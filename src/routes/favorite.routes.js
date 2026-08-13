@@ -2,15 +2,25 @@ const express = require("express");
 
 const router = express.Router();
 
-const favoriteController = require("../controllers/favorite.controller");
-const auth = require("../middleware/auth");
+const favoriteController = require(
+    "../controllers/favorite.controller"
+);
 
-const validateRequest = require("../middleware/validateRequest");
+const auth = require(
+    "../middleware/auth"
+);
+
+const validateRequest = require(
+    "../middleware/validateRequest"
+);
 
 const {
     tmdbMovieIdValidation,
     tmdbMovieBodyValidation,
-} = require("../validations/common.validation");
+    paginationValidation,
+} = require(
+    "../validations/common.validation"
+);
 
 
 /**
@@ -64,19 +74,44 @@ router.post(
  * @swagger
  * /favorites:
  *   get:
- *     summary: Kullanıcının favori filmlerini getirir
+ *     summary: Kullanıcının favori filmlerini sayfalı getirir
  *     tags: [Favorites]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Sayfa numarası
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Sayfa başına kayıt sayısı
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         example: 20
  *     responses:
  *       200:
- *         description: Favori filmler başarıyla getirildi
+ *         description: Favori filmler ve pagination bilgileri başarıyla getirildi
+ *       400:
+ *         description: Geçersiz pagination parametreleri
  *       401:
  *         description: Yetkilendirme gerekli
  */
 router.get(
     "/",
     auth,
+    validateRequest({
+        query: paginationValidation,
+    }),
     favoriteController.getFavorites
 );
 

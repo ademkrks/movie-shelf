@@ -2,16 +2,32 @@ const express = require("express");
 
 const router = express.Router();
 
-const ratingController = require("../controllers/rating.controller");
-const auth = require("../middleware/auth");
-const validateRequest = require("../middleware/validateRequest");
+const ratingController = require(
+    "../controllers/rating.controller"
+);
+
+const auth = require(
+    "../middleware/auth"
+);
+
+const validateRequest = require(
+    "../middleware/validateRequest"
+);
 
 const {
     ratingBodyValidation,
     ratingIdValidation,
     ratingMovieIdValidation,
     ratingUpdateValidation,
-} = require("../validations/rating.validation");
+} = require(
+    "../validations/rating.validation"
+);
+
+const {
+    paginationValidation,
+} = require(
+    "../validations/common.validation"
+);
 
 
 /**
@@ -72,7 +88,7 @@ router.post(
  * @swagger
  * /ratings/movie/{tmdbMovieId}:
  *   get:
- *     summary: Filmin puanlarını getirir
+ *     summary: Filmin puanlarını sayfalı getirir
  *     tags: [Ratings]
  *     parameters:
  *       - in: path
@@ -82,16 +98,36 @@ router.post(
  *         schema:
  *           type: integer
  *         example: 157336
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Sayfa numarası
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Sayfa başına puan kaydı sayısı
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         example: 20
  *     responses:
  *       200:
- *         description: Film puanları başarıyla getirildi
+ *         description: Film puanları, genel istatistikler ve pagination bilgileri başarıyla getirildi
  *       400:
- *         description: Geçersiz TMDB film ID'si
+ *         description: Geçersiz TMDB film ID'si veya pagination parametreleri
  */
 router.get(
     "/movie/:tmdbMovieId",
     validateRequest({
         params: ratingMovieIdValidation,
+        query: paginationValidation,
     }),
     ratingController.getMovieRatings
 );

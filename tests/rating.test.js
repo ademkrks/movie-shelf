@@ -161,7 +161,7 @@ describe("Rating API", () => {
 
 
     test(
-        "GET /ratings/movie/157336 - puanları ve ortalamayı getirmeli",
+        "GET /ratings/movie/157336 - varsayılan pagination ile puanları ve ortalamayı getirmeli",
         async () => {
             const ratings = [
                 {
@@ -209,9 +209,17 @@ describe("Rating API", () => {
                 message:
                     "Film puanları getirildi.",
                 data: {
-                    ratings,
+                    items: ratings,
                     averageRatings: 8.67,
                     totalRatings: 2,
+                    pagination: {
+                        page: 1,
+                        limit: 20,
+                        totalItems: 2,
+                        totalPages: 1,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                    },
                 },
             });
 
@@ -231,6 +239,8 @@ describe("Rating API", () => {
                 orderBy: {
                     createdAt: "desc",
                 },
+                skip: 0,
+                take: 20,
             });
 
             expect(
@@ -246,6 +256,124 @@ describe("Rating API", () => {
                     rating: true,
                 },
             });
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/157336?page=2&limit=1 - sayfayı getirirken genel ortalamayı korumalı",
+        async () => {
+            const ratings = [
+                {
+                    id: 1,
+                    userId: 1,
+                    tmdbMovieId: 157336,
+                    rating: 8,
+                    user: {
+                        id: 1,
+                    },
+                },
+            ];
+
+            prisma.rating.findMany.mockResolvedValue(
+                ratings
+            );
+
+            prisma.rating.aggregate.mockResolvedValue({
+                _avg: {
+                    rating: 8.5,
+                },
+                _count: {
+                    rating: 2,
+                },
+            });
+
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336?page=2&limit=1"
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.data).toEqual({
+                items: ratings,
+                averageRatings: 8.5,
+                totalRatings: 2,
+                pagination: {
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                },
+            });
+
+            expect(
+                prisma.rating.findMany
+            ).toHaveBeenCalledWith({
+                where: {
+                    tmdbMovieId: 157336,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+                skip: 1,
+                take: 1,
+            });
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/157336?page=0 - geçersiz page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336?page=0"
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.rating.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.rating.aggregate
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/157336?limit=101 - maksimum limit aşılırsa 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336?limit=101"
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit en fazla 100 olabilir."
+            );
+
+            expect(
+                prisma.rating.findMany
+            ).not.toHaveBeenCalled();
         }
     );
 

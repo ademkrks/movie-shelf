@@ -1,13 +1,24 @@
-const watchlistService = require("../services/watchlist.service");
-const response = require("../utils/response");
+const watchlistService = require(
+    "../services/watchlist.service"
+);
+
+const response = require(
+    "../utils/response"
+);
+
 
 // İzleme listesine film ekler
-const addWatchlist = async (req, res, next) => {
+const addWatchlist = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const watchlist = await watchlistService.addWatchlist(
-            req.user.id,
-            req.body.tmdbMovieId
-        );
+        const watchlist =
+            await watchlistService.addWatchlist(
+                req.user.id,
+                req.body.tmdbMovieId
+            );
 
         response.success(
             res,
@@ -22,15 +33,33 @@ const addWatchlist = async (req, res, next) => {
 
 
 // Kullanıcının izleme listesini getirir
-const getWatchlist = async (req, res, next) => {
+const getWatchlist = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const watchlist = await watchlistService.getWatchlist(
-            req.user.id
-        );
+        const page =
+            req.query.page !== undefined
+                ? Number(req.query.page)
+                : 1;
+
+        const limit =
+            req.query.limit !== undefined
+                ? Number(req.query.limit)
+                : 20;
+
+
+        const result =
+            await watchlistService.getWatchlist(
+                req.user.id,
+                page,
+                limit
+            );
 
         response.success(
             res,
-            watchlist,
+            result,
             "İzleme listesi getirildi."
         );
     } catch (error) {
@@ -40,11 +69,17 @@ const getWatchlist = async (req, res, next) => {
 
 
 // İzleme listesinden film kaldırır
-const removeWatchlist = async (req, res, next) => {
+const removeWatchlist = async (
+    req,
+    res,
+    next
+) => {
     try {
         await watchlistService.removeWatchlist(
             req.user.id,
-            Number(req.params.tmdbMovieId)
+            Number(
+                req.params.tmdbMovieId
+            )
         );
 
         response.success(

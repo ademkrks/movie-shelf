@@ -2,17 +2,32 @@ const express = require("express");
 
 const router = express.Router();
 
-const reviewController = require("../controllers/review.controller");
-const auth = require("../middleware/auth");
+const reviewController = require(
+    "../controllers/review.controller"
+);
 
-const validateRequest = require("../middleware/validateRequest");
+const auth = require(
+    "../middleware/auth"
+);
+
+const validateRequest = require(
+    "../middleware/validateRequest"
+);
 
 const {
     reviewBodyValidation,
     reviewUpdateValidation,
     reviewIdValidation,
     reviewMovieIdValidation,
-} = require("../validations/review.validation");
+} = require(
+    "../validations/review.validation"
+);
+
+const {
+    paginationValidation,
+} = require(
+    "../validations/common.validation"
+);
 
 
 /**
@@ -71,7 +86,7 @@ router.post(
  * @swagger
  * /reviews/movie/{tmdbMovieId}:
  *   get:
- *     summary: Filmin yorumlarını getirir
+ *     summary: Filmin yorumlarını sayfalı getirir
  *     tags: [Reviews]
  *     parameters:
  *       - in: path
@@ -81,18 +96,36 @@ router.post(
  *         schema:
  *           type: integer
  *         example: 157336
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Sayfa numarası
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Sayfa başına yorum sayısı
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         example: 20
  *     responses:
  *       200:
- *         description: Film yorumları başarıyla getirildi
+ *         description: Film yorumları ve pagination bilgileri başarıyla getirildi
  *       400:
- *         description: Geçersiz TMDB film ID'si
- *       404:
- *         description: Film yorumları bulunamadı
+ *         description: Geçersiz TMDB film ID'si veya pagination parametreleri
  */
 router.get(
     "/movie/:tmdbMovieId",
     validateRequest({
         params: reviewMovieIdValidation,
+        query: paginationValidation,
     }),
     reviewController.getMovieReviews
 );

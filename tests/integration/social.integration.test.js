@@ -247,7 +247,7 @@ describe(
 
 
         test(
-            "GET /reviews/movie/:tmdbMovieId - gerçek DB yorumlarını kullanıcı bilgileriyle getirmeli",
+            "GET /reviews/movie/:tmdbMovieId - gerçek DB yorumlarını pagination ve kullanıcı bilgileriyle getirmeli",
             async () => {
                 await request(app)
                     .post("/reviews")
@@ -293,12 +293,23 @@ describe(
                 ).toBe(true);
 
                 expect(
-                    response.body.data
+                    response.body.data.items
                 ).toHaveLength(2);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 1,
+                    limit: 20,
+                    totalItems: 2,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                });
 
 
                 const userIds =
-                    response.body.data
+                    response.body.data.items
                         .map(
                             (review) =>
                                 review.user.id
@@ -318,21 +329,82 @@ describe(
                  * API yalnızca gerekli kullanıcı
                  * bilgilerini döndürmelidir.
                  */
-                response.body.data.forEach(
-                    (review) => {
-                        expect(
-                            review.user.id
-                        ).toBeDefined();
+                response.body.data.items
+                    .forEach(
+                        (review) => {
+                            expect(
+                                review.user.id
+                            ).toBeDefined();
 
-                        expect(
-                            review.user.name
-                        ).toBeDefined();
+                            expect(
+                                review.user.name
+                            ).toBeDefined();
 
-                        expect(
-                            review.user.password
-                        ).toBeUndefined();
-                    }
-                );
+                            expect(
+                                review.user.password
+                            ).toBeUndefined();
+                        }
+                    );
+            }
+        );
+
+
+        test(
+            "GET /reviews/movie/:tmdbMovieId?page=2&limit=1 - gerçek DB'de ikinci yorum sayfasını getirmeli",
+            async () => {
+                await request(app)
+                    .post("/reviews")
+                    .set(
+                        "Authorization",
+                        `Bearer ${userOneToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                        content:
+                            "Birinci yorum.",
+                    });
+
+
+                await request(app)
+                    .post("/reviews")
+                    .set(
+                        "Authorization",
+                        `Bearer ${userTwoToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                        content:
+                            "İkinci yorum.",
+                    });
+
+
+                const response =
+                    await request(app)
+                        .get(
+                            `/reviews/movie/${MOVIE_ID}?page=2&limit=1`
+                        );
+
+
+                expect(
+                    response.statusCode
+                ).toBe(200);
+
+                expect(
+                    response.body.data.items
+                ).toHaveLength(1);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                });
             }
         );
 
@@ -718,7 +790,7 @@ describe(
 
 
         test(
-            "GET /ratings/movie/:tmdbMovieId - gerçek DB ortalamasını ve toplam puanı doğru hesaplamalı",
+            "GET /ratings/movie/:tmdbMovieId - gerçek DB puanlarını pagination ile getirip genel ortalamayı doğru hesaplamalı",
             async () => {
                 await request(app)
                     .post("/ratings")
@@ -762,7 +834,7 @@ describe(
                 ).toBe(true);
 
                 expect(
-                    response.body.data.ratings
+                    response.body.data.items
                 ).toHaveLength(2);
 
                 expect(
@@ -774,6 +846,85 @@ describe(
                     response.body.data
                         .totalRatings
                 ).toBe(2);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 1,
+                    limit: 20,
+                    totalItems: 2,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                });
+            }
+        );
+
+
+        test(
+            "GET /ratings/movie/:tmdbMovieId?page=2&limit=1 - sayfalanmış kayıtta genel puan istatistiklerini korumalı",
+            async () => {
+                await request(app)
+                    .post("/ratings")
+                    .set(
+                        "Authorization",
+                        `Bearer ${userOneToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                        rating: 8,
+                    });
+
+
+                await request(app)
+                    .post("/ratings")
+                    .set(
+                        "Authorization",
+                        `Bearer ${userTwoToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                        rating: 10,
+                    });
+
+
+                const response =
+                    await request(app)
+                        .get(
+                            `/ratings/movie/${MOVIE_ID}?page=2&limit=1`
+                        );
+
+
+                expect(
+                    response.statusCode
+                ).toBe(200);
+
+                expect(
+                    response.body.data.items
+                ).toHaveLength(1);
+
+                expect(
+                    response.body.data
+                        .averageRatings
+                ).toBe(9);
+
+                expect(
+                    response.body.data
+                        .totalRatings
+                ).toBe(2);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                });
             }
         );
 

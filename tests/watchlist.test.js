@@ -11,13 +11,17 @@ jest.mock("../src/config/prisma", () => ({
     watchlist: {
         findUnique: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         create: jest.fn(),
         delete: jest.fn(),
     },
 }));
 
 
-const prisma = require("../src/config/prisma");
+const prisma = require(
+    "../src/config/prisma"
+);
+
 const app = require("../src/app");
 
 
@@ -154,7 +158,7 @@ describe("Watchlist API", () => {
 
 
     test(
-        "GET /watchlist - kullanıcının izleme listesini başarıyla getirmeli",
+        "GET /watchlist - varsayılan pagination ile listeyi getirmeli",
         async () => {
             const watchlist = [
                 {
@@ -173,6 +177,10 @@ describe("Watchlist API", () => {
                 watchlist
             );
 
+            prisma.watchlist.count.mockResolvedValue(
+                2
+            );
+
             const response = await request(app)
                 .get("/watchlist")
                 .set(
@@ -186,7 +194,17 @@ describe("Watchlist API", () => {
                 success: true,
                 message:
                     "İzleme listesi getirildi.",
-                data: watchlist,
+                data: {
+                    items: watchlist,
+                    pagination: {
+                        page: 1,
+                        limit: 20,
+                        totalItems: 2,
+                        totalPages: 1,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                    },
+                },
             });
 
             expect(
@@ -198,6 +216,74 @@ describe("Watchlist API", () => {
                 orderBy: {
                     createdAt: "desc",
                 },
+                skip: 0,
+                take: 20,
+            });
+
+            expect(
+                prisma.watchlist.count
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId: 1,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /watchlist?page=2&limit=1 - doğru sayfayı istemeli",
+        async () => {
+            const watchlist = [
+                {
+                    id: 1,
+                    userId: 1,
+                    tmdbMovieId: 157336,
+                },
+            ];
+
+            prisma.watchlist.findMany.mockResolvedValue(
+                watchlist
+            );
+
+            prisma.watchlist.count.mockResolvedValue(
+                2
+            );
+
+            const response = await request(app)
+                .get(
+                    "/watchlist?page=2&limit=1"
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.data).toEqual({
+                items: watchlist,
+                pagination: {
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                },
+            });
+
+            expect(
+                prisma.watchlist.findMany
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId: 1,
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+                skip: 1,
+                take: 1,
             });
         }
     );
@@ -424,6 +510,90 @@ describe("Watchlist API", () => {
             expect(
                 prisma.watchlist.delete
             ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /watchlist?page=0 - geçersiz page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/watchlist?page=0")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.watchlist.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.watchlist.count
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /watchlist?page=abc - metin page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/watchlist?page=abc")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası geçerli bir tam sayı olmalıdır."
+            );
+        }
+    );
+
+
+    test(
+        "GET /watchlist?limit=101 - maksimum limit aşılırsa 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/watchlist?limit=101")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit en fazla 100 olabilir."
+            );
+        }
+    );
+
+
+    test(
+        "GET /watchlist?limit=abc - metin limit için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get("/watchlist?limit=abc")
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit geçerli bir tam sayı olmalıdır."
+            );
         }
     );
 

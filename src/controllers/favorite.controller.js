@@ -1,13 +1,24 @@
-const favoriteService = require("../services/favorite.service");
-const response = require("../utils/response");
+const favoriteService = require(
+    "../services/favorite.service"
+);
+
+const response = require(
+    "../utils/response"
+);
+
 
 // Favoriye film ekler
-const addFavorite = async (req, res, next) => {
+const addFavorite = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const favorite = await favoriteService.addFavorite(
-            req.user.id,
-            req.body.tmdbMovieId
-        );
+        const favorite =
+            await favoriteService.addFavorite(
+                req.user.id,
+                req.body.tmdbMovieId
+            );
 
         response.success(
             res,
@@ -20,16 +31,35 @@ const addFavorite = async (req, res, next) => {
     }
 };
 
+
 // Kullanıcının favorilerini getirir
-const getFavorites = async (req, res, next) => {
+const getFavorites = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const favorites = await favoriteService.getFavorites(
-            req.user.id
-        );
+        const page =
+            req.query.page !== undefined
+                ? Number(req.query.page)
+                : 1;
+
+        const limit =
+            req.query.limit !== undefined
+                ? Number(req.query.limit)
+                : 20;
+
+
+        const result =
+            await favoriteService.getFavorites(
+                req.user.id,
+                page,
+                limit
+            );
 
         response.success(
             res,
-            favorites,
+            result,
             "Favoriler getirildi."
         );
     } catch (error) {
@@ -37,12 +67,19 @@ const getFavorites = async (req, res, next) => {
     }
 };
 
+
 // Favoriden film kaldırır
-const removeFavorite = async (req, res, next) => {
+const removeFavorite = async (
+    req,
+    res,
+    next
+) => {
     try {
         await favoriteService.removeFavorite(
             req.user.id,
-            Number(req.params.tmdbMovieId)
+            Number(
+                req.params.tmdbMovieId
+            )
         );
 
         response.success(
@@ -54,6 +91,7 @@ const removeFavorite = async (req, res, next) => {
         next(error);
     }
 };
+
 
 module.exports = {
     addFavorite,

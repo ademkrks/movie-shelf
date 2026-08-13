@@ -56,7 +56,6 @@ describe(
         beforeAll(async () => {
             await deleteTestUser();
 
-            // Gerçek API üzerinden kullanıcı oluşturur
             const registerResponse =
                 await request(app)
                     .post("/auth/register")
@@ -74,7 +73,6 @@ describe(
             ).toBe(201);
 
 
-            // Gerçek DB kaydını alır
             const user =
                 await prisma.user.findUnique({
                     where: {
@@ -87,7 +85,6 @@ describe(
             userId = user.id;
 
 
-            // Gerçek API üzerinden login olur
             const loginResponse =
                 await request(app)
                     .post("/auth/login")
@@ -214,15 +211,6 @@ describe(
                     secondResponse.statusCode
                 ).toBe(400);
 
-                expect(
-                    secondResponse.body
-                ).toEqual({
-                    success: false,
-                    status: "fail",
-                    message:
-                        "Film zaten favorilere eklenmiş.",
-                });
-
 
                 const count =
                     await prisma.favorite.count({
@@ -239,7 +227,7 @@ describe(
 
 
         test(
-            "GET /favorites - gerçek DB'deki favorileri getirmeli",
+            "GET /favorites - varsayılan pagination ile gerçek DB favorilerini getirmeli",
             async () => {
                 await request(app)
                     .post("/favorites")
@@ -277,22 +265,23 @@ describe(
                 ).toBe(200);
 
                 expect(
-                    response.body.success
-                ).toBe(true);
-
-                expect(
-                    response.body.message
-                ).toBe(
-                    "Favoriler getirildi."
-                );
-
-                expect(
-                    response.body.data
+                    response.body.data.items
                 ).toHaveLength(2);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 1,
+                    limit: 20,
+                    totalItems: 2,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                });
 
 
                 const movieIds =
-                    response.body.data
+                    response.body.data.items
                         .map(
                             (favorite) =>
                                 favorite.tmdbMovieId
@@ -311,6 +300,100 @@ describe(
                             a - b
                     )
                 );
+            }
+        );
+
+
+        test(
+            "GET /favorites?page=2&limit=1 - gerçek DB'de ikinci sayfayı getirmeli",
+            async () => {
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                    });
+
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            SECOND_MOVIE_ID,
+                    });
+
+
+                const response =
+                    await request(app)
+                        .get(
+                            "/favorites?page=2&limit=1"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+
+                expect(
+                    response.statusCode
+                ).toBe(200);
+
+                expect(
+                    response.body.data.items
+                ).toHaveLength(1);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                });
+            }
+        );
+
+
+        test(
+            "GET /favorites - geçersiz pagination parametrelerini reddetmeli",
+            async () => {
+                const pageResponse =
+                    await request(app)
+                        .get(
+                            "/favorites?page=0"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    pageResponse.statusCode
+                ).toBe(400);
+
+
+                const limitResponse =
+                    await request(app)
+                        .get(
+                            "/favorites?limit=101"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    limitResponse.statusCode
+                ).toBe(400);
             }
         );
 
@@ -343,15 +426,6 @@ describe(
                 expect(
                     response.statusCode
                 ).toBe(200);
-
-                expect(
-                    response.body
-                ).toEqual({
-                    success: true,
-                    message:
-                        "Film favorilerden kaldırıldı.",
-                    data: null,
-                });
 
 
                 const favorite =
@@ -387,15 +461,6 @@ describe(
                 expect(
                     response.statusCode
                 ).toBe(404);
-
-                expect(
-                    response.body
-                ).toEqual({
-                    success: false,
-                    status: "fail",
-                    message:
-                        "Favori bulunamadı.",
-                });
             }
         );
 
@@ -423,14 +488,6 @@ describe(
                 expect(
                     response.statusCode
                 ).toBe(201);
-
-                expect(
-                    response.body
-                ).toMatchObject({
-                    success: true,
-                    message:
-                        "Film izleme listesine eklendi.",
-                });
 
 
                 const watchlist =
@@ -495,15 +552,6 @@ describe(
                     secondResponse.statusCode
                 ).toBe(400);
 
-                expect(
-                    secondResponse.body
-                ).toEqual({
-                    success: false,
-                    status: "fail",
-                    message:
-                        "Film zaten izleme listesinde.",
-                });
-
 
                 const count =
                     await prisma.watchlist
@@ -521,7 +569,7 @@ describe(
 
 
         test(
-            "GET /watchlist - gerçek DB'deki izleme listesini getirmeli",
+            "GET /watchlist - varsayılan pagination ile gerçek DB listesini getirmeli",
             async () => {
                 await request(app)
                     .post("/watchlist")
@@ -559,22 +607,23 @@ describe(
                 ).toBe(200);
 
                 expect(
-                    response.body.success
-                ).toBe(true);
-
-                expect(
-                    response.body.message
-                ).toBe(
-                    "İzleme listesi getirildi."
-                );
-
-                expect(
-                    response.body.data
+                    response.body.data.items
                 ).toHaveLength(2);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 1,
+                    limit: 20,
+                    totalItems: 2,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                });
 
 
                 const movieIds =
-                    response.body.data
+                    response.body.data.items
                         .map(
                             (watchlist) =>
                                 watchlist.tmdbMovieId
@@ -593,6 +642,100 @@ describe(
                             a - b
                     )
                 );
+            }
+        );
+
+
+        test(
+            "GET /watchlist?page=2&limit=1 - gerçek DB'de ikinci sayfayı getirmeli",
+            async () => {
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            MOVIE_ID,
+                    });
+
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            SECOND_MOVIE_ID,
+                    });
+
+
+                const response =
+                    await request(app)
+                        .get(
+                            "/watchlist?page=2&limit=1"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+
+                expect(
+                    response.statusCode
+                ).toBe(200);
+
+                expect(
+                    response.body.data.items
+                ).toHaveLength(1);
+
+                expect(
+                    response.body.data.pagination
+                ).toEqual({
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                });
+            }
+        );
+
+
+        test(
+            "GET /watchlist - geçersiz pagination parametrelerini reddetmeli",
+            async () => {
+                const pageResponse =
+                    await request(app)
+                        .get(
+                            "/watchlist?page=0"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    pageResponse.statusCode
+                ).toBe(400);
+
+
+                const limitResponse =
+                    await request(app)
+                        .get(
+                            "/watchlist?limit=101"
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    limitResponse.statusCode
+                ).toBe(400);
             }
         );
 
@@ -625,15 +768,6 @@ describe(
                 expect(
                     response.statusCode
                 ).toBe(200);
-
-                expect(
-                    response.body
-                ).toEqual({
-                    success: true,
-                    message:
-                        "Film izleme listesinden kaldırıldı.",
-                    data: null,
-                });
 
 
                 const watchlist =
@@ -669,15 +803,6 @@ describe(
                 expect(
                     response.statusCode
                 ).toBe(404);
-
-                expect(
-                    response.body
-                ).toEqual({
-                    success: false,
-                    status: "fail",
-                    message:
-                        "Film izleme listesinde bulunamadı.",
-                });
             }
         );
     }

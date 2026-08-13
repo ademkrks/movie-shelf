@@ -11,6 +11,7 @@ jest.mock("../src/config/prisma", () => ({
     review: {
         create: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -110,7 +111,7 @@ describe("Review API", () => {
 
 
     test(
-        "GET /reviews/movie/157336 - film yorumlarını başarıyla getirmeli",
+        "GET /reviews/movie/157336 - varsayılan pagination ile yorumları getirmeli",
         async () => {
             const reviews = [
                 {
@@ -141,6 +142,10 @@ describe("Review API", () => {
                 reviews
             );
 
+            prisma.review.count.mockResolvedValue(
+                2
+            );
+
             const response = await request(app)
                 .get(
                     "/reviews/movie/157336"
@@ -152,7 +157,17 @@ describe("Review API", () => {
                 success: true,
                 message:
                     "Film yorumları getirildi.",
-                data: reviews,
+                data: {
+                    items: reviews,
+                    pagination: {
+                        page: 1,
+                        limit: 20,
+                        totalItems: 2,
+                        totalPages: 1,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                    },
+                },
             });
 
             expect(
@@ -172,7 +187,131 @@ describe("Review API", () => {
                 orderBy: {
                     createdAt: "desc",
                 },
+                skip: 0,
+                take: 20,
             });
+
+            expect(
+                prisma.review.count
+            ).toHaveBeenCalledWith({
+                where: {
+                    tmdbMovieId: 157336,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /reviews/movie/157336?page=2&limit=1 - doğru sayfayı getirmeli",
+        async () => {
+            const reviews = [
+                {
+                    id: 1,
+                    userId: 1,
+                    tmdbMovieId: 157336,
+                    content:
+                        "Harika bir film.",
+                    user: {
+                        id: 1,
+                        name: "Test User",
+                    },
+                },
+            ];
+
+            prisma.review.findMany.mockResolvedValue(
+                reviews
+            );
+
+            prisma.review.count.mockResolvedValue(
+                2
+            );
+
+            const response = await request(app)
+                .get(
+                    "/reviews/movie/157336?page=2&limit=1"
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.data).toEqual({
+                items: reviews,
+                pagination: {
+                    page: 2,
+                    limit: 1,
+                    totalItems: 2,
+                    totalPages: 2,
+                    hasNextPage: false,
+                    hasPreviousPage: true,
+                },
+            });
+
+            expect(
+                prisma.review.findMany
+            ).toHaveBeenCalledWith({
+                where: {
+                    tmdbMovieId: 157336,
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                },
+                orderBy: {
+                    createdAt: "desc",
+                },
+                skip: 1,
+                take: 1,
+            });
+        }
+    );
+
+
+    test(
+        "GET /reviews/movie/157336?page=0 - geçersiz page için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/reviews/movie/157336?page=0"
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Sayfa numarası 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.review.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.review.count
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /reviews/movie/157336?limit=101 - maksimum limit aşılırsa 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/reviews/movie/157336?limit=101"
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "Limit en fazla 100 olabilir."
+            );
+
+            expect(
+                prisma.review.findMany
+            ).not.toHaveBeenCalled();
         }
     );
 

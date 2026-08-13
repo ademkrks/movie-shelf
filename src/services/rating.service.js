@@ -1,23 +1,33 @@
 const prisma = require("../config/prisma");
 const AppError = require("../utils/AppError");
 
+
 // Puan ekler
-const addRating = async (userId, tmdbMovieId, rating) => {
-    if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
+const addRating = async (
+    userId,
+    tmdbMovieId,
+    rating
+) => {
+    if (
+        !Number.isInteger(rating) ||
+        rating < 1 ||
+        rating > 10
+    ) {
         throw new AppError(
             "Puan 1 ile 10 arasında olmalıdır.",
             400
         );
     }
 
-    const existingRating = await prisma.rating.findUnique({
-        where: {
-            userId_tmdbMovieId: {
-                userId,
-                tmdbMovieId,
+    const existingRating =
+        await prisma.rating.findUnique({
+            where: {
+                userId_tmdbMovieId: {
+                    userId,
+                    tmdbMovieId,
+                },
             },
-        },
-    });
+        });
 
     if (existingRating) {
         throw new AppError(
@@ -36,60 +46,126 @@ const addRating = async (userId, tmdbMovieId, rating) => {
 };
 
 
-// Filmin tüm puanlarını ve ortalama puanını getirir
-const getMovieRatings = async (tmdbMovieId) => {
-    const ratings = await prisma.rating.findMany({
-        where: {
-            tmdbMovieId,
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
+// Filmin puanlarını sayfalı getirir ve genel ortalamayı hesaplar
+const getMovieRatings = async (
+    tmdbMovieId,
+    page = 1,
+    limit = 20
+) => {
+    const normalizedMovieId =
+        Number(tmdbMovieId);
+
+    const normalizedPage =
+        Number(page);
+
+    const normalizedLimit =
+        Number(limit);
+
+    const skip =
+        (normalizedPage - 1) *
+        normalizedLimit;
+
+
+    /*
+     * Sayfadaki kayıtlar ve filmin tüm
+     * puanlarına ait istatistikler paralel alınır.
+     */
+    const [
+        items,
+        aggregate,
+    ] = await Promise.all([
+        prisma.rating.findMany({
+            where: {
+                tmdbMovieId:
+                    normalizedMovieId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                    },
                 },
             },
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+            orderBy: {
+                createdAt: "desc",
+            },
+            skip,
+            take: normalizedLimit,
+        }),
 
-    const aggregate = await prisma.rating.aggregate({
-        where: {
-            tmdbMovieId,
-        },
-        _avg: {
-            rating: true,
-        },
-        _count: {
-            rating: true,
-        },
-    });
+        prisma.rating.aggregate({
+            where: {
+                tmdbMovieId:
+                    normalizedMovieId,
+            },
+            _avg: {
+                rating: true,
+            },
+            _count: {
+                rating: true,
+            },
+        }),
+    ]);
+
+
+    const totalItems =
+        aggregate._count.rating;
+
+    const totalPages =
+        Math.ceil(
+            totalItems /
+            normalizedLimit
+        );
+
 
     return {
-        ratings,
-        averageRatings: aggregate._avg.rating
-            ? Number(aggregate._avg.rating.toFixed(2))
-            : 0,
-        totalRatings: aggregate._count.rating,
+        items,
+        averageRatings:
+            aggregate._avg.rating
+                ? Number(
+                    aggregate._avg.rating
+                        .toFixed(2)
+                )
+                : 0,
+        totalRatings: totalItems,
+        pagination: {
+            page: normalizedPage,
+            limit: normalizedLimit,
+            totalItems,
+            totalPages,
+            hasNextPage:
+                normalizedPage <
+                totalPages,
+            hasPreviousPage:
+                normalizedPage > 1,
+        },
     };
 };
 
 
 // Kullanıcının kendi puanını günceller
-const updateRating = async (ratingId, userId, rating) => {
-    if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
+const updateRating = async (
+    ratingId,
+    userId,
+    rating
+) => {
+    if (
+        !Number.isInteger(rating) ||
+        rating < 1 ||
+        rating > 10
+    ) {
         throw new AppError(
             "Puan 1 ile 10 arasında olmalıdır.",
             400
         );
     }
 
-    const existingRating = await prisma.rating.findUnique({
-        where: {
-            id: ratingId,
-        },
-    });
+    const existingRating =
+        await prisma.rating.findUnique({
+            where: {
+                id: ratingId,
+            },
+        });
 
     if (!existingRating) {
         throw new AppError(
@@ -98,7 +174,10 @@ const updateRating = async (ratingId, userId, rating) => {
         );
     }
 
-    if (existingRating.userId !== userId) {
+    if (
+        existingRating.userId !==
+        userId
+    ) {
         throw new AppError(
             "Bu puanı güncelleme yetkiniz yok.",
             403
@@ -117,12 +196,16 @@ const updateRating = async (ratingId, userId, rating) => {
 
 
 // Kullanıcı kendi puanını siler
-const deleteRating = async (ratingId, userId) => {
-    const existingRating = await prisma.rating.findUnique({
-        where: {
-            id: ratingId,
-        },
-    });
+const deleteRating = async (
+    ratingId,
+    userId
+) => {
+    const existingRating =
+        await prisma.rating.findUnique({
+            where: {
+                id: ratingId,
+            },
+        });
 
     if (!existingRating) {
         throw new AppError(
@@ -131,7 +214,10 @@ const deleteRating = async (ratingId, userId) => {
         );
     }
 
-    if (existingRating.userId !== userId) {
+    if (
+        existingRating.userId !==
+        userId
+    ) {
         throw new AppError(
             "Bu puanı silme yetkiniz yok.",
             403

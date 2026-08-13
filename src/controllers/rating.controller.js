@@ -1,14 +1,29 @@
-const ratingService = require("../services/rating.service");
-const response = require("../utils/response");
+const ratingService = require(
+    "../services/rating.service"
+);
+
+const response = require(
+    "../utils/response"
+);
+
 
 // Filme puan ekler
-const addRating = async (req, res, next) => {
+const addRating = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const rating = await ratingService.addRating(
-            req.user.id,
-            Number(req.body.tmdbMovieId),
-            Number(req.body.rating)
-        );
+        const rating =
+            await ratingService.addRating(
+                req.user.id,
+                Number(
+                    req.body.tmdbMovieId
+                ),
+                Number(
+                    req.body.rating
+                )
+            );
 
         response.success(
             res,
@@ -23,15 +38,35 @@ const addRating = async (req, res, next) => {
 
 
 // Filmin puanlarını getirir
-const getMovieRatings = async (req, res, next) => {
+const getMovieRatings = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const ratings = await ratingService.getMovieRatings(
-            Number(req.params.tmdbMovieId)
-        );
+        const page =
+            req.query.page !== undefined
+                ? Number(req.query.page)
+                : 1;
+
+        const limit =
+            req.query.limit !== undefined
+                ? Number(req.query.limit)
+                : 20;
+
+
+        const result =
+            await ratingService.getMovieRatings(
+                Number(
+                    req.params.tmdbMovieId
+                ),
+                page,
+                limit
+            );
 
         response.success(
             res,
-            ratings,
+            result,
             "Film puanları getirildi."
         );
     } catch (error) {
@@ -41,13 +76,20 @@ const getMovieRatings = async (req, res, next) => {
 
 
 // Kullanıcının puanını günceller
-const updateRating = async (req, res, next) => {
+const updateRating = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const rating = await ratingService.updateRating(
-            Number(req.params.id),
-            req.user.id,
-            Number(req.body.rating)
-        );
+        const rating =
+            await ratingService.updateRating(
+                Number(req.params.id),
+                req.user.id,
+                Number(
+                    req.body.rating
+                )
+            );
 
         response.success(
             res,
@@ -61,7 +103,11 @@ const updateRating = async (req, res, next) => {
 
 
 // Kullanıcının puanını siler
-const deleteRating = async (req, res, next) => {
+const deleteRating = async (
+    req,
+    res,
+    next
+) => {
     try {
         await ratingService.deleteRating(
             Number(req.params.id),

@@ -3,7 +3,11 @@ const AppError = require("../utils/AppError");
 
 
 // Yorum ekler
-const addReview = async (userId, tmdbMovieId, content) => {
+const addReview = async (
+    userId,
+    tmdbMovieId,
+    content
+) => {
     const review = await prisma.review.create({
         data: {
             userId,
@@ -16,36 +20,98 @@ const addReview = async (userId, tmdbMovieId, content) => {
 };
 
 
-// Filmin yorumlarını getirir
-const getMovieReviews = async (tmdbMovieId) => {
-    return await prisma.review.findMany({
-        where: {
-            tmdbMovieId: Number(tmdbMovieId),
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
+// Filmin yorumlarını sayfalı getirir
+const getMovieReviews = async (
+    tmdbMovieId,
+    page = 1,
+    limit = 20
+) => {
+    const normalizedMovieId =
+        Number(tmdbMovieId);
+
+    const normalizedPage =
+        Number(page);
+
+    const normalizedLimit =
+        Number(limit);
+
+    const skip =
+        (normalizedPage - 1) *
+        normalizedLimit;
+
+
+    const [
+        items,
+        totalItems,
+    ] = await Promise.all([
+        prisma.review.findMany({
+            where: {
+                tmdbMovieId:
+                    normalizedMovieId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
                 },
             },
+            orderBy: {
+                createdAt: "desc",
+            },
+            skip,
+            take: normalizedLimit,
+        }),
+
+        prisma.review.count({
+            where: {
+                tmdbMovieId:
+                    normalizedMovieId,
+            },
+        }),
+    ]);
+
+
+    const totalPages =
+        Math.ceil(
+            totalItems /
+            normalizedLimit
+        );
+
+
+    return {
+        items,
+        pagination: {
+            page: normalizedPage,
+            limit: normalizedLimit,
+            totalItems,
+            totalPages,
+            hasNextPage:
+                normalizedPage <
+                totalPages,
+            hasPreviousPage:
+                normalizedPage > 1,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+    };
 };
 
 
 // Yorumu günceller
-const updateReview = async (reviewId, userId, content) => {
-    const normalizedReviewId = Number(reviewId);
+const updateReview = async (
+    reviewId,
+    userId,
+    content
+) => {
+    const normalizedReviewId =
+        Number(reviewId);
 
-    const review = await prisma.review.findUnique({
-        where: {
-            id: normalizedReviewId,
-        },
-    });
+    const review =
+        await prisma.review.findUnique({
+            where: {
+                id: normalizedReviewId,
+            },
+        });
 
     if (!review) {
         throw new AppError(
@@ -74,14 +140,19 @@ const updateReview = async (reviewId, userId, content) => {
 
 
 // Yorumu siler
-const deleteReview = async (reviewId, userId) => {
-    const normalizedReviewId = Number(reviewId);
+const deleteReview = async (
+    reviewId,
+    userId
+) => {
+    const normalizedReviewId =
+        Number(reviewId);
 
-    const review = await prisma.review.findUnique({
-        where: {
-            id: normalizedReviewId,
-        },
-    });
+    const review =
+        await prisma.review.findUnique({
+            where: {
+                id: normalizedReviewId,
+            },
+        });
 
     if (!review) {
         throw new AppError(
