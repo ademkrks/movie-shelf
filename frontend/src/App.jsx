@@ -4,9 +4,13 @@ import {
 } from "react-router";
 
 import MainLayout from "./layouts/MainLayout";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 
@@ -36,6 +40,15 @@ function App() {
                     path="/register"
                     element={
                         <RegisterPage />
+                    }
+                />
+
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
                     }
                 />
 
