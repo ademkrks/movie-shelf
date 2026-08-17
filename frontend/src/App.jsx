@@ -13,7 +13,10 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
+import MovieDetailPage from "./pages/MovieDetailPage";
 import NotFoundPage from "./pages/NotFoundPage";
+
+import "./styles/movies.css";
 
 
 function App() {
@@ -28,6 +31,13 @@ function App() {
                     path="/"
                     element={
                         <HomePage />
+                    }
+                />
+
+                <Route
+                    path="/movie/:id"
+                    element={
+                        <MovieDetailPage />
                     }
                 />
 
