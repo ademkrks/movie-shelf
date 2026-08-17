@@ -9,12 +9,16 @@ import {
 } from "react-router";
 
 import MovieActionButtons from "../components/MovieActionButtons";
+import RatingSection from "../components/RatingSection";
+import ReviewSection from "../components/ReviewSection";
 
 import {
     getMovieCast,
     getMovieDetails,
     getMovieTrailers,
 } from "../api/tmdb.api";
+
+import "../styles/reviews.css";
 
 
 const POSTER_BASE_URL =
@@ -94,12 +98,10 @@ function MovieDetailPage() {
                         movieResponse.data
                     );
 
-
                     setCast(
                         castResponse.data ||
                         []
                     );
-
 
                     setTrailers(
                         trailerResponse.data ||
@@ -258,7 +260,8 @@ function MovieDetailPage() {
                             </span>
 
                             <span>
-                                ★ {rating}
+                                TMDB ★{" "}
+                                {rating}
                             </span>
 
                             <span>
@@ -387,6 +390,22 @@ function MovieDetailPage() {
                         </div>
                     </section>
                 )}
+
+                <div className="movie-community">
+                    <RatingSection
+                        key={`rating-${movie.id}`}
+                        movieId={
+                            movie.id
+                        }
+                    />
+
+                    <ReviewSection
+                        key={`reviews-${movie.id}`}
+                        movieId={
+                            movie.id
+                        }
+                    />
+                </div>
             </div>
         </article>
     );

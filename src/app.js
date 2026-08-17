@@ -34,13 +34,17 @@ app.disable("x-powered-by");
 
 
 // HTTP güvenlik header'ları
-app.use(helmet());
+app.use(
+    helmet()
+);
 
 
 // CORS
 app.use(
     cors({
-        origin: env.corsOrigins,
+        origin:
+            env.corsOrigins,
+
         methods: [
             "GET",
             "POST",
@@ -49,6 +53,7 @@ app.use(
             "PATCH",
             "OPTIONS",
         ],
+
         allowedHeaders: [
             "Content-Type",
             "Authorization",
@@ -69,12 +74,51 @@ app.get(
 );
 
 
+// Çalışma ortamına göre genel API limitini belirler
+const getApiRateLimit = () => {
+    if (env.isTest) {
+        return 10000;
+    }
+
+
+    if (env.isDevelopment) {
+        return 5000;
+    }
+
+
+    return 500;
+};
+
+
 // Genel API rate limit
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 100,
-    standardHeaders: "draft-8",
-    legacyHeaders: false,
+    windowMs:
+        15 * 60 * 1000,
+
+    limit:
+        getApiRateLimit(),
+
+    standardHeaders:
+        "draft-8",
+
+    legacyHeaders:
+        false,
+
+    /*
+     * CORS preflight istekleri ve
+     * Swagger dokümantasyonu genel API
+     * kotasını tüketmez.
+     */
+    skip: (req) => {
+        return (
+            req.method ===
+                "OPTIONS" ||
+            req.path.startsWith(
+                "/api-docs"
+            )
+        );
+    },
+
     message: {
         success: false,
         status: "error",
@@ -83,7 +127,10 @@ const apiLimiter = rateLimit({
     },
 });
 
-app.use(apiLimiter);
+
+app.use(
+    apiLimiter
+);
 
 
 // JSON body boyutunu sınırlar
@@ -95,34 +142,73 @@ app.use(
 
 
 // Gelen istekleri loglar
-app.use(logger);
+app.use(
+    logger
+);
 
 
 // Swagger API dokümantasyonu
 app.use(
     "/api-docs",
     swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec)
+    swaggerUi.setup(
+        swaggerSpec
+    )
 );
 
 
 // Route'lar
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
-app.use("/movies", movieRoutes);
-app.use("/tmdb", tmdbRoutes);
-app.use("/favorites", favoriteRoutes);
-app.use("/watchlist", watchlistRoutes);
-app.use("/reviews", reviewRoutes);
-app.use("/ratings", ratingRoutes);
+app.use(
+    "/auth",
+    authRoutes
+);
+
+app.use(
+    "/users",
+    userRoutes
+);
+
+app.use(
+    "/movies",
+    movieRoutes
+);
+
+app.use(
+    "/tmdb",
+    tmdbRoutes
+);
+
+app.use(
+    "/favorites",
+    favoriteRoutes
+);
+
+app.use(
+    "/watchlist",
+    watchlistRoutes
+);
+
+app.use(
+    "/reviews",
+    reviewRoutes
+);
+
+app.use(
+    "/ratings",
+    ratingRoutes
+);
 
 
 // Tanımlanamayan endpointleri yakalar
-app.use(notFound);
+app.use(
+    notFound
+);
 
 
 // Global hata yakalayıcı
-app.use(errorHandler);
+app.use(
+    errorHandler
+);
 
 
 module.exports = app;
