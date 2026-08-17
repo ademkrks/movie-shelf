@@ -18,6 +18,15 @@ function Navbar() {
     } = useAuth();
 
 
+    const getNavLinkClass =
+        ({
+            isActive,
+        }) =>
+            isActive
+                ? "nav-link active"
+                : "nav-link";
+
+
     const handleLogout = () => {
         logout();
 
@@ -38,28 +47,63 @@ function Navbar() {
                 <nav className="nav-links">
                     <NavLink
                         to="/"
-                        className={({
-                            isActive,
-                        }) =>
-                            isActive
-                                ? "nav-link active"
-                                : "nav-link"
+                        className={
+                            getNavLinkClass
                         }
                     >
                         Home
                     </NavLink>
 
                     {!isLoading &&
+                        isAuthenticated && (
+                            <>
+                                <NavLink
+                                    to="/favorites"
+                                    className={
+                                        getNavLinkClass
+                                    }
+                                >
+                                    Favorites
+                                </NavLink>
+
+                                <NavLink
+                                    to="/watchlist"
+                                    className={
+                                        getNavLinkClass
+                                    }
+                                >
+                                    Watchlist
+                                </NavLink>
+
+                                <NavLink
+                                    to="/profile"
+                                    className={
+                                        getNavLinkClass
+                                    }
+                                >
+                                    {user?.name ||
+                                        "Profile"}
+                                </NavLink>
+
+                                <button
+                                    type="button"
+                                    className="nav-link logout-button"
+                                    onClick={
+                                        handleLogout
+                                    }
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        )}
+
+                    {!isLoading &&
                         !isAuthenticated && (
                             <>
                                 <NavLink
                                     to="/login"
-                                    className={({
-                                        isActive,
-                                    }) =>
-                                        isActive
-                                            ? "nav-link active"
-                                            : "nav-link"
+                                    className={
+                                        getNavLinkClass
                                     }
                                 >
                                     Login
@@ -77,35 +121,6 @@ function Navbar() {
                                 >
                                     Register
                                 </NavLink>
-                            </>
-                        )}
-
-                    {!isLoading &&
-                        isAuthenticated && (
-                            <>
-                                <NavLink
-                                    to="/profile"
-                                    className={({
-                                        isActive,
-                                    }) =>
-                                        isActive
-                                            ? "nav-link active"
-                                            : "nav-link"
-                                    }
-                                >
-                                    {user?.name ||
-                                        "Profile"}
-                                </NavLink>
-
-                                <button
-                                    type="button"
-                                    className="nav-link logout-button"
-                                    onClick={
-                                        handleLogout
-                                    }
-                                >
-                                    Logout
-                                </button>
                             </>
                         )}
                 </nav>

@@ -14,9 +14,12 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import MovieDetailPage from "./pages/MovieDetailPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import WatchlistPage from "./pages/WatchlistPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 import "./styles/movies.css";
+import "./styles/library.css";
 
 
 function App() {
@@ -66,6 +69,24 @@ function App() {
                     path="/reset-password"
                     element={
                         <ResetPasswordPage />
+                    }
+                />
+
+                <Route
+                    path="/favorites"
+                    element={
+                        <ProtectedRoute>
+                            <FavoritesPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/watchlist"
+                    element={
+                        <ProtectedRoute>
+                            <WatchlistPage />
+                        </ProtectedRoute>
                     }
                 />
 
