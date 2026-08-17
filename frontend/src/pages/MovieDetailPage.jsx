@@ -8,6 +8,8 @@ import {
     useParams,
 } from "react-router";
 
+import MovieActionButtons from "../components/MovieActionButtons";
+
 import {
     getMovieCast,
     getMovieDetails,
@@ -60,7 +62,10 @@ function MovieDetailPage() {
     useEffect(() => {
         const loadMovie =
             async () => {
-                setIsLoading(true);
+                setIsLoading(
+                    true
+                );
+
                 setError("");
 
 
@@ -89,10 +94,12 @@ function MovieDetailPage() {
                         movieResponse.data
                     );
 
+
                     setCast(
                         castResponse.data ||
                         []
                     );
+
 
                     setTrailers(
                         trailerResponse.data ||
@@ -279,6 +286,12 @@ function MovieDetailPage() {
                                 )}
                             </div>
                         )}
+
+                        <MovieActionButtons
+                            movieId={
+                                movie.id
+                            }
+                        />
 
                         <div className="movie-overview">
                             <h2>

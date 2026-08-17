@@ -1,0 +1,154 @@
+.movie-actions-area {
+    margin-top: 28px;
+}
+
+
+.movie-actions {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+
+.movie-action-button {
+    min-height: 46px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    padding:
+        0 17px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 10px;
+
+    background:
+        rgba(
+            23,
+            26,
+            33,
+            0.82
+        );
+
+    color:
+        var(--text);
+
+    font-size: 0.9rem;
+    font-weight: 700;
+
+    backdrop-filter:
+        blur(8px);
+
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease,
+        opacity 160ms ease;
+}
+
+
+.movie-action-button:hover:not(:disabled) {
+    border-color:
+        rgba(
+            108,
+            92,
+            231,
+            0.65
+        );
+
+    background:
+        rgba(
+            108,
+            92,
+            231,
+            0.12
+        );
+}
+
+
+.movie-action-button.active {
+    border-color:
+        rgba(
+            108,
+            92,
+            231,
+            0.55
+        );
+
+    background:
+        rgba(
+            108,
+            92,
+            231,
+            0.18
+        );
+
+    color: #ffffff;
+}
+
+
+.movie-action-button:active:not(:disabled) {
+    transform:
+        translateY(1px);
+}
+
+
+.movie-action-button:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+
+.movie-action-icon {
+    min-width: 18px;
+
+    color: #9b8fff;
+
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+
+.movie-action-feedback,
+.movie-action-error {
+    margin:
+        12px 0 0;
+
+    font-size: 0.86rem;
+}
+
+
+.movie-action-feedback {
+    color:
+        var(--success);
+}
+
+
+.movie-action-error {
+    color:
+        var(--error);
+}
+
+
+@media (
+    max-width: 560px
+) {
+    .movie-actions {
+        display: grid;
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .movie-action-button {
+        width: 100%;
+    }
+}
