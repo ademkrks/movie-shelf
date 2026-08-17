@@ -68,6 +68,32 @@ const getWatchlist = async (
 };
 
 
+// Filmin izleme listesi durumunu getirir
+const getWatchlistStatus = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await watchlistService.getWatchlistStatus(
+                req.user.id,
+                Number(
+                    req.params.tmdbMovieId
+                )
+            );
+
+        response.success(
+            res,
+            result,
+            "İzleme listesi durumu getirildi."
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 // İzleme listesinden film kaldırır
 const removeWatchlist = async (
     req,
@@ -96,5 +122,6 @@ const removeWatchlist = async (
 module.exports = {
     addWatchlist,
     getWatchlist,
+    getWatchlistStatus,
     removeWatchlist,
 };

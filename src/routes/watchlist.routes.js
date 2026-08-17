@@ -118,6 +118,40 @@ router.get(
 
 /**
  * @swagger
+ * /watchlist/{tmdbMovieId}/status:
+ *   get:
+ *     summary: Filmin kullanıcının izleme listesinde olup olmadığını kontrol eder
+ *     tags: [Watchlist]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tmdbMovieId
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: İzleme listesi durumu başarıyla getirildi
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
+ *       401:
+ *         description: Yetkilendirme gerekli
+ */
+router.get(
+    "/:tmdbMovieId/status",
+    auth,
+    validateRequest({
+        params: tmdbMovieIdValidation,
+    }),
+    watchlistController.getWatchlistStatus
+);
+
+
+/**
+ * @swagger
  * /watchlist/{tmdbMovieId}:
  *   delete:
  *     summary: Filmi izleme listesinden kaldırır

@@ -118,6 +118,40 @@ router.get(
 
 /**
  * @swagger
+ * /favorites/{tmdbMovieId}/status:
+ *   get:
+ *     summary: Filmin kullanıcının favorilerinde olup olmadığını kontrol eder
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tmdbMovieId
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Favori durumu başarıyla getirildi
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
+ *       401:
+ *         description: Yetkilendirme gerekli
+ */
+router.get(
+    "/:tmdbMovieId/status",
+    auth,
+    validateRequest({
+        params: tmdbMovieIdValidation,
+    }),
+    favoriteController.getFavoriteStatus
+);
+
+
+/**
+ * @swagger
  * /favorites/{tmdbMovieId}:
  *   delete:
  *     summary: Filmi favorilerden kaldırır

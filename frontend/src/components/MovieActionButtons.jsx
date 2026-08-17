@@ -11,8 +11,8 @@ import {
 import {
     addFavorite,
     addToWatchlist,
-    getAllFavorites,
-    getAllWatchlist,
+    getFavoriteStatus,
+    getWatchlistStatus,
     removeFavorite,
     removeFromWatchlist,
 } from "../api/library.api";
@@ -20,6 +20,43 @@ import {
 import useAuth from "../hooks/useAuth";
 
 import "../styles/library.css";
+
+
+const fetchMovieLibraryStatus =
+    async (
+        movieId
+    ) => {
+        const [
+            favoriteResponse,
+            watchlistResponse,
+        ] =
+            await Promise.all([
+                getFavoriteStatus(
+                    movieId
+                ),
+
+                getWatchlistStatus(
+                    movieId
+                ),
+            ]);
+
+
+        return {
+            isFavorite:
+                Boolean(
+                    favoriteResponse
+                        ?.data
+                        ?.isFavorite
+                ),
+
+            isWatchlisted:
+                Boolean(
+                    watchlistResponse
+                        ?.data
+                        ?.isWatchlisted
+                ),
+        };
+    };
 
 
 function MovieActionButtons({
@@ -50,18 +87,16 @@ function MovieActionButtons({
     const [
         isChecking,
         setIsChecking,
-    ] = useState(
-        isAuthenticated
-    );
-
-    const [
-        favoriteLoading,
-        setFavoriteLoading,
     ] = useState(false);
 
     const [
-        watchlistLoading,
-        setWatchlistLoading,
+        isFavoriteLoading,
+        setIsFavoriteLoading,
+    ] = useState(false);
+
+    const [
+        isWatchlistLoading,
+        setIsWatchlistLoading,
     ] = useState(false);
 
     const [
@@ -76,78 +111,41 @@ function MovieActionButtons({
 
 
     useEffect(() => {
-        let cancelled = false;
+        if (
+            !isAuthenticated ||
+            !movieId
+        ) {
+            return;
+        }
 
 
-        const checkCollections =
-            async () => {
-                if (
-                    !isAuthenticated
-                ) {
-                    setIsFavorite(
-                        false
-                    );
-
-                    setIsWatchlisted(
-                        false
-                    );
-
-                    setIsChecking(
-                        false
-                    );
-
-                    return;
-                }
+        let cancelled =
+            false;
 
 
-                setIsChecking(true);
-
-
-                try {
-                    const [
-                        favorites,
-                        watchlist,
-                    ] =
-                        await Promise.all([
-                            getAllFavorites(),
-                            getAllWatchlist(),
-                        ]);
-
-
+        fetchMovieLibraryStatus(
+            movieId
+        )
+            .then(
+                (status) => {
                     if (cancelled) {
                         return;
                     }
 
 
-                    const normalizedId =
-                        Number(
-                            movieId
-                        );
-
-
                     setIsFavorite(
-                        favorites.some(
-                            (item) =>
-                                Number(
-                                    item.tmdbMovieId
-                                ) ===
-                                normalizedId
-                        )
+                        status.isFavorite
                     );
-
 
                     setIsWatchlisted(
-                        watchlist.some(
-                            (item) =>
-                                Number(
-                                    item.tmdbMovieId
-                                ) ===
-                                normalizedId
-                        )
+                        status.isWatchlisted
                     );
-                } catch (
+                }
+            )
+            .catch(
+                (
                     requestError
-                ) {
+                ) => {
                     if (cancelled) {
                         return;
                     }
@@ -166,21 +164,22 @@ function MovieActionButtons({
                     setError(
                         requestError.message
                     );
-                } finally {
+                }
+            )
+            .finally(
+                () => {
                     if (!cancelled) {
                         setIsChecking(
                             false
                         );
                     }
                 }
-            };
-
-
-        checkCollections();
+            );
 
 
         return () => {
-            cancelled = true;
+            cancelled =
+                true;
         };
     }, [
         isAuthenticated,
@@ -215,6 +214,9 @@ function MovieActionButtons({
                     state: {
                         from:
                             location,
+
+                        message:
+                            "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
                     },
                 }
             );
@@ -232,11 +234,12 @@ function MovieActionButtons({
             }
 
 
-            setError("");
-            setFeedback("");
-            setFavoriteLoading(
+            setIsFavoriteLoading(
                 true
             );
+
+            setFeedback("");
+            setError("");
 
 
             try {
@@ -250,7 +253,7 @@ function MovieActionButtons({
                     );
 
                     setFeedback(
-                        "Removed from favorites."
+                        "Film favorilerden kaldırıldı."
                     );
                 } else {
                     await addFavorite(
@@ -262,7 +265,7 @@ function MovieActionButtons({
                     );
 
                     setFeedback(
-                        "Added to favorites."
+                        "Film favorilere eklendi."
                     );
                 }
             } catch (
@@ -282,7 +285,7 @@ function MovieActionButtons({
                     requestError.message
                 );
             } finally {
-                setFavoriteLoading(
+                setIsFavoriteLoading(
                     false
                 );
             }
@@ -300,11 +303,12 @@ function MovieActionButtons({
             }
 
 
-            setError("");
-            setFeedback("");
-            setWatchlistLoading(
+            setIsWatchlistLoading(
                 true
             );
+
+            setFeedback("");
+            setError("");
 
 
             try {
@@ -320,7 +324,7 @@ function MovieActionButtons({
                     );
 
                     setFeedback(
-                        "Removed from watchlist."
+                        "Film izleme listesinden kaldırıldı."
                     );
                 } else {
                     await addToWatchlist(
@@ -332,7 +336,7 @@ function MovieActionButtons({
                     );
 
                     setFeedback(
-                        "Added to watchlist."
+                        "Film izleme listesine eklendi."
                     );
                 }
             } catch (
@@ -352,7 +356,7 @@ function MovieActionButtons({
                     requestError.message
                 );
             } finally {
-                setWatchlistLoading(
+                setIsWatchlistLoading(
                     false
                 );
             }
@@ -374,10 +378,7 @@ function MovieActionButtons({
                     }
                     disabled={
                         isChecking ||
-                        favoriteLoading
-                    }
-                    aria-pressed={
-                        isFavorite
+                        isFavoriteLoading
                     }
                 >
                     <span className="movie-action-icon">
@@ -386,7 +387,7 @@ function MovieActionButtons({
                             : "♡"}
                     </span>
 
-                    {favoriteLoading
+                    {isFavoriteLoading
                         ? "Updating..."
                         : isFavorite
                             ? "Favorited"
@@ -405,10 +406,7 @@ function MovieActionButtons({
                     }
                     disabled={
                         isChecking ||
-                        watchlistLoading
-                    }
-                    aria-pressed={
-                        isWatchlisted
+                        isWatchlistLoading
                     }
                 >
                     <span className="movie-action-icon">
@@ -417,7 +415,7 @@ function MovieActionButtons({
                             : "+"}
                     </span>
 
-                    {watchlistLoading
+                    {isWatchlistLoading
                         ? "Updating..."
                         : isWatchlisted
                             ? "In Watchlist"

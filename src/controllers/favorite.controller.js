@@ -68,6 +68,32 @@ const getFavorites = async (
 };
 
 
+// Filmin favori durumunu getirir
+const getFavoriteStatus = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await favoriteService.getFavoriteStatus(
+                req.user.id,
+                Number(
+                    req.params.tmdbMovieId
+                )
+            );
+
+        response.success(
+            res,
+            result,
+            "Favori durumu getirildi."
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 // Favoriden film kaldırır
 const removeFavorite = async (
     req,
@@ -96,5 +122,6 @@ const removeFavorite = async (
 module.exports = {
     addFavorite,
     getFavorites,
+    getFavoriteStatus,
     removeFavorite,
 };

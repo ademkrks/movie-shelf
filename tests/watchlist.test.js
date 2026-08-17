@@ -80,23 +80,30 @@ describe("Watchlist API", () => {
                 createdWatchlist
             );
 
-            const response = await request(app)
-                .post("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: 157336,
-                });
+            const response =
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            157336,
+                    });
 
-            expect(response.statusCode).toBe(201);
+            expect(
+                response.statusCode
+            ).toBe(201);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "Film izleme listesine eklendi.",
-                data: createdWatchlist,
+                data:
+                    createdWatchlist,
             });
 
             expect(
@@ -105,7 +112,8 @@ describe("Watchlist API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -115,7 +123,8 @@ describe("Watchlist API", () => {
             ).toHaveBeenCalledWith({
                 data: {
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             });
         }
@@ -128,22 +137,29 @@ describe("Watchlist API", () => {
             prisma.watchlist.findUnique.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
-            const response = await request(app)
-                .post("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: 157336,
-                });
+            const response =
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            157336,
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: false,
                 status: "fail",
                 message:
@@ -164,12 +180,14 @@ describe("Watchlist API", () => {
                 {
                     id: 2,
                     userId: 1,
-                    tmdbMovieId: 27205,
+                    tmdbMovieId:
+                        27205,
                 },
                 {
                     id: 1,
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             ];
 
@@ -181,28 +199,39 @@ describe("Watchlist API", () => {
                 2
             );
 
-            const response = await request(app)
-                .get("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "İzleme listesi getirildi.",
                 data: {
-                    items: watchlist,
+                    items:
+                        watchlist,
+
                     pagination: {
                         page: 1,
                         limit: 20,
-                        totalItems: 2,
-                        totalPages: 1,
-                        hasNextPage: false,
-                        hasPreviousPage: false,
+                        totalItems:
+                            2,
+                        totalPages:
+                            1,
+                        hasNextPage:
+                            false,
+                        hasPreviousPage:
+                            false,
                     },
                 },
             });
@@ -213,9 +242,12 @@ describe("Watchlist API", () => {
                 where: {
                     userId: 1,
                 },
+
                 orderBy: {
-                    createdAt: "desc",
+                    createdAt:
+                        "desc",
                 },
+
                 skip: 0,
                 take: 20,
             });
@@ -238,7 +270,8 @@ describe("Watchlist API", () => {
                 {
                     id: 1,
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             ];
 
@@ -250,26 +283,37 @@ describe("Watchlist API", () => {
                 2
             );
 
-            const response = await request(app)
-                .get(
-                    "/watchlist?page=2&limit=1"
-                )
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist?page=2&limit=1"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body.data).toEqual({
-                items: watchlist,
+            expect(
+                response.body.data
+            ).toEqual({
+                items:
+                    watchlist,
+
                 pagination: {
                     page: 2,
                     limit: 1,
-                    totalItems: 2,
-                    totalPages: 2,
-                    hasNextPage: false,
-                    hasPreviousPage: true,
+                    totalItems:
+                        2,
+                    totalPages:
+                        2,
+                    hasNextPage:
+                        false,
+                    hasPreviousPage:
+                        true,
                 },
             });
 
@@ -279,14 +323,131 @@ describe("Watchlist API", () => {
                 where: {
                     userId: 1,
                 },
+
                 orderBy: {
-                    createdAt: "desc",
+                    createdAt:
+                        "desc",
                 },
+
                 skip: 1,
                 take: 1,
             });
         }
     );
+
+
+    /*
+     * Watchlist status testleri
+     */
+
+
+    test(
+        "GET /watchlist/157336/status - film izleme listesindeyse true dönmeli",
+        async () => {
+            prisma.watchlist.findUnique.mockResolvedValue({
+                id: 1,
+            });
+
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist/157336/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(200);
+
+            expect(
+                response.body
+            ).toEqual({
+                success: true,
+                message:
+                    "İzleme listesi durumu getirildi.",
+                data: {
+                    isWatchlisted:
+                        true,
+                },
+            });
+
+            expect(
+                prisma.watchlist.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId:
+                            157336,
+                    },
+                },
+
+                select: {
+                    id: true,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /watchlist/157336/status - film izleme listesinde değilse false dönmeli",
+        async () => {
+            prisma.watchlist.findUnique.mockResolvedValue(
+                null
+            );
+
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist/157336/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(200);
+
+            expect(
+                response.body
+            ).toEqual({
+                success: true,
+                message:
+                    "İzleme listesi durumu getirildi.",
+                data: {
+                    isWatchlisted:
+                        false,
+                },
+            });
+
+            expect(
+                prisma.watchlist.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId:
+                            157336,
+                    },
+                },
+
+                select: {
+                    id: true,
+                },
+            });
+        }
+    );
+
+
+    /*
+     * Delete testleri
+     */
 
 
     test(
@@ -295,25 +456,34 @@ describe("Watchlist API", () => {
             prisma.watchlist.findUnique.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
             prisma.watchlist.delete.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
-            const response = await request(app)
-                .delete("/watchlist/157336")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/watchlist/157336"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "Film izleme listesinden kaldırıldı.",
@@ -326,7 +496,8 @@ describe("Watchlist API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -337,7 +508,8 @@ describe("Watchlist API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -352,16 +524,23 @@ describe("Watchlist API", () => {
                 null
             );
 
-            const response = await request(app)
-                .delete("/watchlist/157336")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/watchlist/157336"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(404);
+            expect(
+                response.statusCode
+            ).toBe(404);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: false,
                 status: "fail",
                 message:
@@ -383,23 +562,31 @@ describe("Watchlist API", () => {
     test(
         "POST /watchlist - tmdbMovieId olmadan 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({});
+            const response =
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({});
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
-                message: "Geçersiz istek.",
+                message:
+                    "Geçersiz istek.",
             });
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId alanı zorunludur."
             );
 
@@ -413,19 +600,25 @@ describe("Watchlist API", () => {
     test(
         "POST /watchlist - geçersiz tmdbMovieId için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: "abc",
-                });
+            const response =
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            "abc",
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId geçerli bir sayı olmalıdır."
             );
 
@@ -439,19 +632,25 @@ describe("Watchlist API", () => {
     test(
         "POST /watchlist - sıfır tmdbMovieId için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/watchlist")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: 0,
-                });
+            const response =
+                await request(app)
+                    .post("/watchlist")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            0,
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId 0'dan büyük olmalıdır."
             );
 
@@ -463,24 +662,103 @@ describe("Watchlist API", () => {
 
 
     test(
-        "DELETE /watchlist/abc - geçersiz TMDB ID için 400 dönmeli",
+        "GET /watchlist/abc/status - geçersiz TMDB ID için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .delete("/watchlist/abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist/abc/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
-                message: "Geçersiz istek.",
+                message:
+                    "Geçersiz istek.",
             });
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
+                "TMDB film ID geçerli bir sayı olmalıdır."
+            );
+
+            expect(
+                prisma.watchlist.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /watchlist/0/status - sıfır TMDB ID için 400 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist/0/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(400);
+
+            expect(
+                response.body.errors
+            ).toContain(
+                "TMDB film ID 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.watchlist.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "DELETE /watchlist/abc - geçersiz TMDB ID için 400 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .delete(
+                        "/watchlist/abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(400);
+
+            expect(
+                response.body
+            ).toMatchObject({
+                success: false,
+                status: "fail",
+                message:
+                    "Geçersiz istek.",
+            });
+
+            expect(
+                response.body.errors
+            ).toContain(
                 "TMDB film ID geçerli bir sayı olmalıdır."
             );
 
@@ -494,16 +772,23 @@ describe("Watchlist API", () => {
     test(
         "DELETE /watchlist/0 - sıfır TMDB ID için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .delete("/watchlist/0")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/watchlist/0"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "TMDB film ID 0'dan büyük olmalıdır."
             );
 
@@ -517,16 +802,23 @@ describe("Watchlist API", () => {
     test(
         "GET /watchlist?page=0 - geçersiz page için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/watchlist?page=0")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist?page=0"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Sayfa numarası 0'dan büyük olmalıdır."
             );
 
@@ -544,18 +836,33 @@ describe("Watchlist API", () => {
     test(
         "GET /watchlist?page=abc - metin page için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/watchlist?page=abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist?page=abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Sayfa numarası geçerli bir tam sayı olmalıdır."
             );
+
+            expect(
+                prisma.watchlist.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.watchlist.count
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -563,18 +870,33 @@ describe("Watchlist API", () => {
     test(
         "GET /watchlist?limit=101 - maksimum limit aşılırsa 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/watchlist?limit=101")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist?limit=101"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Limit en fazla 100 olabilir."
             );
+
+            expect(
+                prisma.watchlist.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.watchlist.count
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -582,18 +904,62 @@ describe("Watchlist API", () => {
     test(
         "GET /watchlist?limit=abc - metin limit için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/watchlist?limit=abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist?limit=abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Limit geçerli bir tam sayı olmalıdır."
             );
+
+            expect(
+                prisma.watchlist.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.watchlist.count
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /watchlist/157336/status - token olmadan 401 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist/157336/status"
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(401);
+
+            expect(
+                response.body
+            ).toMatchObject({
+                success: false,
+                status: "fail",
+                message:
+                    "Yetkilendirme başarısız.",
+            });
+
+            expect(
+                prisma.watchlist.findUnique
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -601,12 +967,19 @@ describe("Watchlist API", () => {
     test(
         "GET /watchlist - token olmadan 401 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/watchlist");
+            const response =
+                await request(app)
+                    .get(
+                        "/watchlist"
+                    );
 
-            expect(response.statusCode).toBe(401);
+            expect(
+                response.statusCode
+            ).toBe(401);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
                 message:
@@ -615,6 +988,10 @@ describe("Watchlist API", () => {
 
             expect(
                 prisma.watchlist.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.watchlist.count
             ).not.toHaveBeenCalled();
         }
     );

@@ -105,6 +105,36 @@ const getWatchlist = async (
 };
 
 
+// Filmin izleme listesi durumunu kontrol eder
+const getWatchlistStatus = async (
+    userId,
+    tmdbMovieId
+) => {
+    const normalizedMovieId =
+        Number(tmdbMovieId);
+
+    const watchlist =
+        await prisma.watchlist.findUnique({
+            where: {
+                userId_tmdbMovieId: {
+                    userId,
+                    tmdbMovieId:
+                        normalizedMovieId,
+                },
+            },
+            select: {
+                id: true,
+            },
+        });
+
+
+    return {
+        isWatchlisted:
+            Boolean(watchlist),
+    };
+};
+
+
 // İzleme listesinden film kaldırır
 const removeWatchlist = async (
     userId,
@@ -147,5 +177,6 @@ const removeWatchlist = async (
 module.exports = {
     addWatchlist,
     getWatchlist,
+    getWatchlistStatus,
     removeWatchlist,
 };

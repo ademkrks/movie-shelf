@@ -109,6 +109,36 @@ const getFavorites = async (
 };
 
 
+// Filmin favori durumunu kontrol eder
+const getFavoriteStatus = async (
+    userId,
+    tmdbMovieId
+) => {
+    const normalizedMovieId =
+        Number(tmdbMovieId);
+
+    const favorite =
+        await prisma.favorite.findUnique({
+            where: {
+                userId_tmdbMovieId: {
+                    userId,
+                    tmdbMovieId:
+                        normalizedMovieId,
+                },
+            },
+            select: {
+                id: true,
+            },
+        });
+
+
+    return {
+        isFavorite:
+            Boolean(favorite),
+    };
+};
+
+
 // Favoriden film kaldırır
 const removeFavorite = async (
     userId,
@@ -151,5 +181,6 @@ const removeFavorite = async (
 module.exports = {
     addFavorite,
     getFavorites,
+    getFavoriteStatus,
     removeFavorite,
 };

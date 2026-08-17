@@ -39,6 +39,15 @@ const getFavorites = async (
 };
 
 
+const getFavoriteStatus = async (
+    tmdbMovieId
+) => {
+    return apiRequest(
+        `/favorites/${tmdbMovieId}/status`
+    );
+};
+
+
 const removeFavorite = async (
     tmdbMovieId
 ) => {
@@ -87,6 +96,15 @@ const getWatchlist = async (
 };
 
 
+const getWatchlistStatus = async (
+    tmdbMovieId
+) => {
+    return apiRequest(
+        `/watchlist/${tmdbMovieId}/status`
+    );
+};
+
+
 const removeFromWatchlist =
     async (
         tmdbMovieId
@@ -100,73 +118,13 @@ const removeFromWatchlist =
     };
 
 
-const getAllCollectionItems =
-    async (
-        collectionRequest
-    ) => {
-        const items = [];
-
-        let page = 1;
-        let hasNextPage = true;
-
-
-        while (hasNextPage) {
-            const response =
-                await collectionRequest(
-                    page,
-                    100
-                );
-
-
-            const data =
-                response.data;
-
-
-            items.push(
-                ...(
-                    data?.items ||
-                    []
-                )
-            );
-
-
-            hasNextPage =
-                Boolean(
-                    data?.pagination
-                        ?.hasNextPage
-                );
-
-            page += 1;
-        }
-
-
-        return items;
-    };
-
-
-const getAllFavorites =
-    async () => {
-        return getAllCollectionItems(
-            getFavorites
-        );
-    };
-
-
-const getAllWatchlist =
-    async () => {
-        return getAllCollectionItems(
-            getWatchlist
-        );
-    };
-
-
 export {
     addFavorite,
     getFavorites,
-    getAllFavorites,
+    getFavoriteStatus,
     removeFavorite,
     addToWatchlist,
     getWatchlist,
-    getAllWatchlist,
+    getWatchlistStatus,
     removeFromWatchlist,
 };

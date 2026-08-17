@@ -90,13 +90,18 @@ describe("Favorite API", () => {
                     tmdbMovieId: 157336,
                 });
 
-            expect(response.statusCode).toBe(201);
+            expect(
+                response.statusCode
+            ).toBe(201);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "Film favorilere eklendi.",
-                data: createdFavorite,
+                data:
+                    createdFavorite,
             });
 
             expect(
@@ -105,7 +110,8 @@ describe("Favorite API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -115,7 +121,8 @@ describe("Favorite API", () => {
             ).toHaveBeenCalledWith({
                 data: {
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             });
         }
@@ -128,22 +135,29 @@ describe("Favorite API", () => {
             prisma.favorite.findUnique.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
-            const response = await request(app)
-                .post("/favorites")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: 157336,
-                });
+            const response =
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            157336,
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: false,
                 status: "fail",
                 message:
@@ -164,12 +178,14 @@ describe("Favorite API", () => {
                 {
                     id: 2,
                     userId: 1,
-                    tmdbMovieId: 27205,
+                    tmdbMovieId:
+                        27205,
                 },
                 {
                     id: 1,
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             ];
 
@@ -181,28 +197,39 @@ describe("Favorite API", () => {
                 2
             );
 
-            const response = await request(app)
-                .get("/favorites")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "Favoriler getirildi.",
                 data: {
-                    items: favorites,
+                    items:
+                        favorites,
+
                     pagination: {
                         page: 1,
                         limit: 20,
-                        totalItems: 2,
-                        totalPages: 1,
-                        hasNextPage: false,
-                        hasPreviousPage: false,
+                        totalItems:
+                            2,
+                        totalPages:
+                            1,
+                        hasNextPage:
+                            false,
+                        hasPreviousPage:
+                            false,
                     },
                 },
             });
@@ -213,9 +240,12 @@ describe("Favorite API", () => {
                 where: {
                     userId: 1,
                 },
+
                 orderBy: {
-                    createdAt: "desc",
+                    createdAt:
+                        "desc",
                 },
+
                 skip: 0,
                 take: 20,
             });
@@ -238,7 +268,8 @@ describe("Favorite API", () => {
                 {
                     id: 1,
                     userId: 1,
-                    tmdbMovieId: 157336,
+                    tmdbMovieId:
+                        157336,
                 },
             ];
 
@@ -250,26 +281,37 @@ describe("Favorite API", () => {
                 2
             );
 
-            const response = await request(app)
-                .get(
-                    "/favorites?page=2&limit=1"
-                )
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites?page=2&limit=1"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body.data).toEqual({
-                items: favorites,
+            expect(
+                response.body.data
+            ).toEqual({
+                items:
+                    favorites,
+
                 pagination: {
                     page: 2,
                     limit: 1,
-                    totalItems: 2,
-                    totalPages: 2,
-                    hasNextPage: false,
-                    hasPreviousPage: true,
+                    totalItems:
+                        2,
+                    totalPages:
+                        2,
+                    hasNextPage:
+                        false,
+                    hasPreviousPage:
+                        true,
                 },
             });
 
@@ -279,14 +321,131 @@ describe("Favorite API", () => {
                 where: {
                     userId: 1,
                 },
+
                 orderBy: {
-                    createdAt: "desc",
+                    createdAt:
+                        "desc",
                 },
+
                 skip: 1,
                 take: 1,
             });
         }
     );
+
+
+    /*
+     * Favorite status testleri
+     */
+
+
+    test(
+        "GET /favorites/157336/status - film favorilerdeyse true dönmeli",
+        async () => {
+            prisma.favorite.findUnique.mockResolvedValue({
+                id: 1,
+            });
+
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites/157336/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(200);
+
+            expect(
+                response.body
+            ).toEqual({
+                success: true,
+                message:
+                    "Favori durumu getirildi.",
+                data: {
+                    isFavorite:
+                        true,
+                },
+            });
+
+            expect(
+                prisma.favorite.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId:
+                            157336,
+                    },
+                },
+
+                select: {
+                    id: true,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /favorites/157336/status - film favorilerde değilse false dönmeli",
+        async () => {
+            prisma.favorite.findUnique.mockResolvedValue(
+                null
+            );
+
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites/157336/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(200);
+
+            expect(
+                response.body
+            ).toEqual({
+                success: true,
+                message:
+                    "Favori durumu getirildi.",
+                data: {
+                    isFavorite:
+                        false,
+                },
+            });
+
+            expect(
+                prisma.favorite.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId:
+                            157336,
+                    },
+                },
+
+                select: {
+                    id: true,
+                },
+            });
+        }
+    );
+
+
+    /*
+     * Delete testleri
+     */
 
 
     test(
@@ -295,25 +454,34 @@ describe("Favorite API", () => {
             prisma.favorite.findUnique.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
             prisma.favorite.delete.mockResolvedValue({
                 id: 1,
                 userId: 1,
-                tmdbMovieId: 157336,
+                tmdbMovieId:
+                    157336,
             });
 
-            const response = await request(app)
-                .delete("/favorites/157336")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/favorites/157336"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(200);
+            expect(
+                response.statusCode
+            ).toBe(200);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: true,
                 message:
                     "Film favorilerden kaldırıldı.",
@@ -326,7 +494,8 @@ describe("Favorite API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -337,7 +506,8 @@ describe("Favorite API", () => {
                 where: {
                     userId_tmdbMovieId: {
                         userId: 1,
-                        tmdbMovieId: 157336,
+                        tmdbMovieId:
+                            157336,
                     },
                 },
             });
@@ -352,16 +522,23 @@ describe("Favorite API", () => {
                 null
             );
 
-            const response = await request(app)
-                .delete("/favorites/157336")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/favorites/157336"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(404);
+            expect(
+                response.statusCode
+            ).toBe(404);
 
-            expect(response.body).toEqual({
+            expect(
+                response.body
+            ).toEqual({
                 success: false,
                 status: "fail",
                 message:
@@ -383,23 +560,31 @@ describe("Favorite API", () => {
     test(
         "POST /favorites - tmdbMovieId olmadan 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/favorites")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({});
+            const response =
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({});
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
-                message: "Geçersiz istek.",
+                message:
+                    "Geçersiz istek.",
             });
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId alanı zorunludur."
             );
 
@@ -413,19 +598,25 @@ describe("Favorite API", () => {
     test(
         "POST /favorites - geçersiz tmdbMovieId için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/favorites")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: "abc",
-                });
+            const response =
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            "abc",
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId geçerli bir sayı olmalıdır."
             );
 
@@ -439,19 +630,25 @@ describe("Favorite API", () => {
     test(
         "POST /favorites - sıfır tmdbMovieId için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .post("/favorites")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                )
-                .send({
-                    tmdbMovieId: 0,
-                });
+            const response =
+                await request(app)
+                    .post("/favorites")
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    )
+                    .send({
+                        tmdbMovieId:
+                            0,
+                    });
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "tmdbMovieId 0'dan büyük olmalıdır."
             );
 
@@ -463,24 +660,103 @@ describe("Favorite API", () => {
 
 
     test(
-        "DELETE /favorites/abc - geçersiz TMDB ID için 400 dönmeli",
+        "GET /favorites/abc/status - geçersiz TMDB ID için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .delete("/favorites/abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites/abc/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
-                message: "Geçersiz istek.",
+                message:
+                    "Geçersiz istek.",
             });
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
+                "TMDB film ID geçerli bir sayı olmalıdır."
+            );
+
+            expect(
+                prisma.favorite.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /favorites/0/status - sıfır TMDB ID için 400 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites/0/status"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(400);
+
+            expect(
+                response.body.errors
+            ).toContain(
+                "TMDB film ID 0'dan büyük olmalıdır."
+            );
+
+            expect(
+                prisma.favorite.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "DELETE /favorites/abc - geçersiz TMDB ID için 400 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .delete(
+                        "/favorites/abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(400);
+
+            expect(
+                response.body
+            ).toMatchObject({
+                success: false,
+                status: "fail",
+                message:
+                    "Geçersiz istek.",
+            });
+
+            expect(
+                response.body.errors
+            ).toContain(
                 "TMDB film ID geçerli bir sayı olmalıdır."
             );
 
@@ -494,16 +770,23 @@ describe("Favorite API", () => {
     test(
         "DELETE /favorites/0 - sıfır TMDB ID için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .delete("/favorites/0")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .delete(
+                        "/favorites/0"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "TMDB film ID 0'dan büyük olmalıdır."
             );
 
@@ -517,16 +800,23 @@ describe("Favorite API", () => {
     test(
         "GET /favorites?page=0 - geçersiz page için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/favorites?page=0")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites?page=0"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Sayfa numarası 0'dan büyük olmalıdır."
             );
 
@@ -544,18 +834,33 @@ describe("Favorite API", () => {
     test(
         "GET /favorites?page=abc - metin page için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/favorites?page=abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites?page=abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Sayfa numarası geçerli bir tam sayı olmalıdır."
             );
+
+            expect(
+                prisma.favorite.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.favorite.count
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -563,18 +868,33 @@ describe("Favorite API", () => {
     test(
         "GET /favorites?limit=101 - maksimum limit aşılırsa 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/favorites?limit=101")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites?limit=101"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Limit en fazla 100 olabilir."
             );
+
+            expect(
+                prisma.favorite.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.favorite.count
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -582,18 +902,62 @@ describe("Favorite API", () => {
     test(
         "GET /favorites?limit=abc - metin limit için 400 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/favorites?limit=abc")
-                .set(
-                    "Authorization",
-                    `Bearer ${authToken}`
-                );
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites?limit=abc"
+                    )
+                    .set(
+                        "Authorization",
+                        `Bearer ${authToken}`
+                    );
 
-            expect(response.statusCode).toBe(400);
+            expect(
+                response.statusCode
+            ).toBe(400);
 
-            expect(response.body.errors).toContain(
+            expect(
+                response.body.errors
+            ).toContain(
                 "Limit geçerli bir tam sayı olmalıdır."
             );
+
+            expect(
+                prisma.favorite.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.favorite.count
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /favorites/157336/status - token olmadan 401 dönmeli",
+        async () => {
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites/157336/status"
+                    );
+
+            expect(
+                response.statusCode
+            ).toBe(401);
+
+            expect(
+                response.body
+            ).toMatchObject({
+                success: false,
+                status: "fail",
+                message:
+                    "Yetkilendirme başarısız.",
+            });
+
+            expect(
+                prisma.favorite.findUnique
+            ).not.toHaveBeenCalled();
         }
     );
 
@@ -601,12 +965,19 @@ describe("Favorite API", () => {
     test(
         "GET /favorites - token olmadan 401 dönmeli",
         async () => {
-            const response = await request(app)
-                .get("/favorites");
+            const response =
+                await request(app)
+                    .get(
+                        "/favorites"
+                    );
 
-            expect(response.statusCode).toBe(401);
+            expect(
+                response.statusCode
+            ).toBe(401);
 
-            expect(response.body).toMatchObject({
+            expect(
+                response.body
+            ).toMatchObject({
                 success: false,
                 status: "fail",
                 message:
@@ -615,6 +986,10 @@ describe("Favorite API", () => {
 
             expect(
                 prisma.favorite.findMany
+            ).not.toHaveBeenCalled();
+
+            expect(
+                prisma.favorite.count
             ).not.toHaveBeenCalled();
         }
     );

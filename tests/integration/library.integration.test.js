@@ -227,6 +227,110 @@ describe(
 
 
         test(
+            "GET /favorites/:tmdbMovieId/status - gerçek DB favorite durumunu yaşam döngüsü boyunca doğru dönmeli",
+            async () => {
+                const initialStatus =
+                    await request(app)
+                        .get(
+                            `/favorites/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    initialStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    initialStatus.body
+                ).toEqual({
+                    success: true,
+                    message:
+                        "Favori durumu getirildi.",
+                    data: {
+                        isFavorite:
+                            false,
+                    },
+                });
+
+
+                const addResponse =
+                    await request(app)
+                        .post("/favorites")
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        )
+                        .send({
+                            tmdbMovieId:
+                                MOVIE_ID,
+                        });
+
+                expect(
+                    addResponse.statusCode
+                ).toBe(201);
+
+
+                const addedStatus =
+                    await request(app)
+                        .get(
+                            `/favorites/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    addedStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    addedStatus.body.data
+                        .isFavorite
+                ).toBe(true);
+
+
+                const deleteResponse =
+                    await request(app)
+                        .delete(
+                            `/favorites/${MOVIE_ID}`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    deleteResponse.statusCode
+                ).toBe(200);
+
+
+                const removedStatus =
+                    await request(app)
+                        .get(
+                            `/favorites/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    removedStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    removedStatus.body.data
+                        .isFavorite
+                ).toBe(false);
+            }
+        );
+
+
+        test(
             "GET /favorites - varsayılan pagination ile gerçek DB favorilerini getirmeli",
             async () => {
                 await request(app)
@@ -564,6 +668,110 @@ describe(
                         });
 
                 expect(count).toBe(1);
+            }
+        );
+
+
+        test(
+            "GET /watchlist/:tmdbMovieId/status - gerçek DB watchlist durumunu yaşam döngüsü boyunca doğru dönmeli",
+            async () => {
+                const initialStatus =
+                    await request(app)
+                        .get(
+                            `/watchlist/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    initialStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    initialStatus.body
+                ).toEqual({
+                    success: true,
+                    message:
+                        "İzleme listesi durumu getirildi.",
+                    data: {
+                        isWatchlisted:
+                            false,
+                    },
+                });
+
+
+                const addResponse =
+                    await request(app)
+                        .post("/watchlist")
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        )
+                        .send({
+                            tmdbMovieId:
+                                MOVIE_ID,
+                        });
+
+                expect(
+                    addResponse.statusCode
+                ).toBe(201);
+
+
+                const addedStatus =
+                    await request(app)
+                        .get(
+                            `/watchlist/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    addedStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    addedStatus.body.data
+                        .isWatchlisted
+                ).toBe(true);
+
+
+                const deleteResponse =
+                    await request(app)
+                        .delete(
+                            `/watchlist/${MOVIE_ID}`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    deleteResponse.statusCode
+                ).toBe(200);
+
+
+                const removedStatus =
+                    await request(app)
+                        .get(
+                            `/watchlist/${MOVIE_ID}/status`
+                        )
+                        .set(
+                            "Authorization",
+                            `Bearer ${authToken}`
+                        );
+
+                expect(
+                    removedStatus.statusCode
+                ).toBe(200);
+
+                expect(
+                    removedStatus.body.data
+                        .isWatchlisted
+                ).toBe(false);
             }
         );
 
