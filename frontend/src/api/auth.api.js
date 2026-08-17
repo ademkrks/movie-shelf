@@ -82,10 +82,48 @@ const getProfile = async () => {
 };
 
 
+const updateProfile = async ({
+    name,
+    email,
+}) => {
+    return apiRequest(
+        "/users/me",
+        {
+            method: "PUT",
+
+            body: JSON.stringify({
+                name,
+                email,
+            }),
+        }
+    );
+};
+
+
+const changePassword = async ({
+    currentPassword,
+    newPassword,
+}) => {
+    return apiRequest(
+        "/users/change-password",
+        {
+            method: "PUT",
+
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+            }),
+        }
+    );
+};
+
+
 export {
     register,
     login,
     forgotPassword,
     resetPassword,
     getProfile,
+    updateProfile,
+    changePassword,
 };

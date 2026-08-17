@@ -5,8 +5,10 @@ import {
 } from "react";
 
 import {
+    changePassword as changePasswordRequest,
     getProfile,
     login as loginRequest,
+    updateProfile as updateProfileRequest,
 } from "../api/auth.api";
 
 
@@ -77,6 +79,54 @@ function AuthProvider({
     };
 
 
+    const updateProfile =
+        async (
+            profileData
+        ) => {
+            const result =
+                await updateProfileRequest(
+                    profileData
+                );
+
+
+            if (!result.data) {
+                throw new Error(
+                    "Profil güncelleme cevabı geçersiz."
+                );
+            }
+
+
+            setUser(
+                result.data
+            );
+
+
+            return result;
+        };
+
+
+    const changePassword =
+        async (
+            passwordData
+        ) => {
+            const result =
+                await changePasswordRequest(
+                    passwordData
+                );
+
+
+            /*
+             * Şifre değiştiğinde backend tokenVersion
+             * değerini artırdığı için mevcut JWT
+             * artık geçersizdir.
+             */
+            logout();
+
+
+            return result;
+        };
+
+
     useEffect(() => {
         const restoreSession =
             async () => {
@@ -131,6 +181,8 @@ function AuthProvider({
 
         login,
         logout,
+        updateProfile,
+        changePassword,
     };
 
 
