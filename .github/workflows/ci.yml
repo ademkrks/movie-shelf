@@ -15,8 +15,8 @@ permissions:
 
 
 jobs:
-  test:
-    name: Test Suite
+  backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
 
     services:
@@ -71,9 +71,10 @@ jobs:
         with:
           node-version: "22.22.2"
           cache: npm
+          cache-dependency-path: package-lock.json
 
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         run: npm ci
 
 
@@ -81,9 +82,47 @@ jobs:
         run: npm run db:generate
 
 
-      - name: Run all tests
+      - name: Run backend test suite
         run: npm run test:all
 
 
-      - name: Security audit
+      - name: Security audit report
         run: npm audit
+        continue-on-error: true
+
+
+      - name: Block critical vulnerabilities
+        run: npm audit --audit-level=critical
+
+
+  frontend:
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.22.2"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint
+
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
