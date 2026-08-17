@@ -17,20 +17,41 @@ const transporter = nodemailer.createTransport({
 });
 
 
+// Şifre sıfırlama URL'sini oluşturur
+const createPasswordResetUrl = (
+    resetToken
+) => {
+    const resetUrl = new URL(
+        "/reset-password",
+        env.frontendUrl
+    );
+
+    resetUrl.searchParams.set(
+        "token",
+        resetToken
+    );
+
+    return resetUrl.toString();
+};
+
+
 // Şifre sıfırlama e-postası gönderir
 const sendPasswordResetEmail = async (
     email,
     resetToken
 ) => {
     const resetUrl =
-        `${env.frontendUrl}/reset-password?token=${resetToken}`;
+        createPasswordResetUrl(
+            resetToken
+        );
 
     try {
         await transporter.sendMail({
             from: env.emailFrom,
             to: email,
 
-            subject: "MovieShelf Şifre Sıfırlama",
+            subject:
+                "MovieShelf Şifre Sıfırlama",
 
             text:
                 "MovieShelf hesabınızın şifresini sıfırlamak için " +
@@ -39,11 +60,14 @@ const sendPasswordResetEmail = async (
                 "Bu isteği siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.",
 
             html: `
-                <h2>MovieShelf Şifre Sıfırlama</h2>
+                <h2>
+                    MovieShelf Şifre Sıfırlama
+                </h2>
 
                 <p>
-                    Hesabınızın şifresini sıfırlamak için
-                    aşağıdaki bağlantıyı kullanın.
+                    Hesabınızın şifresini
+                    sıfırlamak için aşağıdaki
+                    bağlantıyı kullanın.
                 </p>
 
                 <p>
@@ -53,12 +77,14 @@ const sendPasswordResetEmail = async (
                 </p>
 
                 <p>
-                    Bu bağlantı 15 dakika boyunca geçerlidir.
+                    Bu bağlantı 15 dakika
+                    boyunca geçerlidir.
                 </p>
 
                 <p>
                     Bu isteği siz yapmadıysanız
-                    bu e-postayı görmezden gelebilirsiniz.
+                    bu e-postayı görmezden
+                    gelebilirsiniz.
                 </p>
             `,
         });

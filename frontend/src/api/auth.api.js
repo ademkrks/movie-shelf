@@ -41,6 +41,40 @@ const login = async ({
 };
 
 
+const forgotPassword = async ({
+    email,
+}) => {
+    return apiRequest(
+        "/auth/forgot-password",
+        {
+            method: "POST",
+
+            body: JSON.stringify({
+                email,
+            }),
+        }
+    );
+};
+
+
+const resetPassword = async ({
+    token,
+    password,
+}) => {
+    return apiRequest(
+        "/auth/reset-password",
+        {
+            method: "POST",
+
+            body: JSON.stringify({
+                token,
+                password,
+            }),
+        }
+    );
+};
+
+
 const getProfile = async () => {
     return apiRequest(
         "/users/me"
@@ -51,5 +85,7 @@ const getProfile = async () => {
 export {
     register,
     login,
+    forgotPassword,
+    resetPassword,
     getProfile,
 };
