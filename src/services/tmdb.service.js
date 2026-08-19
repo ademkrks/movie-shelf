@@ -11,8 +11,11 @@ const api = axios.create({
     timeout: 10000,
 
     headers: {
-        Authorization: `Bearer ${env.tmdbApiKey}`,
-        Accept: "application/json",
+        Authorization:
+            `Bearer ${env.tmdbApiKey}`,
+
+        Accept:
+            "application/json",
     },
 });
 
@@ -20,17 +23,23 @@ const api = axios.create({
 // TMDB kaynaklı hataları güvenli API hatalarına çevirir
 const handleTmdbError = (error) => {
     // TMDB üzerinde kaynak bulunamadı
-    if (error.response?.status === 404) {
+    if (
+        error.response?.status ===
+        404
+    ) {
         throw new AppError(
             "TMDB üzerinde istenen kaynak bulunamadı.",
             404
         );
     }
 
+
     // İstek zaman aşımına uğradı
     if (
-        error.code === "ECONNABORTED" ||
-        error.code === "ETIMEDOUT"
+        error.code ===
+            "ECONNABORTED" ||
+        error.code ===
+            "ETIMEDOUT"
     ) {
         throw new AppError(
             "TMDB servisi zaman aşımına uğradı.",
@@ -38,21 +47,28 @@ const handleTmdbError = (error) => {
         );
     }
 
+
     // TMDB cevap verdi ancak hata döndürdü
-    if (error.response) {
+    if (
+        error.response
+    ) {
         throw new AppError(
             "TMDB servisinden geçerli bir cevap alınamadı.",
             502
         );
     }
 
+
     // TMDB servisine hiç ulaşılamadı
-    if (error.request) {
+    if (
+        error.request
+    ) {
         throw new AppError(
             "TMDB servisine ulaşılamadı.",
             502
         );
     }
+
 
     // Beklenmeyen hata
     throw error;
@@ -60,59 +76,83 @@ const handleTmdbError = (error) => {
 
 
 // Haftalık trend filmleri getirir
-const getTrendingMovies = async () => {
-    try {
-        const response = await api.get(
-            "/trending/movie/week"
-        );
+const getTrendingMovies =
+    async () => {
+        try {
+            const response =
+                await api.get(
+                    "/trending/movie/week"
+                );
 
-        return response.data.results;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .results;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // Popüler filmleri getirir
-const getPopularMovies = async () => {
-    try {
-        const response = await api.get(
-            "/movie/popular"
-        );
+const getPopularMovies =
+    async () => {
+        try {
+            const response =
+                await api.get(
+                    "/movie/popular"
+                );
 
-        return response.data.results;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .results;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // En yüksek puanlı filmleri getirir
-const getTopRatedMovies = async () => {
-    try {
-        const response = await api.get(
-            "/movie/top_rated"
-        );
+const getTopRatedMovies =
+    async () => {
+        try {
+            const response =
+                await api.get(
+                    "/movie/top_rated"
+                );
 
-        return response.data.results;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .results;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // Yakında vizyona girecek filmleri getirir
-const getUpcomingMovies = async () => {
-    try {
-        const response = await api.get(
-            "/movie/upcoming"
-        );
+const getUpcomingMovies =
+    async () => {
+        try {
+            const response =
+                await api.get(
+                    "/movie/upcoming"
+                );
 
-        return response.data.results;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .results;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // Film arar ve pagination bilgilerini getirir
@@ -124,16 +164,19 @@ const searchMovies = async (
         const normalizedPage =
             Number(page);
 
-        const response = await api.get(
-            "/search/movie",
-            {
-                params: {
-                    query,
-                    page:
-                        normalizedPage,
-                },
-            }
-        );
+
+        const response =
+            await api.get(
+                "/search/movie",
+                {
+                    params: {
+                        query,
+
+                        page:
+                            normalizedPage,
+                    },
+                }
+            );
 
 
         const currentPage =
@@ -142,12 +185,14 @@ const searchMovies = async (
             ) ||
             normalizedPage;
 
+
         const totalPages =
             Number(
                 response.data
                     .total_pages
             ) ||
             0;
+
 
         const totalItems =
             Number(
@@ -181,55 +226,185 @@ const searchMovies = async (
             },
         };
     } catch (error) {
-        handleTmdbError(error);
+        handleTmdbError(
+            error
+        );
     }
 };
 
 
 // Film detayını getirir
-const getMovieDetails = async (movieId) => {
-    try {
-        const response = await api.get(
-            `/movie/${movieId}`
+const getMovieDetails =
+    async (
+        movieId
+    ) => {
+        try {
+            const response =
+                await api.get(
+                    `/movie/${movieId}`
+                );
+
+
+            return response.data;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
+
+
+// Birden fazla filmin detayını getirir
+const getMovieDetailsBatch =
+    async (
+        movieIds
+    ) => {
+        const uniqueMovieIds =
+            [
+                ...new Set(
+                    movieIds.map(
+                        (movieId) =>
+                            Number(
+                                movieId
+                            )
+                    )
+                ),
+            ];
+
+
+        if (
+            uniqueMovieIds.length ===
+            0
+        ) {
+            return {
+                items: [],
+                failedMovieIds: [],
+            };
+        }
+
+
+        const results =
+            await Promise.allSettled(
+                uniqueMovieIds.map(
+                    (movieId) =>
+                        getMovieDetails(
+                            movieId
+                        )
+                )
+            );
+
+
+        const items = [];
+
+        const failedMovieIds =
+            [];
+
+        let firstError =
+            null;
+
+
+        results.forEach(
+            (
+                result,
+                index
+            ) => {
+                if (
+                    result.status ===
+                    "fulfilled"
+                ) {
+                    items.push(
+                        result.value
+                    );
+
+                    return;
+                }
+
+
+                failedMovieIds.push(
+                    uniqueMovieIds[
+                        index
+                    ]
+                );
+
+
+                if (
+                    !firstError
+                ) {
+                    firstError =
+                        result.reason;
+                }
+            }
         );
 
-        return response.data;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+        /*
+         * Tüm TMDB çağrıları başarısızsa
+         * hatayı boş liste gibi gizleme.
+         */
+        if (
+            items.length ===
+                0 &&
+            firstError
+        ) {
+            throw firstError;
+        }
+
+
+        return {
+            items,
+            failedMovieIds,
+        };
+    };
 
 
 // Film oyuncu kadrosunu getirir
-const getMovieCast = async (movieId) => {
-    try {
-        const response = await api.get(
-            `/movie/${movieId}/credits`
-        );
+const getMovieCast =
+    async (
+        movieId
+    ) => {
+        try {
+            const response =
+                await api.get(
+                    `/movie/${movieId}/credits`
+                );
 
-        return response.data.cast;
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .cast;
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // Film fragmanlarını getirir
-const getMovieTrailers = async (movieId) => {
-    try {
-        const response = await api.get(
-            `/movie/${movieId}/videos`
-        );
+const getMovieTrailers =
+    async (
+        movieId
+    ) => {
+        try {
+            const response =
+                await api.get(
+                    `/movie/${movieId}/videos`
+                );
 
-        return response.data.results.filter(
-            (video) =>
-                video.site === "YouTube" &&
-                video.type === "Trailer"
-        );
-    } catch (error) {
-        handleTmdbError(error);
-    }
-};
+
+            return response.data
+                .results.filter(
+                    (video) =>
+                        video.site ===
+                            "YouTube" &&
+                        video.type ===
+                            "Trailer"
+                );
+        } catch (error) {
+            handleTmdbError(
+                error
+            );
+        }
+    };
 
 
 // Fonksiyonları dışa aktarır
@@ -240,6 +415,7 @@ module.exports = {
     getUpcomingMovies,
     searchMovies,
     getMovieDetails,
+    getMovieDetailsBatch,
     getMovieCast,
     getMovieTrailers,
 };

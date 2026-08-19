@@ -8,199 +8,240 @@ const response = require(
 
 
 // Trend filmleri getirir
-const getTrendingMovies = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const movies =
-            await tmdbService
-                .getTrendingMovies();
+const getTrendingMovies =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const movies =
+                await tmdbService
+                    .getTrendingMovies();
 
-        response.success(
-            res,
-            movies,
-            "Trend filmler getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                movies,
+                "Trend filmler getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Popüler filmleri getirir
-const getPopularMovies = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const movies =
-            await tmdbService
-                .getPopularMovies();
+const getPopularMovies =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const movies =
+                await tmdbService
+                    .getPopularMovies();
 
-        response.success(
-            res,
-            movies,
-            "Popüler filmler getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                movies,
+                "Popüler filmler getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // En yüksek puanlı filmleri getirir
-const getTopRatedMovies = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const movies =
-            await tmdbService
-                .getTopRatedMovies();
+const getTopRatedMovies =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const movies =
+                await tmdbService
+                    .getTopRatedMovies();
 
-        response.success(
-            res,
-            movies,
-            "En yüksek puanlı filmler getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                movies,
+                "En yüksek puanlı filmler getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Yakında vizyona girecek filmleri getirir
-const getUpcomingMovies = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const movies =
-            await tmdbService
-                .getUpcomingMovies();
+const getUpcomingMovies =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const movies =
+                await tmdbService
+                    .getUpcomingMovies();
 
-        response.success(
-            res,
-            movies,
-            "Yakında vizyona girecek filmler getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                movies,
+                "Yakında vizyona girecek filmler getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Film arar
-const searchMovie = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const page =
-            req.query.page !==
-            undefined
-                ? Number(
-                    req.query.page
-                )
-                : 1;
+const searchMovie =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const page =
+                req.query.page !==
+                undefined
+                    ? Number(
+                        req.query.page
+                    )
+                    : 1;
 
 
-        const result =
-            await tmdbService
-                .searchMovies(
-                    req.query.q
-                        .trim(),
-                    page
-                );
+            const result =
+                await tmdbService
+                    .searchMovies(
+                        req.query.q
+                            .trim(),
+                        page
+                    );
 
 
-        response.success(
-            res,
-            result,
-            "Arama sonuçları getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+            response.success(
+                res,
+                result,
+                "Arama sonuçları getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Film detaylarını getirir
-const getMovieDetails = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const movie =
-            await tmdbService
-                .getMovieDetails(
-                    req.params.id
-                );
+const getMovieDetails =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const movie =
+                await tmdbService
+                    .getMovieDetails(
+                        req.params.id
+                    );
 
-        response.success(
-            res,
-            movie,
-            "Film detayları getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                movie,
+                "Film detayları getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
+
+
+// Birden fazla filmin detayını getirir
+const getMovieDetailsBatch =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const result =
+                await tmdbService
+                    .getMovieDetailsBatch(
+                        req.body.movieIds
+                    );
+
+
+            response.success(
+                res,
+                result,
+                "Film detayları getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Film oyuncu kadrosunu getirir
-const getMovieCast = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const cast =
-            await tmdbService
-                .getMovieCast(
-                    req.params.id
-                );
+const getMovieCast =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const cast =
+                await tmdbService
+                    .getMovieCast(
+                        req.params.id
+                    );
 
-        response.success(
-            res,
-            cast,
-            "Film oyuncu kadrosu getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                cast,
+                "Film oyuncu kadrosu getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 // Film fragmanlarını getirir
-const getMovieTrailers = async (
-    req,
-    res,
-    next
-) => {
-    try {
-        const trailers =
-            await tmdbService
-                .getMovieTrailers(
-                    req.params.id
-                );
+const getMovieTrailers =
+    async (
+        req,
+        res,
+        next
+    ) => {
+        try {
+            const trailers =
+                await tmdbService
+                    .getMovieTrailers(
+                        req.params.id
+                    );
 
-        response.success(
-            res,
-            trailers,
-            "Film fragmanları getirildi."
-        );
-    } catch (error) {
-        next(error);
-    }
-};
+
+            response.success(
+                res,
+                trailers,
+                "Film fragmanları getirildi."
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
 
 module.exports = {
@@ -210,6 +251,7 @@ module.exports = {
     getUpcomingMovies,
     searchMovie,
     getMovieDetails,
+    getMovieDetailsBatch,
     getMovieCast,
     getMovieTrailers,
 };

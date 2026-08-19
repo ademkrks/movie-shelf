@@ -1,6 +1,9 @@
-const express = require("express");
+const express = require(
+    "express"
+);
 
-const router = express.Router();
+const router =
+    express.Router();
 
 const tmdbController = require(
     "../controllers/tmdb.controller"
@@ -13,6 +16,7 @@ const validateRequest = require(
 const {
     tmdbIdValidation,
     movieSearchValidation,
+    movieBatchValidation,
 } = require(
     "../validations/tmdb.validation"
 );
@@ -38,7 +42,8 @@ const {
  */
 router.get(
     "/trending",
-    tmdbController.getTrendingMovies
+    tmdbController
+        .getTrendingMovies
 );
 
 
@@ -54,7 +59,8 @@ router.get(
  */
 router.get(
     "/popular",
-    tmdbController.getPopularMovies
+    tmdbController
+        .getPopularMovies
 );
 
 
@@ -70,7 +76,8 @@ router.get(
  */
 router.get(
     "/top-rated",
-    tmdbController.getTopRatedMovies
+    tmdbController
+        .getTopRatedMovies
 );
 
 
@@ -86,7 +93,8 @@ router.get(
  */
 router.get(
     "/upcoming",
-    tmdbController.getUpcomingMovies
+    tmdbController
+        .getUpcomingMovies
 );
 
 
@@ -131,6 +139,53 @@ router.get(
 
 /**
  * @swagger
+ * /tmdb/movies/batch:
+ *   post:
+ *     summary: Birden fazla filmin detaylarını toplu getirir
+ *     tags: [TMDB]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - movieIds
+ *             properties:
+ *               movieIds:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 20
+ *                 items:
+ *                   type: integer
+ *                   minimum: 1
+ *                 example:
+ *                   - 157336
+ *                   - 27205
+ *                   - 155
+ *     responses:
+ *       200:
+ *         description: Film detayları başarıyla getirildi
+ *       400:
+ *         description: Film ID listesi geçersiz
+ *       502:
+ *         description: TMDB servisine ulaşılamadı
+ *       504:
+ *         description: TMDB servisi zaman aşımına uğradı
+ */
+router.post(
+    "/movies/batch",
+    validateRequest({
+        body:
+            movieBatchValidation,
+    }),
+    tmdbController
+        .getMovieDetailsBatch
+);
+
+
+/**
+ * @swagger
  * /tmdb/movie/{id}:
  *   get:
  *     summary: Film detaylarını getirir
@@ -157,7 +212,8 @@ router.get(
         params:
             tmdbIdValidation,
     }),
-    tmdbController.getMovieDetails
+    tmdbController
+        .getMovieDetails
 );
 
 
@@ -189,7 +245,8 @@ router.get(
         params:
             tmdbIdValidation,
     }),
-    tmdbController.getMovieCast
+    tmdbController
+        .getMovieCast
 );
 
 
@@ -221,7 +278,8 @@ router.get(
         params:
             tmdbIdValidation,
     }),
-    tmdbController.getMovieTrailers
+    tmdbController
+        .getMovieTrailers
 );
 
 

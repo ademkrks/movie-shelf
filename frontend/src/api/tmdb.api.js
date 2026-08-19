@@ -3,32 +3,36 @@ import {
 } from "./client";
 
 
-const getTrendingMovies = async () => {
-    return apiRequest(
-        "/tmdb/trending"
-    );
-};
+const getTrendingMovies =
+    async () => {
+        return apiRequest(
+            "/tmdb/trending"
+        );
+    };
 
 
-const getPopularMovies = async () => {
-    return apiRequest(
-        "/tmdb/popular"
-    );
-};
+const getPopularMovies =
+    async () => {
+        return apiRequest(
+            "/tmdb/popular"
+        );
+    };
 
 
-const getTopRatedMovies = async () => {
-    return apiRequest(
-        "/tmdb/top-rated"
-    );
-};
+const getTopRatedMovies =
+    async () => {
+        return apiRequest(
+            "/tmdb/top-rated"
+        );
+    };
 
 
-const getUpcomingMovies = async () => {
-    return apiRequest(
-        "/tmdb/upcoming"
-    );
-};
+const getUpcomingMovies =
+    async () => {
+        return apiRequest(
+            "/tmdb/upcoming"
+        );
+    };
 
 
 const searchMovies = async (
@@ -38,7 +42,8 @@ const searchMovies = async (
     const params =
         new URLSearchParams({
             q: query,
-            page: String(page),
+            page:
+                String(page),
         });
 
 
@@ -48,31 +53,60 @@ const searchMovies = async (
 };
 
 
-const getMovieDetails = async (
-    movieId
-) => {
-    return apiRequest(
-        `/tmdb/movie/${movieId}`
-    );
-};
+const getMovieDetails =
+    async (
+        movieId
+    ) => {
+        return apiRequest(
+            `/tmdb/movie/${movieId}`
+        );
+    };
 
 
-const getMovieCast = async (
-    movieId
-) => {
-    return apiRequest(
-        `/tmdb/movie/${movieId}/cast`
-    );
-};
+const getMovieDetailsBatch =
+    async (
+        movieIds
+    ) => {
+        return apiRequest(
+            "/tmdb/movies/batch",
+            {
+                method: "POST",
+
+                body:
+                    JSON.stringify({
+                        movieIds:
+                            movieIds.map(
+                                (
+                                    movieId
+                                ) =>
+                                    Number(
+                                        movieId
+                                    )
+                            ),
+                    }),
+            }
+        );
+    };
 
 
-const getMovieTrailers = async (
-    movieId
-) => {
-    return apiRequest(
-        `/tmdb/movie/${movieId}/trailers`
-    );
-};
+const getMovieCast =
+    async (
+        movieId
+    ) => {
+        return apiRequest(
+            `/tmdb/movie/${movieId}/cast`
+        );
+    };
+
+
+const getMovieTrailers =
+    async (
+        movieId
+    ) => {
+        return apiRequest(
+            `/tmdb/movie/${movieId}/trailers`
+        );
+    };
 
 
 export {
@@ -82,6 +116,7 @@ export {
     getUpcomingMovies,
     searchMovies,
     getMovieDetails,
+    getMovieDetailsBatch,
     getMovieCast,
     getMovieTrailers,
 };

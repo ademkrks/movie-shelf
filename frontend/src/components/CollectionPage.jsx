@@ -12,7 +12,7 @@ import {
 import CollectionMovieCard from "./CollectionMovieCard";
 
 import {
-    getMovieDetails,
+    getMovieDetailsBatch,
 } from "../api/tmdb.api";
 
 import useAuth from "../hooks/useAuth";
@@ -42,38 +42,89 @@ const fetchCollectionPage =
             [];
 
 
+        if (
+            items.length ===
+            0
+        ) {
+            return {
+                movies: [],
+
+                pagination:
+                    collectionData
+                        ?.pagination ||
+                    null,
+            };
+        }
+
+
+        const movieIds =
+            items.map(
+                (item) =>
+                    Number(
+                        item.tmdbMovieId
+                    )
+            );
+
+
+        const movieResponse =
+            await getMovieDetailsBatch(
+                movieIds
+            );
+
+
         const movieDetails =
-            await Promise.all(
-                items.map(
-                    async (
-                        item
-                    ) => {
-                        try {
-                            const movieResponse =
-                                await getMovieDetails(
-                                    item.tmdbMovieId
-                                );
+            movieResponse.data
+                ?.items ||
+            [];
 
 
-                            return {
-                                ...movieResponse.data,
-
-                                collectionCreatedAt:
-                                    item.createdAt,
-                            };
-                        } catch {
-                            return null;
-                        }
-                    }
+        const moviesById =
+            new Map(
+                movieDetails.map(
+                    (movie) => [
+                        Number(
+                            movie.id
+                        ),
+                        movie,
+                    ]
                 )
             );
 
 
-        return {
-            movies:
-                movieDetails.filter(
+        const movies =
+            items
+                .map(
+                    (item) => {
+                        const movie =
+                            moviesById.get(
+                                Number(
+                                    item.tmdbMovieId
+                                )
+                            );
+
+
+                        if (
+                            !movie
+                        ) {
+                            return null;
+                        }
+
+
+                        return {
+                            ...movie,
+
+                            collectionCreatedAt:
+                                item.createdAt,
+                        };
+                    }
+                )
+                .filter(
                     Boolean
-                ),
+                );
+
+
+        return {
+            movies,
 
             pagination:
                 collectionData
