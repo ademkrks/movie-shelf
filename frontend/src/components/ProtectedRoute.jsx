@@ -11,13 +11,15 @@ import "../styles/route-loading.css";
 function ProtectedRoute({
     children,
 }) {
+    const location =
+        useLocation();
+
     const {
         isAuthenticated,
         isLoading,
+        sessionError,
+        retrySession,
     } = useAuth();
-
-    const location =
-        useLocation();
 
 
     if (isLoading) {
@@ -67,7 +69,55 @@ function ProtectedRoute({
     }
 
 
-    if (!isAuthenticated) {
+    if (
+        sessionError
+    ) {
+        return (
+            <section
+                className="route-loading"
+                role="alert"
+            >
+                <div className="route-loading-content">
+                    <div
+                        className="route-loading-mark"
+                        aria-hidden="true"
+                    >
+                        <span className="route-loading-brand">
+                            !
+                        </span>
+                    </div>
+
+                    <p className="eyebrow">
+                        CONNECTION ISSUE
+                    </p>
+
+                    <h1>
+                        We couldn&apos;t verify
+                        your session
+                    </h1>
+
+                    <p className="route-loading-description">
+                        {sessionError}
+                    </p>
+
+                    <button
+                        type="button"
+                        className="primary-button"
+                        onClick={
+                            retrySession
+                        }
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </section>
+        );
+    }
+
+
+    if (
+        !isAuthenticated
+    ) {
         return (
             <Navigate
                 to="/login"

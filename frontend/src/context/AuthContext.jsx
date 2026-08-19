@@ -1,5 +1,6 @@
 import {
     createContext,
+    useCallback,
     useEffect,
     useState,
 } from "react";
@@ -23,60 +24,130 @@ const TOKEN_KEY =
 function AuthProvider({
     children,
 }) {
-    const [user, setUser] =
-        useState(null);
+    const [
+        user,
+        setUser,
+    ] = useState(null);
 
     const [
         isLoading,
         setIsLoading,
-    ] = useState(true);
+    ] = useState(
+        () =>
+            Boolean(
+                localStorage.getItem(
+                    TOKEN_KEY
+                )
+            )
+    );
+
+    const [
+        sessionError,
+        setSessionError,
+    ] = useState("");
 
 
-    const logout = () => {
-        localStorage.removeItem(
-            TOKEN_KEY
+    const logout =
+        useCallback(() => {
+            localStorage.removeItem(
+                TOKEN_KEY
+            );
+
+            setUser(null);
+
+            setSessionError("");
+        }, []);
+
+
+    const handleSessionError =
+        useCallback(
+            (
+                requestError
+            ) => {
+                /*
+                 * 401:
+                 * Token geçersiz veya süresi dolmuş.
+                 *
+                 * 404:
+                 * Token geçerli görünse bile kullanıcı
+                 * hesabı artık mevcut değil.
+                 */
+                if (
+                    requestError.status ===
+                        401 ||
+                    requestError.status ===
+                        404
+                ) {
+                    localStorage.removeItem(
+                        TOKEN_KEY
+                    );
+
+                    setUser(null);
+
+                    setSessionError("");
+
+
+                    return false;
+                }
+
+
+                /*
+                 * Network, timeout veya 5xx gibi
+                 * geçici hatalarda token korunur.
+                 */
+                setUser(null);
+
+                setSessionError(
+                    requestError.message ||
+                        "Oturum doğrulanamadı. Lütfen tekrar deneyin."
+                );
+
+
+                return false;
+            },
+            []
         );
 
-        setUser(null);
-    };
+
+    const login =
+        async (
+            credentials
+        ) => {
+            const result =
+                await loginRequest(
+                    credentials
+                );
 
 
-    const login = async (
-        credentials
-    ) => {
-        const result =
-            await loginRequest(
-                credentials
+            const authData =
+                result.data;
+
+
+            if (
+                !authData?.token ||
+                !authData?.user
+            ) {
+                throw new Error(
+                    "Giriş cevabı geçersiz."
+                );
+            }
+
+
+            localStorage.setItem(
+                TOKEN_KEY,
+                authData.token
             );
 
 
-        const authData =
-            result.data;
-
-
-        if (
-            !authData?.token ||
-            !authData?.user
-        ) {
-            throw new Error(
-                "Giriş cevabı geçersiz."
+            setUser(
+                authData.user
             );
-        }
+
+            setSessionError("");
 
 
-        localStorage.setItem(
-            TOKEN_KEY,
-            authData.token
-        );
-
-
-        setUser(
-            authData.user
-        );
-
-
-        return authData.user;
-    };
+            return authData.user;
+        };
 
 
     const updateProfile =
@@ -89,7 +160,9 @@ function AuthProvider({
                 );
 
 
-            if (!result.data) {
+            if (
+                !result.data
+            ) {
                 throw new Error(
                     "Profil güncelleme cevabı geçersiz."
                 );
@@ -116,9 +189,9 @@ function AuthProvider({
 
 
             /*
-             * Şifre değiştiğinde backend tokenVersion
-             * değerini artırdığı için mevcut JWT
-             * artık geçersizdir.
+             * Backend tokenVersion değerini
+             * artırdığı için mevcut JWT artık
+             * geçersiz hale gelir.
              */
             logout();
 
@@ -127,8 +200,8 @@ function AuthProvider({
         };
 
 
-    useEffect(() => {
-        const restoreSession =
+    const retrySession =
+        useCallback(
             async () => {
                 const token =
                     localStorage.getItem(
@@ -136,13 +209,24 @@ function AuthProvider({
                     );
 
 
+                setSessionError("");
+
+
                 if (!token) {
+                    setUser(null);
+
                     setIsLoading(
                         false
                     );
 
-                    return;
+
+                    return false;
                 }
+
+
+                setIsLoading(
+                    true
+                );
 
 
                 try {
@@ -150,25 +234,119 @@ function AuthProvider({
                         await getProfile();
 
 
+                    if (
+                        !result?.data
+                    ) {
+                        throw new Error(
+                            "Profil cevabı geçersiz."
+                        );
+                    }
+
+
                     setUser(
                         result.data
                     );
-                } catch {
-                    localStorage.removeItem(
-                        TOKEN_KEY
-                    );
 
-                    setUser(null);
+                    setSessionError("");
+
+
+                    return true;
+                } catch (
+                    requestError
+                ) {
+                    return handleSessionError(
+                        requestError
+                    );
                 } finally {
                     setIsLoading(
                         false
                     );
                 }
-            };
+            },
+            [
+                handleSessionError,
+            ]
+        );
 
 
-        restoreSession();
-    }, []);
+    useEffect(() => {
+        const token =
+            localStorage.getItem(
+                TOKEN_KEY
+            );
+
+
+        if (!token) {
+            return undefined;
+        }
+
+
+        let cancelled =
+            false;
+
+
+        getProfile()
+            .then(
+                (result) => {
+                    if (
+                        cancelled
+                    ) {
+                        return;
+                    }
+
+
+                    if (
+                        !result?.data
+                    ) {
+                        throw new Error(
+                            "Profil cevabı geçersiz."
+                        );
+                    }
+
+
+                    setUser(
+                        result.data
+                    );
+
+                    setSessionError("");
+                }
+            )
+            .catch(
+                (
+                    requestError
+                ) => {
+                    if (
+                        cancelled
+                    ) {
+                        return;
+                    }
+
+
+                    handleSessionError(
+                        requestError
+                    );
+                }
+            )
+            .finally(
+                () => {
+                    if (
+                        !cancelled
+                    ) {
+                        setIsLoading(
+                            false
+                        );
+                    }
+                }
+            );
+
+
+        return () => {
+            cancelled =
+                true;
+        };
+    }, [
+        handleSessionError,
+    ]);
 
 
     const value = {
@@ -179,10 +357,14 @@ function AuthProvider({
 
         isLoading,
 
+        sessionError,
+
         login,
         logout,
         updateProfile,
         changePassword,
+
+        retrySession,
     };
 
 
