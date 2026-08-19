@@ -143,6 +143,31 @@ const getMovieRatings = async (
 };
 
 
+// Kullanıcının belirli bir filme verdiği puanı getirir
+const getMyRating = async (
+    userId,
+    tmdbMovieId
+) => {
+    const normalizedMovieId =
+        Number(tmdbMovieId);
+
+    return await prisma.rating.findUnique({
+        where: {
+            userId_tmdbMovieId: {
+                userId,
+                tmdbMovieId:
+                    normalizedMovieId,
+            },
+        },
+        select: {
+            id: true,
+            tmdbMovieId: true,
+            rating: true,
+        },
+    });
+};
+
+
 // Kullanıcının kendi puanını günceller
 const updateRating = async (
     ratingId,
@@ -235,6 +260,7 @@ const deleteRating = async (
 module.exports = {
     addRating,
     getMovieRatings,
+    getMyRating,
     updateRating,
     deleteRating,
 };

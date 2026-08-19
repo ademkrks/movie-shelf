@@ -75,6 +75,32 @@ const getMovieRatings = async (
 };
 
 
+// Kullanıcının filme verdiği kendi puanını getirir
+const getMyRating = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const rating =
+            await ratingService.getMyRating(
+                req.user.id,
+                Number(
+                    req.params.tmdbMovieId
+                )
+            );
+
+        response.success(
+            res,
+            rating,
+            "Kullanıcının film puanı getirildi."
+        );
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 // Kullanıcının puanını günceller
 const updateRating = async (
     req,
@@ -128,6 +154,7 @@ const deleteRating = async (
 module.exports = {
     addRating,
     getMovieRatings,
+    getMyRating,
     updateRating,
     deleteRating,
 };

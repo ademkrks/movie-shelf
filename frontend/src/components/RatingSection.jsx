@@ -12,6 +12,7 @@ import {
     addRating,
     deleteRating,
     getMovieRatings,
+    getMyRating,
     updateRating,
 } from "../api/rating.api";
 
@@ -20,83 +21,54 @@ import useAuth from "../hooks/useAuth";
 
 const fetchRatingState = async (
     movieId,
-    userId
+    isAuthenticated
 ) => {
-    const firstResponse =
-        await getMovieRatings(
+    /*
+     * Genel istatistikler için tek kayıtlık
+     * sayfa yeterlidir.
+     *
+     * Kullanıcının kendi puanı ise ayrı
+     * endpoint üzerinden doğrudan alınır.
+     */
+    const [
+        ratingsResponse,
+        myRatingResponse,
+    ] = await Promise.all([
+        getMovieRatings(
             movieId,
             1,
-            100
-        );
+            1
+        ),
+
+        isAuthenticated
+            ? getMyRating(
+                movieId
+            )
+            : Promise.resolve(
+                null
+            ),
+    ]);
 
 
-    const firstData =
-        firstResponse.data;
-
-
-    let userRating =
-        firstData?.items?.find(
-            (item) =>
-                item.user?.id ===
-                userId
-        ) || null;
-
-
-    if (
-        userId &&
-        !userRating &&
-        firstData?.pagination
-            ?.hasNextPage
-    ) {
-        const totalPages =
-            firstData.pagination
-                .totalPages;
-
-
-        for (
-            let page = 2;
-            page <= totalPages;
-            page += 1
-        ) {
-            const response =
-                await getMovieRatings(
-                    movieId,
-                    page,
-                    100
-                );
-
-
-            userRating =
-                response.data
-                    ?.items
-                    ?.find(
-                        (item) =>
-                            item.user
-                                ?.id ===
-                            userId
-                    ) ||
-                null;
-
-
-            if (userRating) {
-                break;
-            }
-        }
-    }
+    const ratingsData =
+        ratingsResponse.data;
 
 
     return {
         averageRatings:
-            firstData
+            ratingsData
                 ?.averageRatings ??
             0,
 
         totalRatings:
-            firstData
+            ratingsData
                 ?.totalRatings ??
             0,
 
-        userRating,
+        userRating:
+            myRatingResponse
+                ?.data ??
+            null,
     };
 };
 
@@ -111,7 +83,6 @@ function RatingSection({
         useLocation();
 
     const {
-        user,
         isAuthenticated,
         logout,
     } = useAuth();
@@ -138,9 +109,9 @@ function RatingSection({
     ] = useState(0);
 
     const [
-        isLoading,
-        setIsLoading,
-    ] = useState(true);
+        loadedRequestKey,
+        setLoadedRequestKey,
+    ] = useState(null);
 
     const [
         isSaving,
@@ -163,14 +134,26 @@ function RatingSection({
     ] = useState("");
 
 
+    const requestKey =
+        `${movieId}:${isAuthenticated}`;
+
+
+    const isLoading =
+        loadedRequestKey !==
+        requestKey;
+
+
     useEffect(() => {
         let cancelled =
             false;
 
+        const currentRequestKey =
+            `${movieId}:${isAuthenticated}`;
+
 
         fetchRatingState(
             movieId,
-            user?.id
+            isAuthenticated
         )
             .then(
                 (result) => {
@@ -200,27 +183,31 @@ function RatingSection({
                             ?.rating ??
                         0
                     );
+
+                    setError("");
+
+                    setLoadedRequestKey(
+                        currentRequestKey
+                    );
                 }
             )
             .catch(
                 (
                     requestError
                 ) => {
-                    if (!cancelled) {
-                        setError(
-                            requestError
-                                .message
-                        );
+                    if (cancelled) {
+                        return;
                     }
-                }
-            )
-            .finally(
-                () => {
-                    if (!cancelled) {
-                        setIsLoading(
-                            false
-                        );
-                    }
+
+
+                    setError(
+                        requestError
+                            .message
+                    );
+
+                    setLoadedRequestKey(
+                        currentRequestKey
+                    );
                 }
             );
 
@@ -231,7 +218,7 @@ function RatingSection({
         };
     }, [
         movieId,
-        user?.id,
+        isAuthenticated,
     ]);
 
 
@@ -275,7 +262,7 @@ function RatingSection({
             const result =
                 await fetchRatingState(
                     movieId,
-                    user?.id
+                    isAuthenticated
                 );
 
 
@@ -512,6 +499,10 @@ function RatingSection({
                                         aria-pressed={
                                             selectedRating ===
                                             value
+                                        }
+                                        disabled={
+                                            isSaving ||
+                                            isDeleting
                                         }
                                     >
                                         {

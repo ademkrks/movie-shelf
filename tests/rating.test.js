@@ -333,6 +333,149 @@ describe("Rating API", () => {
 
 
     test(
+        "GET /ratings/movie/157336/me - kullanıcı puan verdiyse kendi puanını getirmeli",
+        async () => {
+            const myRating = {
+                id: 7,
+                tmdbMovieId: 157336,
+                rating: 9,
+            };
+
+            prisma.rating.findUnique.mockResolvedValue(
+                myRating
+            );
+
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336/me"
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body).toEqual({
+                success: true,
+                message:
+                    "Kullanıcının film puanı getirildi.",
+                data: myRating,
+            });
+
+            expect(
+                prisma.rating.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId: 157336,
+                    },
+                },
+                select: {
+                    id: true,
+                    tmdbMovieId: true,
+                    rating: true,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/157336/me - kullanıcı puan vermediyse null dönmeli",
+        async () => {
+            prisma.rating.findUnique.mockResolvedValue(
+                null
+            );
+
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336/me"
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body).toEqual({
+                success: true,
+                message:
+                    "Kullanıcının film puanı getirildi.",
+                data: null,
+            });
+
+            expect(
+                prisma.rating.findUnique
+            ).toHaveBeenCalledWith({
+                where: {
+                    userId_tmdbMovieId: {
+                        userId: 1,
+                        tmdbMovieId: 157336,
+                    },
+                },
+                select: {
+                    id: true,
+                    tmdbMovieId: true,
+                    rating: true,
+                },
+            });
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/abc/me - geçersiz TMDB ID için 400 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/abc/me"
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${authToken}`
+                );
+
+            expect(response.statusCode).toBe(400);
+
+            expect(response.body.errors).toContain(
+                "TMDB film ID geçerli bir sayı olmalıdır."
+            );
+
+            expect(
+                prisma.rating.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
+        "GET /ratings/movie/157336/me - token olmadan 401 dönmeli",
+        async () => {
+            const response = await request(app)
+                .get(
+                    "/ratings/movie/157336/me"
+                );
+
+            expect(response.statusCode).toBe(401);
+
+            expect(response.body).toMatchObject({
+                success: false,
+                status: "fail",
+                message:
+                    "Yetkilendirme başarısız.",
+            });
+
+            expect(
+                prisma.rating.findUnique
+            ).not.toHaveBeenCalled();
+        }
+    );
+
+
+    test(
         "GET /ratings/movie/157336?page=0 - geçersiz page için 400 dönmeli",
         async () => {
             const response = await request(app)

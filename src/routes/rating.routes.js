@@ -86,6 +86,40 @@ router.post(
 
 /**
  * @swagger
+ * /ratings/movie/{tmdbMovieId}/me:
+ *   get:
+ *     summary: Kullanıcının filme verdiği kendi puanını getirir
+ *     tags: [Ratings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tmdbMovieId
+ *         required: true
+ *         description: TMDB film ID'si
+ *         schema:
+ *           type: integer
+ *         example: 157336
+ *     responses:
+ *       200:
+ *         description: Kullanıcının film puanı getirildi; puan yoksa data null döner
+ *       400:
+ *         description: Geçersiz TMDB film ID'si
+ *       401:
+ *         description: Yetkilendirme gerekli
+ */
+router.get(
+    "/movie/:tmdbMovieId/me",
+    auth,
+    validateRequest({
+        params: ratingMovieIdValidation,
+    }),
+    ratingController.getMyRating
+);
+
+
+/**
+ * @swagger
  * /ratings/movie/{tmdbMovieId}:
  *   get:
  *     summary: Filmin puanlarını sayfalı getirir

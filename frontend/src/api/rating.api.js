@@ -30,7 +30,7 @@ const addRating = async (
 const getMovieRatings = async (
     tmdbMovieId,
     page = 1,
-    limit = 100
+    limit = 20
 ) => {
     const params =
         new URLSearchParams({
@@ -41,6 +41,16 @@ const getMovieRatings = async (
 
     return apiRequest(
         `/ratings/movie/${tmdbMovieId}?${params.toString()}`
+    );
+};
+
+
+// Kullanıcının belirli filme verdiği puanı getirir
+const getMyRating = async (
+    tmdbMovieId
+) => {
+    return apiRequest(
+        `/ratings/movie/${tmdbMovieId}/me`
     );
 };
 
@@ -80,6 +90,7 @@ const deleteRating = async (
 export {
     addRating,
     getMovieRatings,
+    getMyRating,
     updateRating,
     deleteRating,
 };
