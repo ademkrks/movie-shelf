@@ -9,7 +9,6 @@ const env = require("./config/env");
 
 
 // Route'lar
-const movieRoutes = require("./routes/movie.routes");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const tmdbRoutes = require("./routes/tmdb.routes");
@@ -166,11 +165,6 @@ app.use(
 app.use(
     "/users",
     userRoutes
-);
-
-app.use(
-    "/movies",
-    movieRoutes
 );
 
 app.use(
