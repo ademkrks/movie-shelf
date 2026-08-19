@@ -23,52 +23,76 @@ const fetchRatingState = async (
     movieId,
     isAuthenticated
 ) => {
-    /*
-     * Genel istatistikler için tek kayıtlık
-     * sayfa yeterlidir.
-     *
-     * Kullanıcının kendi puanı ise ayrı
-     * endpoint üzerinden doğrudan alınır.
-     */
     const [
-        ratingsResponse,
-        myRatingResponse,
-    ] = await Promise.all([
-        getMovieRatings(
-            movieId,
-            1,
-            1
-        ),
-
-        isAuthenticated
-            ? getMyRating(
-                movieId
-            )
-            : Promise.resolve(
-                null
+        ratingsResult,
+        myRatingResult,
+    ] =
+        await Promise.allSettled([
+            getMovieRatings(
+                movieId,
+                1,
+                1
             ),
-    ]);
+
+            isAuthenticated
+                ? getMyRating(
+                    movieId
+                )
+                : Promise.resolve(
+                    null
+                ),
+        ]);
 
 
     const ratingsData =
-        ratingsResponse.data;
+        ratingsResult.status ===
+        "fulfilled"
+            ? ratingsResult.value
+                ?.data
+            : null;
 
 
     return {
         averageRatings:
-            ratingsData
-                ?.averageRatings ??
-            0,
+            ratingsResult.status ===
+            "fulfilled"
+                ? Number(
+                    ratingsData
+                        ?.averageRatings ??
+                    0
+                )
+                : null,
 
         totalRatings:
-            ratingsData
-                ?.totalRatings ??
-            0,
+            ratingsResult.status ===
+            "fulfilled"
+                ? Number(
+                    ratingsData
+                        ?.totalRatings ??
+                    0
+                )
+                : null,
+
+        ratingsError:
+            ratingsResult.status ===
+            "rejected"
+                ? ratingsResult.reason
+                : null,
 
         userRating:
-            myRatingResponse
-                ?.data ??
-            null,
+            myRatingResult.status ===
+            "fulfilled"
+                ? myRatingResult.value
+                    ?.data ??
+                null
+                : null,
+
+        userRatingError:
+            isAuthenticated &&
+            myRatingResult.status ===
+                "rejected"
+                ? myRatingResult.reason
+                : null,
     };
 };
 
@@ -91,12 +115,12 @@ function RatingSection({
     const [
         averageRatings,
         setAverageRatings,
-    ] = useState(0);
+    ] = useState(null);
 
     const [
         totalRatings,
         setTotalRatings,
-    ] = useState(0);
+    ] = useState(null);
 
     const [
         userRating,
@@ -124,8 +148,18 @@ function RatingSection({
     ] = useState(false);
 
     const [
-        error,
-        setError,
+        communityError,
+        setCommunityError,
+    ] = useState("");
+
+    const [
+        userRatingError,
+        setUserRatingError,
+    ] = useState("");
+
+    const [
+        actionError,
+        setActionError,
     ] = useState("");
 
     const [
@@ -172,6 +206,42 @@ function RatingSection({
                             .totalRatings
                     );
 
+                    setCommunityError(
+                        result
+                            .ratingsError
+                            ?.message ||
+                        ""
+                    );
+
+
+                    if (
+                        result
+                            .userRatingError
+                            ?.status ===
+                        401
+                    ) {
+                        setUserRating(
+                            null
+                        );
+
+                        setSelectedRating(
+                            0
+                        );
+
+                        setUserRatingError(
+                            ""
+                        );
+
+                        setLoadedRequestKey(
+                            currentRequestKey
+                        );
+
+                        logout();
+
+                        return;
+                    }
+
+
                     setUserRating(
                         result
                             .userRating
@@ -184,7 +254,14 @@ function RatingSection({
                         0
                     );
 
-                    setError("");
+                    setUserRatingError(
+                        result
+                            .userRatingError
+                            ?.message ||
+                        ""
+                    );
+
+                    setActionError("");
 
                     setLoadedRequestKey(
                         currentRequestKey
@@ -200,9 +277,32 @@ function RatingSection({
                     }
 
 
-                    setError(
+                    setAverageRatings(
+                        null
+                    );
+
+                    setTotalRatings(
+                        null
+                    );
+
+                    setUserRating(
+                        null
+                    );
+
+                    setSelectedRating(
+                        0
+                    );
+
+                    setCommunityError(
                         requestError
                             .message
+                    );
+
+                    setUserRatingError(
+                        isAuthenticated
+                            ? requestError
+                                .message
+                            : ""
                     );
 
                     setLoadedRequestKey(
@@ -219,6 +319,7 @@ function RatingSection({
     }, [
         movieId,
         isAuthenticated,
+        logout,
     ]);
 
 
@@ -274,6 +375,25 @@ function RatingSection({
                 result.totalRatings
             );
 
+            setCommunityError(
+                result.ratingsError
+                    ?.message ||
+                ""
+            );
+
+
+            if (
+                result
+                    .userRatingError
+                    ?.status ===
+                401
+            ) {
+                handleUnauthorized();
+
+                return false;
+            }
+
+
             setUserRating(
                 result.userRating
             );
@@ -283,6 +403,16 @@ function RatingSection({
                     ?.rating ??
                 0
             );
+
+            setUserRatingError(
+                result
+                    .userRatingError
+                    ?.message ||
+                ""
+            );
+
+
+            return true;
         };
 
 
@@ -298,10 +428,17 @@ function RatingSection({
 
 
             if (
+                userRatingError
+            ) {
+                return;
+            }
+
+
+            if (
                 selectedRating < 1 ||
                 selectedRating > 10
             ) {
-                setError(
+                setActionError(
                     "1 ile 10 arasında bir puan seçin."
                 );
 
@@ -310,7 +447,9 @@ function RatingSection({
 
 
             setIsSaving(true);
-            setError("");
+
+            setActionError("");
+
             setFeedback("");
 
 
@@ -350,7 +489,7 @@ function RatingSection({
                 }
 
 
-                setError(
+                setActionError(
                     requestError.message
                 );
             } finally {
@@ -361,13 +500,18 @@ function RatingSection({
 
     const handleDelete =
         async () => {
-            if (!userRating) {
+            if (
+                !userRating ||
+                userRatingError
+            ) {
                 return;
             }
 
 
             setIsDeleting(true);
-            setError("");
+
+            setActionError("");
+
             setFeedback("");
 
 
@@ -396,7 +540,7 @@ function RatingSection({
                 }
 
 
-                setError(
+                setActionError(
                     requestError.message
                 );
             } finally {
@@ -418,9 +562,12 @@ function RatingSection({
                     </span>
 
                     <strong>
-                        {averageRatings.toFixed(
-                            1
-                        )}
+                        {averageRatings ===
+                        null
+                            ? "—"
+                            : averageRatings.toFixed(
+                                1
+                            )}
                     </strong>
 
                     <span>
@@ -428,12 +575,28 @@ function RatingSection({
                     </span>
                 </div>
 
-                <p>
-                    {totalRatings}{" "}
-                    {totalRatings === 1
-                        ? "rating"
-                        : "ratings"}
-                </p>
+                {communityError ? (
+                    <>
+                        <p>
+                            Ratings unavailable.
+                        </p>
+
+                        <p className="review-error">
+                            {
+                                communityError
+                            }
+                        </p>
+                    </>
+                ) : (
+                    <p>
+                        {totalRatings ??
+                            0}{" "}
+                        {totalRatings ===
+                        1
+                            ? "rating"
+                            : "ratings"}
+                    </p>
+                )}
             </div>
 
             <div className="your-rating">
@@ -465,6 +628,20 @@ function RatingSection({
                     >
                         Sign in to rate
                     </button>
+                ) : userRatingError ? (
+                    <div>
+                        <p className="review-error">
+                            {
+                                userRatingError
+                            }
+                        </p>
+
+                        <p>
+                            Your existing
+                            rating could not
+                            be verified.
+                        </p>
+                    </div>
                 ) : (
                     <>
                         <div className="rating-buttons">
@@ -524,7 +701,7 @@ function RatingSection({
                                     isSaving ||
                                     isDeleting ||
                                     selectedRating ===
-                                    0
+                                        0
                                 }
                             >
                                 {isSaving
@@ -561,9 +738,9 @@ function RatingSection({
                     </p>
                 )}
 
-                {error && (
+                {actionError && (
                     <p className="review-error">
-                        {error}
+                        {actionError}
                     </p>
                 )}
             </div>

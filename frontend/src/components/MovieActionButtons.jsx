@@ -27,10 +27,10 @@ const fetchMovieLibraryStatus =
         movieId
     ) => {
         const [
-            favoriteResponse,
-            watchlistResponse,
+            favoriteResult,
+            watchlistResult,
         ] =
-            await Promise.all([
+            await Promise.allSettled([
                 getFavoriteStatus(
                     movieId
                 ),
@@ -41,20 +41,68 @@ const fetchMovieLibraryStatus =
             ]);
 
 
+        const unauthorizedResult =
+            [
+                favoriteResult,
+                watchlistResult,
+            ].find(
+                (result) =>
+                    result.status ===
+                        "rejected" &&
+                    result.reason
+                        ?.status ===
+                        401
+            );
+
+
+        if (
+            unauthorizedResult
+        ) {
+            throw unauthorizedResult
+                .reason;
+        }
+
+
         return {
             isFavorite:
-                Boolean(
-                    favoriteResponse
-                        ?.data
-                        ?.isFavorite
-                ),
+                favoriteResult.status ===
+                "fulfilled"
+                    ? Boolean(
+                        favoriteResult
+                            .value
+                            ?.data
+                            ?.isFavorite
+                    )
+                    : false,
+
+            favoriteError:
+                favoriteResult.status ===
+                "rejected"
+                    ? favoriteResult
+                        .reason
+                        ?.message ||
+                    "Favori durumu alınamadı."
+                    : "",
 
             isWatchlisted:
-                Boolean(
-                    watchlistResponse
-                        ?.data
-                        ?.isWatchlisted
-                ),
+                watchlistResult.status ===
+                "fulfilled"
+                    ? Boolean(
+                        watchlistResult
+                            .value
+                            ?.data
+                            ?.isWatchlisted
+                    )
+                    : false,
+
+            watchlistError:
+                watchlistResult.status ===
+                "rejected"
+                    ? watchlistResult
+                        .reason
+                        ?.message ||
+                    "İzleme listesi durumu alınamadı."
+                    : "",
         };
     };
 
@@ -78,10 +126,6 @@ function MovieActionButtons({
     /*
      * Status bilgisi hem kullanıcıya
      * hem de filme bağlı tutulur.
-     *
-     * Böylece farklı filme veya farklı
-     * kullanıcıya geçildiğinde eski durum
-     * yanlışlıkla kullanılamaz.
      */
     const [
         libraryStatus,
@@ -123,10 +167,6 @@ function MovieActionButtons({
             : null;
 
 
-    /*
-     * Yalnızca mevcut kullanıcı ve filme
-     * ait status bilgisi kullanılabilir.
-     */
     const currentStatus =
         requestKey &&
         libraryStatus?.key ===
@@ -135,19 +175,29 @@ function MovieActionButtons({
             : null;
 
 
-    /*
-     * Status henüz gelmediyse butonlar
-     * kullanıma açılmaz.
-     */
-    const isChecking =
+    const isFavoriteChecking =
         Boolean(
             requestKey
         ) &&
         !currentStatus;
 
 
-    const statusError =
-        currentStatus?.error ??
+    const isWatchlistChecking =
+        Boolean(
+            requestKey
+        ) &&
+        !currentStatus;
+
+
+    const favoriteStatusError =
+        currentStatus
+            ?.favoriteError ??
+        "";
+
+
+    const watchlistStatusError =
+        currentStatus
+            ?.watchlistError ??
         "";
 
 
@@ -209,10 +259,14 @@ function MovieActionButtons({
                         isFavorite:
                             status.isFavorite,
 
+                        favoriteError:
+                            status.favoriteError,
+
                         isWatchlisted:
                             status.isWatchlisted,
 
-                        error: "",
+                        watchlistError:
+                            status.watchlistError,
                     });
                 }
             )
@@ -235,14 +289,6 @@ function MovieActionButtons({
                     }
 
 
-                    /*
-                     * Status belirlenememişse
-                     * action butonları açılmaz.
-                     *
-                     * Böylece bilinmeyen durumda
-                     * yanlış POST/DELETE isteği
-                     * gönderilmez.
-                     */
                     setLibraryStatus({
                         key:
                             currentRequestKey,
@@ -250,10 +296,13 @@ function MovieActionButtons({
                         isFavorite:
                             false,
 
+                        favoriteError:
+                            requestError.message,
+
                         isWatchlisted:
                             false,
 
-                        error:
+                        watchlistError:
                             requestError.message,
                     });
                 }
@@ -318,13 +367,16 @@ function MovieActionButtons({
 
 
             /*
-             * Status henüz bilinmiyorsa
-             * veya status isteği başarısızsa
-             * action gönderilmez.
+             * Sadece favori status bilgisi
+             * bilinmiyorsa favori action'ı
+             * engellenir.
+             *
+             * Watchlist status hatası favori
+             * butonunu etkilemez.
              */
             if (
                 !currentStatus ||
-                statusError
+                favoriteStatusError
             ) {
                 return;
             }
@@ -460,9 +512,13 @@ function MovieActionButtons({
             }
 
 
+            /*
+             * Favorite status hatası watchlist
+             * action'ını engellemez.
+             */
             if (
                 !currentStatus ||
-                statusError
+                watchlistStatusError
             ) {
                 return;
             }
@@ -603,9 +659,9 @@ function MovieActionButtons({
                         handleFavorite
                     }
                     disabled={
-                        isChecking ||
+                        isFavoriteChecking ||
                         Boolean(
-                            statusError
+                            favoriteStatusError
                         ) ||
                         isFavoriteLoading
                     }
@@ -616,7 +672,7 @@ function MovieActionButtons({
                             : "♡"}
                     </span>
 
-                    {isChecking
+                    {isFavoriteChecking
                         ? "Checking..."
                         : isFavoriteLoading
                             ? "Updating..."
@@ -636,9 +692,9 @@ function MovieActionButtons({
                         handleWatchlist
                     }
                     disabled={
-                        isChecking ||
+                        isWatchlistChecking ||
                         Boolean(
-                            statusError
+                            watchlistStatusError
                         ) ||
                         isWatchlistLoading
                     }
@@ -649,7 +705,7 @@ function MovieActionButtons({
                             : "+"}
                     </span>
 
-                    {isChecking
+                    {isWatchlistChecking
                         ? "Checking..."
                         : isWatchlistLoading
                             ? "Updating..."
@@ -667,11 +723,29 @@ function MovieActionButtons({
                 </p>
             )}
 
-            {(statusError ||
-                visibleActionError) && (
+            {favoriteStatusError && (
                 <p className="movie-action-error">
-                    {statusError ||
-                        visibleActionError}
+                    Favorites:{" "}
+                    {
+                        favoriteStatusError
+                    }
+                </p>
+            )}
+
+            {watchlistStatusError && (
+                <p className="movie-action-error">
+                    Watchlist:{" "}
+                    {
+                        watchlistStatusError
+                    }
+                </p>
+            )}
+
+            {visibleActionError && (
+                <p className="movie-action-error">
+                    {
+                        visibleActionError
+                    }
                 </p>
             )}
         </div>
