@@ -21,6 +21,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import "./styles/movies.css";
 import "./styles/library.css";
 import "./styles/home-discover.css";
+import "./styles/auth.css";
 
 
 function App() {
