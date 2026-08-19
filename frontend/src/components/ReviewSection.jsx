@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -78,6 +79,16 @@ function ReviewSection({
     ] = useState(1);
 
     const [
+        loadedMovieId,
+        setLoadedMovieId,
+    ] = useState(null);
+
+    const [
+        isReloading,
+        setIsReloading,
+    ] = useState(false);
+
+    const [
         content,
         setContent,
     ] = useState("");
@@ -98,11 +109,6 @@ function ReviewSection({
     ] = useState(null);
 
     const [
-        isLoading,
-        setIsLoading,
-    ] = useState(true);
-
-    const [
         isSubmitting,
         setIsSubmitting,
     ] = useState(false);
@@ -113,8 +119,13 @@ function ReviewSection({
     ] = useState(false);
 
     const [
-        error,
-        setError,
+        loadError,
+        setLoadError,
+    ] = useState("");
+
+    const [
+        actionError,
+        setActionError,
     ] = useState("");
 
     const [
@@ -123,18 +134,61 @@ function ReviewSection({
     ] = useState("");
 
 
+    const loadRequestIdRef =
+        useRef(0);
+
+    const isMountedRef =
+        useRef(true);
+
+
+    const isLoading =
+        loadedMovieId !==
+            movieId ||
+        isReloading;
+
+
     useEffect(() => {
+        isMountedRef.current =
+            true;
+
+
+        return () => {
+            isMountedRef.current =
+                false;
+        };
+    }, []);
+
+
+    useEffect(() => {
+        const currentMovieId =
+            movieId;
+
+        const requestId =
+            loadRequestIdRef
+                .current +
+            1;
+
+
+        loadRequestIdRef.current =
+            requestId;
+
+
         let cancelled =
             false;
 
 
         fetchReviewPage(
-            movieId,
-            page
+            currentMovieId,
+            1
         )
             .then(
                 (result) => {
-                    if (cancelled) {
+                    if (
+                        cancelled ||
+                        requestId !==
+                            loadRequestIdRef
+                                .current
+                    ) {
                         return;
                     }
 
@@ -147,28 +201,44 @@ function ReviewSection({
                         result.pagination
                     );
 
-                    setError("");
+                    setPage(1);
+
+                    setLoadError("");
+
+                    setLoadedMovieId(
+                        currentMovieId
+                    );
                 }
             )
             .catch(
                 (
                     requestError
                 ) => {
-                    if (!cancelled) {
-                        setError(
-                            requestError
-                                .message
-                        );
+                    if (
+                        cancelled ||
+                        requestId !==
+                            loadRequestIdRef
+                                .current
+                    ) {
+                        return;
                     }
-                }
-            )
-            .finally(
-                () => {
-                    if (!cancelled) {
-                        setIsLoading(
-                            false
-                        );
-                    }
+
+
+                    setReviews([]);
+
+                    setPagination(null);
+
+                    setPage(1);
+
+                    setLoadError(
+                        requestError
+                            .message ||
+                            "Yorumlar yüklenemedi."
+                    );
+
+                    setLoadedMovieId(
+                        currentMovieId
+                    );
                 }
             );
 
@@ -176,10 +246,20 @@ function ReviewSection({
         return () => {
             cancelled =
                 true;
+
+
+            if (
+                loadRequestIdRef
+                    .current ===
+                requestId
+            ) {
+                loadRequestIdRef
+                    .current +=
+                    1;
+            }
         };
     }, [
         movieId,
-        page,
     ]);
 
 
@@ -222,7 +302,19 @@ function ReviewSection({
         async (
             requestedPage
         ) => {
-            setIsLoading(true);
+            const requestId =
+                loadRequestIdRef
+                    .current +
+                1;
+
+
+            loadRequestIdRef.current =
+                requestId;
+
+
+            setIsReloading(true);
+
+            setLoadError("");
 
 
             try {
@@ -233,6 +325,17 @@ function ReviewSection({
                     );
 
 
+                if (
+                    !isMountedRef
+                        .current ||
+                    requestId !==
+                        loadRequestIdRef
+                            .current
+                ) {
+                    return false;
+                }
+
+
                 setReviews(
                     result.reviews
                 );
@@ -240,20 +343,68 @@ function ReviewSection({
                 setPagination(
                     result.pagination
                 );
+
+                setPage(
+                    requestedPage
+                );
+
+                setLoadedMovieId(
+                    movieId
+                );
+
+                setLoadError("");
+
+
+                return true;
             } catch (
                 requestError
             ) {
-                setError(
-                    requestError.message
+                if (
+                    !isMountedRef
+                        .current ||
+                    requestId !==
+                        loadRequestIdRef
+                            .current
+                ) {
+                    return false;
+                }
+
+
+                /*
+                 * Mevcut yorumlar korunur.
+                 *
+                 * Böylece sayfa yenileme veya pagination
+                 * isteği başarısız olduğunda kullanıcı
+                 * çalışan son veriyi kaybetmez.
+                 */
+                setLoadError(
+                    requestError
+                        .message ||
+                        "Yorumlar yenilenemedi."
                 );
+
+
+                return false;
             } finally {
-                setIsLoading(false);
+                if (
+                    isMountedRef
+                        .current &&
+                    requestId ===
+                        loadRequestIdRef
+                            .current
+                ) {
+                    setIsReloading(
+                        false
+                    );
+                }
             }
         };
 
 
     const handleSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
 
 
@@ -271,7 +422,7 @@ function ReviewSection({
 
 
             if (!trimmedContent) {
-                setError(
+                setActionError(
                     "Yorum boş bırakılamaz."
                 );
 
@@ -283,7 +434,7 @@ function ReviewSection({
                 trimmedContent.length >
                 1000
             ) {
-                setError(
+                setActionError(
                     "Yorum en fazla 1000 karakter olabilir."
                 );
 
@@ -292,7 +443,9 @@ function ReviewSection({
 
 
             setIsSubmitting(true);
-            setError("");
+
+            setActionError("");
+
             setFeedback("");
 
 
@@ -310,14 +463,11 @@ function ReviewSection({
                 );
 
 
-                if (page !== 1) {
-                    setIsLoading(true);
-                    setPage(1);
-                } else {
-                    await reloadReviews(
-                        1
-                    );
-                }
+                await reloadReviews(
+                    page === 1
+                        ? 1
+                        : 1
+                );
             } catch (
                 requestError
             ) {
@@ -331,7 +481,7 @@ function ReviewSection({
                 }
 
 
-                setError(
+                setActionError(
                     requestError.message
                 );
             } finally {
@@ -343,7 +493,9 @@ function ReviewSection({
 
 
     const startEditing =
-        (review) => {
+        (
+            review
+        ) => {
             setEditingReviewId(
                 review.id
             );
@@ -352,7 +504,8 @@ function ReviewSection({
                 review.content
             );
 
-            setError("");
+            setActionError("");
+
             setFeedback("");
         };
 
@@ -376,7 +529,7 @@ function ReviewSection({
 
 
             if (!trimmedContent) {
-                setError(
+                setActionError(
                     "Yorum boş bırakılamaz."
                 );
 
@@ -388,7 +541,7 @@ function ReviewSection({
                 trimmedContent.length >
                 1000
             ) {
-                setError(
+                setActionError(
                     "Yorum en fazla 1000 karakter olabilir."
                 );
 
@@ -397,7 +550,9 @@ function ReviewSection({
 
 
             setIsSavingEdit(true);
-            setError("");
+
+            setActionError("");
+
             setFeedback("");
 
 
@@ -435,7 +590,7 @@ function ReviewSection({
                 }
 
 
-                setError(
+                setActionError(
                     requestError.message
                 );
             } finally {
@@ -454,7 +609,8 @@ function ReviewSection({
                 reviewId
             );
 
-            setError("");
+            setActionError("");
+
             setFeedback("");
 
 
@@ -469,22 +625,21 @@ function ReviewSection({
                 );
 
 
-                if (
+                const isLastItem =
                     reviews.length ===
-                        1 &&
-                    page > 1
-                ) {
-                    setIsLoading(true);
+                    1;
 
-                    setPage(
-                        (current) =>
-                            current - 1
-                    );
-                } else {
-                    await reloadReviews(
-                        page
-                    );
-                }
+
+                const targetPage =
+                    isLastItem &&
+                    page > 1
+                        ? page - 1
+                        : page;
+
+
+                await reloadReviews(
+                    targetPage
+                );
             } catch (
                 requestError
             ) {
@@ -498,7 +653,7 @@ function ReviewSection({
                 }
 
 
-                setError(
+                setActionError(
                     requestError.message
                 );
             } finally {
@@ -510,39 +665,43 @@ function ReviewSection({
 
 
     const goPrevious =
-        () => {
+        async () => {
             if (
                 !pagination
-                    ?.hasPreviousPage
+                    ?.hasPreviousPage ||
+                isLoading
             ) {
                 return;
             }
 
 
-            setIsLoading(true);
-
-            setPage(
-                (current) =>
-                    current - 1
+            await reloadReviews(
+                page - 1
             );
         };
 
 
     const goNext =
-        () => {
+        async () => {
             if (
                 !pagination
-                    ?.hasNextPage
+                    ?.hasNextPage ||
+                isLoading
             ) {
                 return;
             }
 
 
-            setIsLoading(true);
+            await reloadReviews(
+                page + 1
+            );
+        };
 
-            setPage(
-                (current) =>
-                    current + 1
+
+    const retryReviews =
+        async () => {
+            await reloadReviews(
+                page
             );
         };
 
@@ -637,18 +796,69 @@ function ReviewSection({
                 </p>
             )}
 
-            {error && (
+            {actionError && (
                 <p className="review-error">
-                    {error}
+                    {actionError}
                 </p>
             )}
 
-            {isLoading ? (
+            {loadError &&
+                reviews.length >
+                    0 && (
+                    <div>
+                        <p className="review-error">
+                            {loadError}
+                        </p>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={
+                                retryReviews
+                            }
+                            disabled={
+                                isLoading
+                            }
+                        >
+                            {isLoading
+                                ? "Retrying..."
+                                : "Try Again"}
+                        </button>
+                    </div>
+                )}
+
+            {isLoading &&
+            reviews.length === 0 ? (
                 <div className="reviews-loading">
                     Loading reviews...
                 </div>
+            ) : loadError &&
+              reviews.length === 0 ? (
+                <div className="reviews-empty">
+                    <p>
+                        Reviews could not be
+                        loaded.
+                    </p>
+
+                    <p className="review-error">
+                        {loadError}
+                    </p>
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={
+                            retryReviews
+                        }
+                        disabled={
+                            isLoading
+                        }
+                    >
+                        Try Again
+                    </button>
+                </div>
             ) : reviews.length ===
-                0 ? (
+              0 ? (
                 <div className="reviews-empty">
                     <p>
                         No reviews yet.
@@ -660,7 +870,9 @@ function ReviewSection({
                 <>
                     <div className="review-list">
                         {reviews.map(
-                            (review) => (
+                            (
+                                review
+                            ) => (
                                 <ReviewCard
                                     key={
                                         review.id
@@ -725,7 +937,8 @@ function ReviewSection({
                                     }
                                     disabled={
                                         !pagination
-                                            .hasPreviousPage
+                                            .hasPreviousPage ||
+                                        isLoading
                                     }
                                 >
                                     Previous
@@ -750,7 +963,8 @@ function ReviewSection({
                                     }
                                     disabled={
                                         !pagination
-                                            .hasNextPage
+                                            .hasNextPage ||
+                                        isLoading
                                     }
                                 >
                                     Next
