@@ -1,10 +1,22 @@
-const tmdbService = require("../services/tmdb.service");
-const response = require("../utils/response");
+const tmdbService = require(
+    "../services/tmdb.service"
+);
+
+const response = require(
+    "../utils/response"
+);
+
 
 // Trend filmleri getirir
-const getTrendingMovies = async (req, res, next) => {
+const getTrendingMovies = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movies = await tmdbService.getTrendingMovies();
+        const movies =
+            await tmdbService
+                .getTrendingMovies();
 
         response.success(
             res,
@@ -16,10 +28,17 @@ const getTrendingMovies = async (req, res, next) => {
     }
 };
 
+
 // Popüler filmleri getirir
-const getPopularMovies = async (req, res, next) => {
+const getPopularMovies = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movies = await tmdbService.getPopularMovies();
+        const movies =
+            await tmdbService
+                .getPopularMovies();
 
         response.success(
             res,
@@ -31,10 +50,17 @@ const getPopularMovies = async (req, res, next) => {
     }
 };
 
+
 // En yüksek puanlı filmleri getirir
-const getTopRatedMovies = async (req, res, next) => {
+const getTopRatedMovies = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movies = await tmdbService.getTopRatedMovies();
+        const movies =
+            await tmdbService
+                .getTopRatedMovies();
 
         response.success(
             res,
@@ -46,10 +72,17 @@ const getTopRatedMovies = async (req, res, next) => {
     }
 };
 
+
 // Yakında vizyona girecek filmleri getirir
-const getUpcomingMovies = async (req, res, next) => {
+const getUpcomingMovies = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movies = await tmdbService.getUpcomingMovies();
+        const movies =
+            await tmdbService
+                .getUpcomingMovies();
 
         response.success(
             res,
@@ -61,14 +94,35 @@ const getUpcomingMovies = async (req, res, next) => {
     }
 };
 
+
 // Film arar
-const searchMovie = async (req, res, next) => {
+const searchMovie = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movies = await tmdbService.searchMovies(req.query.q);
+        const page =
+            req.query.page !==
+            undefined
+                ? Number(
+                    req.query.page
+                )
+                : 1;
+
+
+        const result =
+            await tmdbService
+                .searchMovies(
+                    req.query.q
+                        .trim(),
+                    page
+                );
+
 
         response.success(
             res,
-            movies,
+            result,
             "Arama sonuçları getirildi."
         );
     } catch (error) {
@@ -76,12 +130,19 @@ const searchMovie = async (req, res, next) => {
     }
 };
 
+
 // Film detaylarını getirir
-const getMovieDetails = async (req, res, next) => {
+const getMovieDetails = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const movie = await tmdbService.getMovieDetails(
-            req.params.id
-        );
+        const movie =
+            await tmdbService
+                .getMovieDetails(
+                    req.params.id
+                );
 
         response.success(
             res,
@@ -93,12 +154,19 @@ const getMovieDetails = async (req, res, next) => {
     }
 };
 
+
 // Film oyuncu kadrosunu getirir
-const getMovieCast = async (req, res, next) => {
+const getMovieCast = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const cast = await tmdbService.getMovieCast(
-            req.params.id
-        );
+        const cast =
+            await tmdbService
+                .getMovieCast(
+                    req.params.id
+                );
 
         response.success(
             res,
@@ -110,12 +178,19 @@ const getMovieCast = async (req, res, next) => {
     }
 };
 
+
 // Film fragmanlarını getirir
-const getMovieTrailers = async (req, res, next) => {
+const getMovieTrailers = async (
+    req,
+    res,
+    next
+) => {
     try {
-        const trailers = await tmdbService.getMovieTrailers(
-            req.params.id
-        );
+        const trailers =
+            await tmdbService
+                .getMovieTrailers(
+                    req.params.id
+                );
 
         response.success(
             res,
@@ -126,6 +201,7 @@ const getMovieTrailers = async (req, res, next) => {
         next(error);
     }
 };
+
 
 module.exports = {
     getTrendingMovies,

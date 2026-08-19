@@ -13,6 +13,17 @@ import {
     searchMovies,
 } from "../api/tmdb.api";
 
+import "../styles/search-pagination.css";
+
+
+const EMPTY_SEARCH_PAGINATION = {
+    page: 1,
+    totalPages: 0,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+};
+
 
 function MovieSection({
     title,
@@ -79,6 +90,13 @@ function HomePage() {
         searchResults,
         setSearchResults,
     ] = useState([]);
+
+    const [
+        searchPagination,
+        setSearchPagination,
+    ] = useState(
+        EMPTY_SEARCH_PAGINATION
+    );
 
     const [
         searchQuery,
@@ -161,19 +179,11 @@ function HomePage() {
     }, []);
 
 
-    const handleSearch =
-        async (event) => {
-            event.preventDefault();
-
-            const query =
-                searchQuery.trim();
-
-
-            if (!query) {
-                return;
-            }
-
-
+    const performSearch =
+        async (
+            query,
+            page
+        ) => {
             setError("");
             setIsSearching(true);
 
@@ -181,13 +191,24 @@ function HomePage() {
             try {
                 const response =
                     await searchMovies(
-                        query
+                        query,
+                        page
                     );
 
 
-                setSearchResults(
+                const result =
                     response.data ||
+                    {};
+
+
+                setSearchResults(
+                    result.items ||
                     []
+                );
+
+                setSearchPagination(
+                    result.pagination ||
+                    EMPTY_SEARCH_PAGINATION
                 );
 
                 setActiveSearch(
@@ -207,10 +228,67 @@ function HomePage() {
         };
 
 
+    const handleSearch =
+        async (event) => {
+            event.preventDefault();
+
+            const query =
+                searchQuery.trim();
+
+
+            if (!query) {
+                return;
+            }
+
+
+            await performSearch(
+                query,
+                1
+            );
+        };
+
+
+    const handlePageChange =
+        async (page) => {
+            if (
+                isSearching ||
+                !activeSearch
+            ) {
+                return;
+            }
+
+
+            if (
+                page < 1 ||
+                page >
+                    searchPagination
+                        .totalPages
+            ) {
+                return;
+            }
+
+
+            await performSearch(
+                activeSearch,
+                page
+            );
+
+
+            window.scrollTo({
+                top: 520,
+                behavior: "smooth",
+            });
+        };
+
+
     const clearSearch = () => {
         setSearchQuery("");
         setSearchResults([]);
+        setSearchPagination(
+            EMPTY_SEARCH_PAGINATION
+        );
         setActiveSearch("");
+        setError("");
     };
 
 
@@ -300,6 +378,19 @@ function HomePage() {
                                         activeSearch
                                     }&quot;
                                 </h2>
+
+                                <p className="search-result-summary">
+                                    {
+                                        searchPagination
+                                            .totalItems
+                                    }{" "}
+                                    {searchPagination
+                                        .totalItems ===
+                                    1
+                                        ? "movie"
+                                        : "movies"}{" "}
+                                    found
+                                </p>
                             </div>
 
                             <button
@@ -308,6 +399,9 @@ function HomePage() {
                                 onClick={
                                     clearSearch
                                 }
+                                disabled={
+                                    isSearching
+                                }
                             >
                                 Clear search
                             </button>
@@ -315,22 +409,80 @@ function HomePage() {
 
                         {searchResults.length >
                         0 ? (
-                            <div className="movie-grid">
-                                {searchResults.map(
-                                    (
-                                        movie
-                                    ) => (
-                                        <MovieCard
-                                            key={
-                                                movie.id
+                            <>
+                                <div className="movie-grid">
+                                    {searchResults.map(
+                                        (
+                                            movie
+                                        ) => (
+                                            <MovieCard
+                                                key={
+                                                    movie.id
+                                                }
+                                                movie={
+                                                    movie
+                                                }
+                                            />
+                                        )
+                                    )}
+                                </div>
+
+                                {searchPagination
+                                    .totalPages >
+                                    1 && (
+                                    <nav
+                                        className="search-pagination"
+                                        aria-label="Search result pages"
+                                    >
+                                        <button
+                                            type="button"
+                                            className="secondary-button"
+                                            disabled={
+                                                isSearching ||
+                                                !searchPagination
+                                                    .hasPreviousPage
                                             }
-                                            movie={
-                                                movie
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    searchPagination
+                                                        .page -
+                                                        1
+                                                )
                                             }
-                                        />
-                                    )
+                                        >
+                                            Previous
+                                        </button>
+
+                                        <div
+                                            className="search-pagination-info"
+                                            aria-live="polite"
+                                        >
+                                            {isSearching
+                                                ? "Loading..."
+                                                : `Page ${searchPagination.page} of ${searchPagination.totalPages}`}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="secondary-button"
+                                            disabled={
+                                                isSearching ||
+                                                !searchPagination
+                                                    .hasNextPage
+                                            }
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    searchPagination
+                                                        .page +
+                                                        1
+                                                )
+                                            }
+                                        >
+                                            Next
+                                        </button>
+                                    </nav>
                                 )}
-                            </div>
+                            </>
                         ) : (
                             <div className="empty-state">
                                 No movies found.

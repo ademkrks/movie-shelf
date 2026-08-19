@@ -32,11 +32,13 @@ const getUpcomingMovies = async () => {
 
 
 const searchMovies = async (
-    query
+    query,
+    page = 1
 ) => {
     const params =
         new URLSearchParams({
             q: query,
+            page: String(page),
         });
 
 

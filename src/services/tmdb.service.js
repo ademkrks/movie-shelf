@@ -115,19 +115,71 @@ const getUpcomingMovies = async () => {
 };
 
 
-// Film arar
-const searchMovies = async (query) => {
+// Film arar ve pagination bilgilerini getirir
+const searchMovies = async (
+    query,
+    page = 1
+) => {
     try {
+        const normalizedPage =
+            Number(page);
+
         const response = await api.get(
             "/search/movie",
             {
                 params: {
                     query,
+                    page:
+                        normalizedPage,
                 },
             }
         );
 
-        return response.data.results;
+
+        const currentPage =
+            Number(
+                response.data.page
+            ) ||
+            normalizedPage;
+
+        const totalPages =
+            Number(
+                response.data
+                    .total_pages
+            ) ||
+            0;
+
+        const totalItems =
+            Number(
+                response.data
+                    .total_results
+            ) ||
+            0;
+
+
+        return {
+            items:
+                response.data
+                    .results ||
+                [],
+
+            pagination: {
+                page:
+                    currentPage,
+
+                totalPages,
+
+                totalItems,
+
+                hasNextPage:
+                    currentPage <
+                    totalPages,
+
+                hasPreviousPage:
+                    currentPage >
+                    1,
+            },
+        };
     } catch (error) {
         handleTmdbError(error);
     }

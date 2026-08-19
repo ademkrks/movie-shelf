@@ -2,14 +2,20 @@ const express = require("express");
 
 const router = express.Router();
 
-const tmdbController = require("../controllers/tmdb.controller");
+const tmdbController = require(
+    "../controllers/tmdb.controller"
+);
 
-const validateRequest = require("../middleware/validateRequest");
+const validateRequest = require(
+    "../middleware/validateRequest"
+);
 
 const {
     tmdbIdValidation,
     movieSearchValidation,
-} = require("../validations/tmdb.validation");
+} = require(
+    "../validations/tmdb.validation"
+);
 
 
 /**
@@ -98,16 +104,26 @@ router.get(
  *         schema:
  *           type: string
  *         example: Interstellar
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Arama sonuçlarının sayfa numarası
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         example: 2
  *     responses:
  *       200:
- *         description: Arama sonuçları başarıyla getirildi
+ *         description: Arama sonuçları ve pagination bilgileri başarıyla getirildi
  *       400:
- *         description: Arama sorgusu gerekli veya geçersiz
+ *         description: Arama sorgusu veya sayfa parametresi geçersiz
  */
 router.get(
     "/search",
     validateRequest({
-        query: movieSearchValidation,
+        query:
+            movieSearchValidation,
     }),
     tmdbController.searchMovie
 );
@@ -138,7 +154,8 @@ router.get(
 router.get(
     "/movie/:id",
     validateRequest({
-        params: tmdbIdValidation,
+        params:
+            tmdbIdValidation,
     }),
     tmdbController.getMovieDetails
 );
@@ -169,7 +186,8 @@ router.get(
 router.get(
     "/movie/:id/cast",
     validateRequest({
-        params: tmdbIdValidation,
+        params:
+            tmdbIdValidation,
     }),
     tmdbController.getMovieCast
 );
@@ -200,7 +218,8 @@ router.get(
 router.get(
     "/movie/:id/trailers",
     validateRequest({
-        params: tmdbIdValidation,
+        params:
+            tmdbIdValidation,
     }),
     tmdbController.getMovieTrailers
 );

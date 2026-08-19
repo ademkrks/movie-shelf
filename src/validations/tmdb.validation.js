@@ -8,11 +8,18 @@ const tmdbIdValidation = (params) => {
         return "Film ID zorunludur.";
     }
 
-    if (!/^\d+$/.test(String(params.id))) {
+    if (
+        !/^\d+$/.test(
+            String(params.id)
+        )
+    ) {
         return "Film ID geçerli bir sayı olmalıdır.";
     }
 
-    if (Number(params.id) <= 0) {
+    if (
+        Number(params.id) <=
+        0
+    ) {
         return "Film ID 0'dan büyük olmalıdır.";
     }
 
@@ -30,29 +37,90 @@ const movieSearchValidation = (query) => {
         return "Arama parametreleri geçersiz.";
     }
 
-    const { q } = query;
 
-    if (q === undefined || q === null) {
+    const {
+        q,
+        page,
+    } = query;
+
+
+    if (
+        q === undefined ||
+        q === null
+    ) {
         return "Arama sorgusu zorunludur.";
     }
 
-    if (typeof q !== "string") {
+
+    if (
+        typeof q !== "string"
+    ) {
         return "Arama sorgusu metin olmalıdır.";
     }
 
-    const trimmedQuery = q.trim();
 
-    if (trimmedQuery.length === 0) {
+    const trimmedQuery =
+        q.trim();
+
+
+    if (
+        trimmedQuery.length ===
+        0
+    ) {
         return "Arama sorgusu boş bırakılamaz.";
     }
 
-    if (trimmedQuery.length < 2) {
+
+    if (
+        trimmedQuery.length <
+        2
+    ) {
         return "Arama sorgusu en az 2 karakter olmalıdır.";
     }
 
-    if (trimmedQuery.length > 100) {
+
+    if (
+        trimmedQuery.length >
+        100
+    ) {
         return "Arama sorgusu en fazla 100 karakter olabilir.";
     }
+
+
+    // page gönderilmişse pozitif tam sayı olmalıdır
+    if (
+        page !== undefined
+    ) {
+        if (
+            !/^\d+$/.test(
+                String(page)
+            )
+        ) {
+            return "Sayfa numarası geçerli bir tam sayı olmalıdır.";
+        }
+
+
+        const pageNumber =
+            Number(page);
+
+
+        if (
+            !Number.isSafeInteger(
+                pageNumber
+            )
+        ) {
+            return "Sayfa numarası geçerli bir tam sayı olmalıdır.";
+        }
+
+
+        if (
+            pageNumber <=
+            0
+        ) {
+            return "Sayfa numarası 0'dan büyük olmalıdır.";
+        }
+    }
+
 
     return true;
 };
