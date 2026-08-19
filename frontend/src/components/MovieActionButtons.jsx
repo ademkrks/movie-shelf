@@ -69,25 +69,24 @@ function MovieActionButtons({
         useLocation();
 
     const {
+        user,
         isAuthenticated,
         logout,
     } = useAuth();
 
 
+    /*
+     * Status bilgisi hem kullanıcıya
+     * hem de filme bağlı tutulur.
+     *
+     * Böylece farklı filme veya farklı
+     * kullanıcıya geçildiğinde eski durum
+     * yanlışlıkla kullanılamaz.
+     */
     const [
-        isFavorite,
-        setIsFavorite,
-    ] = useState(false);
-
-    const [
-        isWatchlisted,
-        setIsWatchlisted,
-    ] = useState(false);
-
-    const [
-        isChecking,
-        setIsChecking,
-    ] = useState(false);
+        libraryStatus,
+        setLibraryStatus,
+    ] = useState(null);
 
     const [
         isFavoriteLoading,
@@ -102,25 +101,95 @@ function MovieActionButtons({
     const [
         feedback,
         setFeedback,
-    ] = useState("");
+    ] = useState({
+        key: null,
+        message: "",
+    });
 
     const [
-        error,
-        setError,
-    ] = useState("");
+        actionError,
+        setActionError,
+    ] = useState({
+        key: null,
+        message: "",
+    });
+
+
+    const requestKey =
+        isAuthenticated &&
+        user?.id &&
+        movieId
+            ? `${user.id}:${movieId}`
+            : null;
+
+
+    /*
+     * Yalnızca mevcut kullanıcı ve filme
+     * ait status bilgisi kullanılabilir.
+     */
+    const currentStatus =
+        requestKey &&
+        libraryStatus?.key ===
+            requestKey
+            ? libraryStatus
+            : null;
+
+
+    /*
+     * Status henüz gelmediyse butonlar
+     * kullanıma açılmaz.
+     */
+    const isChecking =
+        Boolean(
+            requestKey
+        ) &&
+        !currentStatus;
+
+
+    const statusError =
+        currentStatus?.error ??
+        "";
+
+
+    const isFavorite =
+        Boolean(
+            currentStatus
+                ?.isFavorite
+        );
+
+
+    const isWatchlisted =
+        Boolean(
+            currentStatus
+                ?.isWatchlisted
+        );
+
+
+    const visibleFeedback =
+        feedback.key ===
+        requestKey
+            ? feedback.message
+            : "";
+
+
+    const visibleActionError =
+        actionError.key ===
+        requestKey
+            ? actionError.message
+            : "";
 
 
     useEffect(() => {
-        if (
-            !isAuthenticated ||
-            !movieId
-        ) {
+        if (!requestKey) {
             return;
         }
 
 
         let cancelled =
             false;
+
+        const currentRequestKey =
+            requestKey;
 
 
         fetchMovieLibraryStatus(
@@ -133,13 +202,18 @@ function MovieActionButtons({
                     }
 
 
-                    setIsFavorite(
-                        status.isFavorite
-                    );
+                    setLibraryStatus({
+                        key:
+                            currentRequestKey,
 
-                    setIsWatchlisted(
-                        status.isWatchlisted
-                    );
+                        isFavorite:
+                            status.isFavorite,
+
+                        isWatchlisted:
+                            status.isWatchlisted,
+
+                        error: "",
+                    });
                 }
             )
             .catch(
@@ -161,18 +235,27 @@ function MovieActionButtons({
                     }
 
 
-                    setError(
-                        requestError.message
-                    );
-                }
-            )
-            .finally(
-                () => {
-                    if (!cancelled) {
-                        setIsChecking(
-                            false
-                        );
-                    }
+                    /*
+                     * Status belirlenememişse
+                     * action butonları açılmaz.
+                     *
+                     * Böylece bilinmeyen durumda
+                     * yanlış POST/DELETE isteği
+                     * gönderilmez.
+                     */
+                    setLibraryStatus({
+                        key:
+                            currentRequestKey,
+
+                        isFavorite:
+                            false,
+
+                        isWatchlisted:
+                            false,
+
+                        error:
+                            requestError.message,
+                    });
                 }
             );
 
@@ -182,9 +265,9 @@ function MovieActionButtons({
                 true;
         };
     }, [
-        isAuthenticated,
         logout,
         movieId,
+        requestKey,
     ]);
 
 
@@ -234,12 +317,34 @@ function MovieActionButtons({
             }
 
 
+            /*
+             * Status henüz bilinmiyorsa
+             * veya status isteği başarısızsa
+             * action gönderilmez.
+             */
+            if (
+                !currentStatus ||
+                statusError
+            ) {
+                return;
+            }
+
+
             setIsFavoriteLoading(
                 true
             );
 
-            setFeedback("");
-            setError("");
+            setFeedback({
+                key:
+                    requestKey,
+                message: "",
+            });
+
+            setActionError({
+                key:
+                    requestKey,
+                message: "",
+            });
 
 
             try {
@@ -248,25 +353,73 @@ function MovieActionButtons({
                         movieId
                     );
 
-                    setIsFavorite(
-                        false
+
+                    setLibraryStatus(
+                        (
+                            previousStatus
+                        ) => {
+                            if (
+                                previousStatus
+                                    ?.key !==
+                                requestKey
+                            ) {
+                                return previousStatus;
+                            }
+
+
+                            return {
+                                ...previousStatus,
+
+                                isFavorite:
+                                    false,
+                            };
+                        }
                     );
 
-                    setFeedback(
-                        "Film favorilerden kaldırıldı."
-                    );
+
+                    setFeedback({
+                        key:
+                            requestKey,
+
+                        message:
+                            "Film favorilerden kaldırıldı.",
+                    });
                 } else {
                     await addFavorite(
                         movieId
                     );
 
-                    setIsFavorite(
-                        true
+
+                    setLibraryStatus(
+                        (
+                            previousStatus
+                        ) => {
+                            if (
+                                previousStatus
+                                    ?.key !==
+                                requestKey
+                            ) {
+                                return previousStatus;
+                            }
+
+
+                            return {
+                                ...previousStatus,
+
+                                isFavorite:
+                                    true,
+                            };
+                        }
                     );
 
-                    setFeedback(
-                        "Film favorilere eklendi."
-                    );
+
+                    setFeedback({
+                        key:
+                            requestKey,
+
+                        message:
+                            "Film favorilere eklendi.",
+                    });
                 }
             } catch (
                 requestError
@@ -281,9 +434,13 @@ function MovieActionButtons({
                 }
 
 
-                setError(
-                    requestError.message
-                );
+                setActionError({
+                    key:
+                        requestKey,
+
+                    message:
+                        requestError.message,
+                });
             } finally {
                 setIsFavoriteLoading(
                     false
@@ -303,12 +460,29 @@ function MovieActionButtons({
             }
 
 
+            if (
+                !currentStatus ||
+                statusError
+            ) {
+                return;
+            }
+
+
             setIsWatchlistLoading(
                 true
             );
 
-            setFeedback("");
-            setError("");
+            setFeedback({
+                key:
+                    requestKey,
+                message: "",
+            });
+
+            setActionError({
+                key:
+                    requestKey,
+                message: "",
+            });
 
 
             try {
@@ -319,25 +493,73 @@ function MovieActionButtons({
                         movieId
                     );
 
-                    setIsWatchlisted(
-                        false
+
+                    setLibraryStatus(
+                        (
+                            previousStatus
+                        ) => {
+                            if (
+                                previousStatus
+                                    ?.key !==
+                                requestKey
+                            ) {
+                                return previousStatus;
+                            }
+
+
+                            return {
+                                ...previousStatus,
+
+                                isWatchlisted:
+                                    false,
+                            };
+                        }
                     );
 
-                    setFeedback(
-                        "Film izleme listesinden kaldırıldı."
-                    );
+
+                    setFeedback({
+                        key:
+                            requestKey,
+
+                        message:
+                            "Film izleme listesinden kaldırıldı.",
+                    });
                 } else {
                     await addToWatchlist(
                         movieId
                     );
 
-                    setIsWatchlisted(
-                        true
+
+                    setLibraryStatus(
+                        (
+                            previousStatus
+                        ) => {
+                            if (
+                                previousStatus
+                                    ?.key !==
+                                requestKey
+                            ) {
+                                return previousStatus;
+                            }
+
+
+                            return {
+                                ...previousStatus,
+
+                                isWatchlisted:
+                                    true,
+                            };
+                        }
                     );
 
-                    setFeedback(
-                        "Film izleme listesine eklendi."
-                    );
+
+                    setFeedback({
+                        key:
+                            requestKey,
+
+                        message:
+                            "Film izleme listesine eklendi.",
+                    });
                 }
             } catch (
                 requestError
@@ -352,9 +574,13 @@ function MovieActionButtons({
                 }
 
 
-                setError(
-                    requestError.message
-                );
+                setActionError({
+                    key:
+                        requestKey,
+
+                    message:
+                        requestError.message,
+                });
             } finally {
                 setIsWatchlistLoading(
                     false
@@ -378,6 +604,9 @@ function MovieActionButtons({
                     }
                     disabled={
                         isChecking ||
+                        Boolean(
+                            statusError
+                        ) ||
                         isFavoriteLoading
                     }
                 >
@@ -387,11 +616,13 @@ function MovieActionButtons({
                             : "♡"}
                     </span>
 
-                    {isFavoriteLoading
-                        ? "Updating..."
-                        : isFavorite
-                            ? "Favorited"
-                            : "Add to Favorites"}
+                    {isChecking
+                        ? "Checking..."
+                        : isFavoriteLoading
+                            ? "Updating..."
+                            : isFavorite
+                                ? "Favorited"
+                                : "Add to Favorites"}
                 </button>
 
                 <button
@@ -406,6 +637,9 @@ function MovieActionButtons({
                     }
                     disabled={
                         isChecking ||
+                        Boolean(
+                            statusError
+                        ) ||
                         isWatchlistLoading
                     }
                 >
@@ -415,23 +649,29 @@ function MovieActionButtons({
                             : "+"}
                     </span>
 
-                    {isWatchlistLoading
-                        ? "Updating..."
-                        : isWatchlisted
-                            ? "In Watchlist"
-                            : "Add to Watchlist"}
+                    {isChecking
+                        ? "Checking..."
+                        : isWatchlistLoading
+                            ? "Updating..."
+                            : isWatchlisted
+                                ? "In Watchlist"
+                                : "Add to Watchlist"}
                 </button>
             </div>
 
-            {feedback && (
+            {visibleFeedback && (
                 <p className="movie-action-feedback">
-                    {feedback}
+                    {
+                        visibleFeedback
+                    }
                 </p>
             )}
 
-            {error && (
+            {(statusError ||
+                visibleActionError) && (
                 <p className="movie-action-error">
-                    {error}
+                    {statusError ||
+                        visibleActionError}
                 </p>
             )}
         </div>
