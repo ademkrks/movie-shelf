@@ -83,91 +83,200 @@ function MovieDetailPage() {
 
 
     const [
-        movie,
-        setMovie,
-    ] = useState(null);
+        loadState,
+        setLoadState,
+    ] = useState({
+        movieId: null,
+        movie: null,
+        cast: [],
+        trailers: [],
+        error: "",
+    });
 
-    const [
-        cast,
-        setCast,
-    ] = useState([]);
 
-    const [
-        trailers,
-        setTrailers,
-    ] = useState([]);
+    const isLoading =
+        loadState.movieId !==
+        id;
 
-    const [
-        isLoading,
-        setIsLoading,
-    ] = useState(true);
 
-    const [
-        error,
-        setError,
-    ] = useState("");
+    const movie =
+        isLoading
+            ? null
+            : loadState.movie;
+
+    const cast =
+        isLoading
+            ? []
+            : loadState.cast;
+
+    const trailers =
+        isLoading
+            ? []
+            : loadState.trailers;
+
+    const error =
+        isLoading
+            ? ""
+            : loadState.error;
 
 
     useEffect(() => {
-        const loadMovie =
-            async () => {
-                setIsLoading(
-                    true
-                );
+        const controller =
+            new AbortController();
 
-                setError("");
+        const currentMovieId =
+            id;
 
 
-                try {
+        const requestOptions = {
+            signal:
+                controller.signal,
+        };
+
+
+        Promise.allSettled([
+            getMovieDetails(
+                currentMovieId,
+                requestOptions
+            ),
+
+            getMovieCast(
+                currentMovieId,
+                requestOptions
+            ),
+
+            getMovieTrailers(
+                currentMovieId,
+                requestOptions
+            ),
+        ])
+            .then(
+                (
+                    results
+                ) => {
+                    if (
+                        controller.signal
+                            .aborted
+                    ) {
+                        return;
+                    }
+
+
                     const [
-                        movieResponse,
-                        castResponse,
-                        trailerResponse,
-                    ] =
-                        await Promise.all([
-                            getMovieDetails(
-                                id
-                            ),
-
-                            getMovieCast(
-                                id
-                            ),
-
-                            getMovieTrailers(
-                                id
-                            ),
-                        ]);
+                        movieResult,
+                        castResult,
+                        trailerResult,
+                    ] = results;
 
 
-                    setMovie(
-                        movieResponse.data
-                    );
+                    /*
+                     * Film detayları ana veri olduğu için
+                     * bu istek başarısızsa sayfa yüklenemez.
+                     */
+                    if (
+                        movieResult.status ===
+                        "rejected"
+                    ) {
+                        setLoadState({
+                            movieId:
+                                currentMovieId,
 
-                    setCast(
-                        castResponse.data ||
-                        []
-                    );
+                            movie: null,
 
-                    setTrailers(
-                        trailerResponse.data ||
-                        []
-                    );
-                } catch (
-                    requestError
-                ) {
-                    setError(
-                        requestError.message
-                    );
-                } finally {
-                    setIsLoading(
-                        false
-                    );
+                            cast: [],
+
+                            trailers: [],
+
+                            error:
+                                movieResult.reason
+                                    ?.message ||
+                                "Movie could not be loaded.",
+                        });
+
+
+                        return;
+                    }
+
+
+                    /*
+                     * Cast ve trailer ek içeriktir.
+                     * Bu isteklerden biri başarısız olsa bile
+                     * ana film sayfası kullanılabilir kalır.
+                     */
+                    const nextCast =
+                        castResult.status ===
+                        "fulfilled"
+                            ? castResult.value
+                                ?.data ||
+                            []
+                            : [];
+
+
+                    const nextTrailers =
+                        trailerResult.status ===
+                        "fulfilled"
+                            ? trailerResult.value
+                                ?.data ||
+                            []
+                            : [];
+
+
+                    setLoadState({
+                        movieId:
+                            currentMovieId,
+
+                        movie:
+                            movieResult.value
+                                ?.data ||
+                            null,
+
+                        cast:
+                            nextCast,
+
+                        trailers:
+                            nextTrailers,
+
+                        error: "",
+                    });
                 }
-            };
+            )
+            .catch(
+                (
+                    requestError
+                ) => {
+                    if (
+                        controller.signal
+                            .aborted
+                    ) {
+                        return;
+                    }
 
 
-        loadMovie();
-    }, [id]);
+                    setLoadState({
+                        movieId:
+                            currentMovieId,
+
+                        movie: null,
+
+                        cast: [],
+
+                        trailers: [],
+
+                        error:
+                            requestError
+                                .message ||
+                            "Movie could not be loaded.",
+                    });
+                }
+            );
+
+
+        return () => {
+            controller.abort();
+        };
+    }, [
+        id,
+    ]);
 
 
     if (isLoading) {

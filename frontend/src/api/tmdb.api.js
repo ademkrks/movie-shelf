@@ -55,10 +55,12 @@ const searchMovies = async (
 
 const getMovieDetails =
     async (
-        movieId
+        movieId,
+        options = {}
     ) => {
         return apiRequest(
-            `/tmdb/movie/${movieId}`
+            `/tmdb/movie/${movieId}`,
+            options
         );
     };
 
@@ -91,20 +93,24 @@ const getMovieDetailsBatch =
 
 const getMovieCast =
     async (
-        movieId
+        movieId,
+        options = {}
     ) => {
         return apiRequest(
-            `/tmdb/movie/${movieId}/cast`
+            `/tmdb/movie/${movieId}/cast`,
+            options
         );
     };
 
 
 const getMovieTrailers =
     async (
-        movieId
+        movieId,
+        options = {}
     ) => {
         return apiRequest(
-            `/tmdb/movie/${movieId}/trailers`
+            `/tmdb/movie/${movieId}/trailers`,
+            options
         );
     };
 
