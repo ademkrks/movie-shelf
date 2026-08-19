@@ -1,6 +1,7 @@
 import {
     useCallback,
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -18,7 +19,23 @@ import {
 import useAuth from "../hooks/useAuth";
 
 
-const COLLECTION_PAGE_SIZE = 20;
+const COLLECTION_PAGE_SIZE =
+    20;
+
+
+const getScrollBehavior =
+    () => {
+        const prefersReducedMotion =
+            window.matchMedia?.(
+                "(prefers-reduced-motion: reduce)"
+            )
+                .matches;
+
+
+        return prefersReducedMotion
+            ? "auto"
+            : "smooth";
+    };
 
 
 const fetchCollectionPage =
@@ -53,13 +70,18 @@ const fetchCollectionPage =
                     collectionData
                         ?.pagination ||
                     null,
+
+                hydrationWarning:
+                    "",
             };
         }
 
 
         const movieIds =
             items.map(
-                (item) =>
+                (
+                    item
+                ) =>
                     Number(
                         item.tmdbMovieId
                     )
@@ -78,15 +100,37 @@ const fetchCollectionPage =
             [];
 
 
+        const failedMovieIds =
+            movieResponse.data
+                ?.failedMovieIds ||
+            [];
+
+
         const moviesById =
             new Map(
                 movieDetails.map(
-                    (movie) => [
+                    (
+                        movie
+                    ) => [
                         Number(
                             movie.id
                         ),
+
                         movie,
                     ]
+                )
+            );
+
+
+        const unavailableMovieIds =
+            new Set(
+                failedMovieIds.map(
+                    (
+                        movieId
+                    ) =>
+                        Number(
+                            movieId
+                        )
                 )
             );
 
@@ -94,18 +138,28 @@ const fetchCollectionPage =
         const movies =
             items
                 .map(
-                    (item) => {
-                        const movie =
-                            moviesById.get(
-                                Number(
-                                    item.tmdbMovieId
-                                )
+                    (
+                        item
+                    ) => {
+                        const tmdbMovieId =
+                            Number(
+                                item.tmdbMovieId
                             );
 
 
-                        if (
-                            !movie
-                        ) {
+                        const movie =
+                            moviesById.get(
+                                tmdbMovieId
+                            );
+
+
+                        if (!movie) {
+                            unavailableMovieIds
+                                .add(
+                                    tmdbMovieId
+                                );
+
+
                             return null;
                         }
 
@@ -123,6 +177,29 @@ const fetchCollectionPage =
                 );
 
 
+        const unavailableCount =
+            unavailableMovieIds.size;
+
+
+        let hydrationWarning =
+            "";
+
+
+        if (
+            unavailableCount ===
+            1
+        ) {
+            hydrationWarning =
+                "1 saved movie could not be loaded from TMDB.";
+        } else if (
+            unavailableCount >
+            1
+        ) {
+            hydrationWarning =
+                `${unavailableCount} saved movies could not be loaded from TMDB.`;
+        }
+
+
         return {
             movies,
 
@@ -130,6 +207,8 @@ const fetchCollectionPage =
                 collectionData
                     ?.pagination ||
                 null,
+
+            hydrationWarning,
         };
     };
 
@@ -223,9 +302,26 @@ function CollectionPage({
     ] = useState(null);
 
     const [
-        error,
-        setError,
+        loadError,
+        setLoadError,
     ] = useState("");
+
+    const [
+        actionError,
+        setActionError,
+    ] = useState("");
+
+    const [
+        hydrationWarning,
+        setHydrationWarning,
+    ] = useState("");
+
+
+    const requestIdRef =
+        useRef(0);
+
+    const mountedRef =
+        useRef(true);
 
 
     const isFavoritesCollection =
@@ -258,6 +354,7 @@ function CollectionPage({
         useCallback(() => {
             logout();
 
+
             navigate(
                 "/login",
                 {
@@ -276,18 +373,44 @@ function CollectionPage({
 
 
     useEffect(() => {
+        mountedRef.current =
+            true;
+
+
+        return () => {
+            mountedRef.current =
+                false;
+        };
+    }, []);
+
+
+    useEffect(() => {
+        const requestId =
+            requestIdRef.current +
+            1;
+
+
+        requestIdRef.current =
+            requestId;
+
+
         let cancelled =
             false;
 
 
         fetchCollectionPage(
             loadCollection,
-            page
+            1
         )
             .then(
-                (result) => {
+                (
+                    result
+                ) => {
                     if (
-                        cancelled
+                        cancelled ||
+                        requestId !==
+                            requestIdRef
+                                .current
                     ) {
                         return;
                     }
@@ -301,7 +424,20 @@ function CollectionPage({
                         result.pagination
                     );
 
-                    setError("");
+                    setPage(
+                        result.pagination
+                            ?.page ??
+                        1
+                    );
+
+                    setLoadError("");
+
+                    setActionError("");
+
+                    setHydrationWarning(
+                        result
+                            .hydrationWarning
+                    );
                 }
             )
             .catch(
@@ -309,7 +445,10 @@ function CollectionPage({
                     requestError
                 ) => {
                     if (
-                        cancelled
+                        cancelled ||
+                        requestId !==
+                            requestIdRef
+                                .current
                     ) {
                         return;
                     }
@@ -325,15 +464,28 @@ function CollectionPage({
                     }
 
 
-                    setError(
-                        requestError.message
+                    setMovies([]);
+
+                    setPagination(null);
+
+                    setPage(1);
+
+                    setHydrationWarning("");
+
+                    setLoadError(
+                        requestError
+                            .message ||
+                            "Collection could not be loaded."
                     );
                 }
             )
             .finally(
                 () => {
                     if (
-                        !cancelled
+                        !cancelled &&
+                        requestId ===
+                            requestIdRef
+                                .current
                     ) {
                         setIsLoading(
                             false
@@ -346,11 +498,19 @@ function CollectionPage({
         return () => {
             cancelled =
                 true;
+
+
+            if (
+                requestIdRef.current ===
+                requestId
+            ) {
+                requestIdRef.current +=
+                    1;
+            }
         };
     }, [
         handleUnauthorized,
         loadCollection,
-        page,
     ]);
 
 
@@ -358,11 +518,20 @@ function CollectionPage({
         async (
             requestedPage
         ) => {
-            setIsLoading(
-                true
-            );
+            const requestId =
+                requestIdRef.current +
+                1;
 
-            setError("");
+
+            requestIdRef.current =
+                requestId;
+
+
+            setIsLoading(true);
+
+            setLoadError("");
+
+            setActionError("");
 
 
             try {
@@ -373,6 +542,16 @@ function CollectionPage({
                     );
 
 
+                if (
+                    !mountedRef.current ||
+                    requestId !==
+                        requestIdRef
+                            .current
+                ) {
+                    return false;
+                }
+
+
                 setMovies(
                     result.movies
                 );
@@ -380,26 +559,68 @@ function CollectionPage({
                 setPagination(
                     result.pagination
                 );
+
+                setPage(
+                    result.pagination
+                        ?.page ??
+                    requestedPage
+                );
+
+                setHydrationWarning(
+                    result
+                        .hydrationWarning
+                );
+
+                setLoadError("");
+
+
+                return true;
             } catch (
                 requestError
             ) {
+                if (
+                    !mountedRef.current ||
+                    requestId !==
+                        requestIdRef
+                            .current
+                ) {
+                    return false;
+                }
+
+
                 if (
                     requestError.status ===
                     401
                 ) {
                     handleUnauthorized();
 
-                    return;
+                    return false;
                 }
 
 
-                setError(
-                    requestError.message
+                /*
+                 * Pagination veya refresh hatasında
+                 * son başarılı film listesi korunur.
+                 */
+                setLoadError(
+                    requestError
+                        .message ||
+                        "Collection could not be refreshed."
                 );
+
+
+                return false;
             } finally {
-                setIsLoading(
-                    false
-                );
+                if (
+                    mountedRef.current &&
+                    requestId ===
+                        requestIdRef
+                            .current
+                ) {
+                    setIsLoading(
+                        false
+                    );
+                }
             }
         };
 
@@ -412,7 +633,7 @@ function CollectionPage({
                 movieId
             );
 
-            setError("");
+            setActionError("");
 
 
             try {
@@ -426,23 +647,16 @@ function CollectionPage({
                     1;
 
 
-                if (
+                const targetPage =
                     isLastItem &&
                     page > 1
-                ) {
-                    setIsLoading(
-                        true
-                    );
+                        ? page - 1
+                        : page;
 
-                    setPage(
-                        (current) =>
-                            current - 1
-                    );
-                } else {
-                    await reloadPage(
-                        page
-                    );
-                }
+
+                await reloadPage(
+                    targetPage
+                );
             } catch (
                 requestError
             ) {
@@ -456,8 +670,10 @@ function CollectionPage({
                 }
 
 
-                setError(
-                    requestError.message
+                setActionError(
+                    requestError
+                        .message ||
+                        "Movie could not be removed."
                 );
             } finally {
                 setRemovingMovieId(
@@ -468,59 +684,88 @@ function CollectionPage({
 
 
     const goToPreviousPage =
-        () => {
+        async () => {
             if (
                 !pagination
-                    ?.hasPreviousPage
+                    ?.hasPreviousPage ||
+                isLoading ||
+                removingMovieId
             ) {
                 return;
             }
 
 
-            setError("");
+            const succeeded =
+                await reloadPage(
+                    page - 1
+                );
 
-            setIsLoading(
-                true
-            );
 
-            setPage(
-                (current) =>
-                    current - 1
-            );
+            if (succeeded) {
+                window.scrollTo({
+                    top: 0,
 
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-            });
+                    behavior:
+                        getScrollBehavior(),
+                });
+            }
         };
 
 
     const goToNextPage =
-        () => {
+        async () => {
             if (
                 !pagination
-                    ?.hasNextPage
+                    ?.hasNextPage ||
+                isLoading ||
+                removingMovieId
             ) {
                 return;
             }
 
 
-            setError("");
+            const succeeded =
+                await reloadPage(
+                    page + 1
+                );
 
-            setIsLoading(
-                true
-            );
 
-            setPage(
-                (current) =>
-                    current + 1
-            );
+            if (succeeded) {
+                window.scrollTo({
+                    top: 0,
 
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-            });
+                    behavior:
+                        getScrollBehavior(),
+                });
+            }
         };
+
+
+    const retryCurrentPage =
+        async () => {
+            await reloadPage(
+                page
+            );
+        };
+
+
+    const hasInitialLoadFailure =
+        Boolean(
+            loadError
+        ) &&
+        movies.length ===
+            0 &&
+        !pagination;
+
+
+    const hasUnavailableSavedMovies =
+        Boolean(
+            hydrationWarning
+        ) &&
+        movies.length ===
+            0 &&
+        totalItems >
+            0;
 
 
     return (
@@ -539,7 +784,7 @@ function CollectionPage({
                         >
                             {isFavoritesCollection
                                 ? "♥"
-                                : "＋"}
+                                : "+"}
                         </span>
 
                         <span>
@@ -578,7 +823,8 @@ function CollectionPage({
                         </span>
 
                         <strong>
-                            {isLoading
+                            {isLoading &&
+                            !pagination
                                 ? "—"
                                 : totalItems}
                         </strong>
@@ -594,7 +840,8 @@ function CollectionPage({
                         </span>
 
                         <strong>
-                            {isLoading
+                            {isLoading &&
+                            !pagination
                                 ? "—"
                                 : currentPage}
                         </strong>
@@ -608,19 +855,144 @@ function CollectionPage({
                 </div>
             </header>
 
-            {error && (
+            {actionError && (
                 <div
                     className="form-error collection-message"
                     role="alert"
                 >
-                    {error}
+                    {actionError}
                 </div>
             )}
 
-            {isLoading ? (
-                <CollectionLoading />
-            ) : movies.length ===
+            {loadError &&
+                !hasInitialLoadFailure && (
+                <div
+                    className="form-error collection-message"
+                    role="alert"
+                >
+                    <span>
+                        {loadError}
+                    </span>
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={
+                            retryCurrentPage
+                        }
+                        disabled={
+                            isLoading
+                        }
+                    >
+                        {isLoading
+                            ? "Retrying..."
+                            : "Try Again"}
+                    </button>
+                </div>
+            )}
+
+            {hydrationWarning &&
+                movies.length >
+                    0 && (
+                <div
+                    className="form-error collection-message"
+                    role="status"
+                >
+                    <span>
+                        {
+                            hydrationWarning
+                        }
+                    </span>
+
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={
+                            retryCurrentPage
+                        }
+                        disabled={
+                            isLoading
+                        }
+                    >
+                        Retry missing movies
+                    </button>
+                </div>
+            )}
+
+            {isLoading &&
+            movies.length ===
                 0 ? (
+                <CollectionLoading />
+            ) : hasInitialLoadFailure ? (
+                <div className="collection-empty">
+                    <div className="collection-empty-content">
+                        <div
+                            className="collection-empty-icon"
+                            aria-hidden="true"
+                        >
+                            !
+                        </div>
+
+                        <p className="eyebrow">
+                            COLLECTION UNAVAILABLE
+                        </p>
+
+                        <h2>
+                            Movies could not be loaded
+                        </h2>
+
+                        <p>
+                            {loadError}
+                        </p>
+
+                        <button
+                            type="button"
+                            className="primary-button collection-empty-button"
+                            onClick={
+                                retryCurrentPage
+                            }
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            ) : hasUnavailableSavedMovies ? (
+                <div className="collection-empty">
+                    <div className="collection-empty-content">
+                        <div
+                            className="collection-empty-icon"
+                            aria-hidden="true"
+                        >
+                            !
+                        </div>
+
+                        <p className="eyebrow">
+                            MOVIES UNAVAILABLE
+                        </p>
+
+                        <h2>
+                            Saved movies could not be displayed
+                        </h2>
+
+                        <p>
+                            {
+                                hydrationWarning
+                            }
+                        </p>
+
+                        <button
+                            type="button"
+                            className="primary-button collection-empty-button"
+                            onClick={
+                                retryCurrentPage
+                            }
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            ) : movies.length ===
+              0 ? (
                 <div className="collection-empty">
                     <div className="collection-empty-content">
                         <div
@@ -629,7 +1001,7 @@ function CollectionPage({
                         >
                             {isFavoritesCollection
                                 ? "♡"
-                                : "＋"}
+                                : "+"}
                         </div>
 
                         <p className="eyebrow">
@@ -680,11 +1052,14 @@ function CollectionPage({
                         aria-busy={
                             Boolean(
                                 removingMovieId
-                            )
+                            ) ||
+                            isLoading
                         }
                     >
                         {movies.map(
-                            (movie) => (
+                            (
+                                movie
+                            ) => (
                                 <CollectionMovieCard
                                     key={
                                         movie.id
@@ -723,6 +1098,7 @@ function CollectionPage({
                                     goToPreviousPage
                                 }
                                 disabled={
+                                    isLoading ||
                                     !pagination
                                         .hasPreviousPage ||
                                     Boolean(
@@ -769,6 +1145,7 @@ function CollectionPage({
                                     goToNextPage
                                 }
                                 disabled={
+                                    isLoading ||
                                     !pagination
                                         .hasNextPage ||
                                     Boolean(

@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useRef,
     useState,
 } from "react";
 
@@ -33,6 +34,143 @@ const EMPTY_SEARCH_PAGINATION = {
 };
 
 
+const fetchDiscoveryFeed =
+    async () => {
+        const [
+            trendingResult,
+            popularResult,
+            topRatedResult,
+            upcomingResult,
+        ] =
+            await Promise.allSettled([
+                getTrendingMovies(),
+                getPopularMovies(),
+                getTopRatedMovies(),
+                getUpcomingMovies(),
+            ]);
+
+
+        const results = [
+            {
+                label:
+                    "Trending",
+                result:
+                    trendingResult,
+            },
+            {
+                label:
+                    "Popular",
+                result:
+                    popularResult,
+            },
+            {
+                label:
+                    "Top Rated",
+                result:
+                    topRatedResult,
+            },
+            {
+                label:
+                    "Upcoming",
+                result:
+                    upcomingResult,
+            },
+        ];
+
+
+        const failedSections =
+            results
+                .filter(
+                    ({
+                        result,
+                    }) =>
+                        result.status ===
+                        "rejected"
+                )
+                .map(
+                    ({
+                        label,
+                    }) =>
+                        label
+                );
+
+
+        let warning = "";
+
+
+        if (
+            failedSections.length ===
+            results.length
+        ) {
+            const firstFailure =
+                results.find(
+                    ({
+                        result,
+                    }) =>
+                        result.status ===
+                        "rejected"
+                );
+
+
+            warning =
+                firstFailure
+                    ?.result
+                    ?.reason
+                    ?.message ||
+                "Movie discovery could not be loaded.";
+        } else if (
+            failedSections.length >
+            0
+        ) {
+            warning =
+                `Some movie sections could not be loaded: ${failedSections.join(
+                    ", "
+                )}.`;
+        }
+
+
+        return {
+            trendingMovies:
+                trendingResult.status ===
+                "fulfilled"
+                    ? trendingResult
+                        .value
+                        ?.data ||
+                    []
+                    : [],
+
+            popularMovies:
+                popularResult.status ===
+                "fulfilled"
+                    ? popularResult
+                        .value
+                        ?.data ||
+                    []
+                    : [],
+
+            topRatedMovies:
+                topRatedResult.status ===
+                "fulfilled"
+                    ? topRatedResult
+                        .value
+                        ?.data ||
+                    []
+                    : [],
+
+            upcomingMovies:
+                upcomingResult.status ===
+                "fulfilled"
+                    ? upcomingResult
+                        .value
+                        ?.data ||
+                    []
+                    : [],
+
+            warning,
+        };
+    };
+
+
 function MovieSkeleton() {
     return (
         <div
@@ -55,7 +193,10 @@ function MovieGridSkeleton() {
             {Array.from({
                 length: 10,
             }).map(
-                (_, index) => (
+                (
+                    _,
+                    index
+                ) => (
                     <MovieSkeleton
                         key={
                             index
@@ -105,6 +246,14 @@ function MovieSection({
     subtitle,
     movies,
 }) {
+    if (
+        movies.length ===
+        0
+    ) {
+        return null;
+    }
+
+
     return (
         <section className="movie-section">
             <div className="section-heading">
@@ -127,7 +276,9 @@ function MovieSection({
 
             <div className="movie-grid">
                 {movies.map(
-                    (movie) => (
+                    (
+                        movie
+                    ) => (
                         <MovieCard
                             key={
                                 movie.id
@@ -151,7 +302,9 @@ function HeroShowcase({
     const featuredMovies =
         movies
             .filter(
-                (movie) =>
+                (
+                    movie
+                ) =>
                     movie.poster_path
             )
             .slice(
@@ -172,7 +325,9 @@ function HeroShowcase({
             {isLoading ? (
                 <>
                     <div className="hero-poster hero-poster-skeleton hero-poster-one" />
+
                     <div className="hero-poster hero-poster-skeleton hero-poster-two" />
+
                     <div className="hero-poster hero-poster-skeleton hero-poster-three" />
                 </>
             ) : (
@@ -285,64 +440,196 @@ function HomePage() {
     ] = useState(false);
 
     const [
-        error,
-        setError,
+        discoveryError,
+        setDiscoveryError,
+    ] = useState("");
+
+    const [
+        searchError,
+        setSearchError,
     ] = useState("");
 
 
+    const discoveryRequestIdRef =
+        useRef(0);
+
+    const searchRequestIdRef =
+        useRef(0);
+
+
+    const applyDiscoveryResult =
+        (
+            result
+        ) => {
+            setTrendingMovies(
+                result.trendingMovies
+            );
+
+            setPopularMovies(
+                result.popularMovies
+            );
+
+            setTopRatedMovies(
+                result.topRatedMovies
+            );
+
+            setUpcomingMovies(
+                result.upcomingMovies
+            );
+
+            setDiscoveryError(
+                result.warning
+            );
+        };
+
+
     useEffect(() => {
-        const loadMovies =
-            async () => {
-                try {
-                    const [
-                        trendingResponse,
-                        popularResponse,
-                        topRatedResponse,
-                        upcomingResponse,
-                    ] =
-                        await Promise.all([
-                            getTrendingMovies(),
-                            getPopularMovies(),
-                            getTopRatedMovies(),
-                            getUpcomingMovies(),
-                        ]);
+        const requestId =
+            discoveryRequestIdRef
+                .current +
+            1;
 
 
-                    setTrendingMovies(
-                        trendingResponse.data ||
-                        []
+        discoveryRequestIdRef.current =
+            requestId;
+
+
+        fetchDiscoveryFeed()
+            .then(
+                (
+                    result
+                ) => {
+                    if (
+                        requestId !==
+                        discoveryRequestIdRef
+                            .current
+                    ) {
+                        return;
+                    }
+
+
+                    applyDiscoveryResult(
+                        result
                     );
-
-                    setPopularMovies(
-                        popularResponse.data ||
-                        []
-                    );
-
-                    setTopRatedMovies(
-                        topRatedResponse.data ||
-                        []
-                    );
-
-                    setUpcomingMovies(
-                        upcomingResponse.data ||
-                        []
-                    );
-                } catch (
+                }
+            )
+            .catch(
+                (
                     requestError
-                ) {
-                    setError(
-                        requestError.message
+                ) => {
+                    if (
+                        requestId !==
+                        discoveryRequestIdRef
+                            .current
+                    ) {
+                        return;
+                    }
+
+
+                    setDiscoveryError(
+                        requestError
+                            .message ||
+                            "Movie discovery could not be loaded."
                     );
-                } finally {
+                }
+            )
+            .finally(
+                () => {
+                    if (
+                        requestId ===
+                        discoveryRequestIdRef
+                            .current
+                    ) {
+                        setIsLoading(
+                            false
+                        );
+                    }
+                }
+            );
+
+
+        return () => {
+            if (
+                discoveryRequestIdRef
+                    .current ===
+                requestId
+            ) {
+                discoveryRequestIdRef
+                    .current +=
+                    1;
+            }
+
+
+            searchRequestIdRef
+                .current +=
+                1;
+        };
+    }, []);
+
+
+    const reloadDiscovery =
+        async () => {
+            const requestId =
+                discoveryRequestIdRef
+                    .current +
+                1;
+
+
+            discoveryRequestIdRef.current =
+                requestId;
+
+
+            setIsLoading(true);
+
+            setDiscoveryError("");
+
+
+            try {
+                const result =
+                    await fetchDiscoveryFeed();
+
+
+                if (
+                    requestId !==
+                    discoveryRequestIdRef
+                        .current
+                ) {
+                    return;
+                }
+
+
+                applyDiscoveryResult(
+                    result
+                );
+            } catch (
+                requestError
+            ) {
+                if (
+                    requestId !==
+                    discoveryRequestIdRef
+                        .current
+                ) {
+                    return;
+                }
+
+
+                setDiscoveryError(
+                    requestError
+                        .message ||
+                        "Movie discovery could not be loaded."
+                );
+            } finally {
+                if (
+                    requestId ===
+                    discoveryRequestIdRef
+                        .current
+                ) {
                     setIsLoading(
                         false
                     );
                 }
-            };
-
-
-        loadMovies();
-    }, []);
+            }
+        };
 
 
     const performSearch =
@@ -350,7 +637,18 @@ function HomePage() {
             query,
             page
         ) => {
-            setError("");
+            const requestId =
+                searchRequestIdRef
+                    .current +
+                1;
+
+
+            searchRequestIdRef.current =
+                requestId;
+
+
+            setSearchError("");
+
             setIsSearching(true);
 
 
@@ -360,6 +658,15 @@ function HomePage() {
                         query,
                         page
                     );
+
+
+                if (
+                    requestId !==
+                    searchRequestIdRef
+                        .current
+                ) {
+                    return false;
+                }
 
 
                 const result =
@@ -386,29 +693,68 @@ function HomePage() {
             } catch (
                 requestError
             ) {
-                setError(
-                    requestError.message
+                if (
+                    requestId !==
+                    searchRequestIdRef
+                        .current
+                ) {
+                    return false;
+                }
+
+
+                setSearchError(
+                    requestError
+                        .message ||
+                        "Search could not be completed."
                 );
 
 
                 return false;
             } finally {
-                setIsSearching(
-                    false
-                );
+                if (
+                    requestId ===
+                    searchRequestIdRef
+                        .current
+                ) {
+                    setIsSearching(
+                        false
+                    );
+                }
             }
         };
 
 
     const handleSearch =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
+
 
             const query =
                 searchQuery.trim();
 
 
-            if (!query) {
+            if (
+                query.length <
+                2
+            ) {
+                setSearchError(
+                    "Enter at least 2 characters to search."
+                );
+
+                return;
+            }
+
+
+            if (
+                query.length >
+                100
+            ) {
+                setSearchError(
+                    "Search can be at most 100 characters."
+                );
+
                 return;
             }
 
@@ -421,7 +767,9 @@ function HomePage() {
 
 
     const handlePageChange =
-        async (page) => {
+        async (
+            page
+        ) => {
             if (
                 isSearching ||
                 !activeSearch
@@ -450,13 +798,23 @@ function HomePage() {
             if (
                 searchSucceeded
             ) {
+                const prefersReducedMotion =
+                    window.matchMedia?.(
+                        "(prefers-reduced-motion: reduce)"
+                    )
+                        .matches;
+
+
                 document
                     .getElementById(
                         "search-results"
                     )
                     ?.scrollIntoView({
                         behavior:
-                            "smooth",
+                            prefersReducedMotion
+                                ? "auto"
+                                : "smooth",
+
                         block:
                             "start",
                     });
@@ -464,23 +822,34 @@ function HomePage() {
         };
 
 
-    const clearSearch = () => {
-        setSearchQuery("");
-        setSearchResults([]);
+    const clearSearch =
+        () => {
+            searchRequestIdRef
+                .current +=
+                1;
 
-        setSearchPagination(
-            EMPTY_SEARCH_PAGINATION
-        );
 
-        setActiveSearch("");
-        setError("");
-    };
+            setSearchQuery("");
+
+            setSearchResults([]);
+
+            setSearchPagination(
+                EMPTY_SEARCH_PAGINATION
+            );
+
+            setActiveSearch("");
+
+            setSearchError("");
+
+            setIsSearching(false);
+        };
 
 
     return (
         <div className="movies-page">
             <section className="movies-hero">
                 <div className="movies-hero-orb movies-hero-orb-one" />
+
                 <div className="movies-hero-orb movies-hero-orb-two" />
 
                 <div className="movies-hero-inner">
@@ -552,6 +921,9 @@ function HomePage() {
                                     minLength={
                                         2
                                     }
+                                    maxLength={
+                                        100
+                                    }
                                 />
                             </div>
 
@@ -602,16 +974,48 @@ function HomePage() {
                 id="discover-content"
                 className="movie-content"
             >
-                {error && (
+                {!activeSearch &&
+                    discoveryError && (
                     <div
                         className="form-error movie-page-message"
                         role="alert"
                     >
-                        {error}
+                        <span>
+                            {
+                                discoveryError
+                            }
+                        </span>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={
+                                reloadDiscovery
+                            }
+                            disabled={
+                                isLoading
+                            }
+                        >
+                            {isLoading
+                                ? "Retrying..."
+                                : "Try Again"}
+                        </button>
                     </div>
                 )}
 
-                {isLoading ? (
+                {searchError && (
+                    <div
+                        className="form-error movie-page-message"
+                        role="alert"
+                    >
+                        {
+                            searchError
+                        }
+                    </div>
+                )}
+
+                {isLoading &&
+                !activeSearch ? (
                     <DiscoverySkeleton />
                 ) : activeSearch ? (
                     <section
