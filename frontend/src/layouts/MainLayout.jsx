@@ -1,4 +1,6 @@
-import { Outlet } from "react-router";
+import {
+    Outlet,
+} from "react-router";
 
 import Navbar from "../components/Navbar";
 
@@ -6,9 +8,19 @@ import Navbar from "../components/Navbar";
 function MainLayout() {
     return (
         <div className="app-shell">
+            <a
+                href="#main-content"
+                className="skip-link"
+            >
+                Skip to content
+            </a>
+
             <Navbar />
 
-            <main className="main-content">
+            <main
+                id="main-content"
+                className="main-content"
+            >
                 <Outlet />
             </main>
         </div>

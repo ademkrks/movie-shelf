@@ -1,4 +1,9 @@
 import {
+    useEffect,
+    useState,
+} from "react";
+
+import {
     NavLink,
     useNavigate,
 } from "react-router";
@@ -9,6 +14,11 @@ import useAuth from "../hooks/useAuth";
 function Navbar() {
     const navigate =
         useNavigate();
+
+    const [
+        isMenuOpen,
+        setIsMenuOpen,
+    ] = useState(false);
 
     const {
         user,
@@ -27,28 +37,166 @@ function Navbar() {
                 : "nav-link";
 
 
+    const closeMenu = () => {
+        setIsMenuOpen(false);
+    };
+
+
+    const toggleMenu = () => {
+        setIsMenuOpen(
+            (current) =>
+                !current
+        );
+    };
+
+
     const handleLogout = () => {
+        closeMenu();
+
         logout();
 
         navigate("/");
     };
 
 
+    useEffect(() => {
+        if (!isMenuOpen) {
+            return undefined;
+        }
+
+
+        const handleKeyDown = (
+            event
+        ) => {
+            if (
+                event.key ===
+                "Escape"
+            ) {
+                setIsMenuOpen(
+                    false
+                );
+            }
+        };
+
+
+        const handleResize = () => {
+            if (
+                window.innerWidth >
+                860
+            ) {
+                setIsMenuOpen(
+                    false
+                );
+            }
+        };
+
+
+        document.body.classList.add(
+            "mobile-nav-open"
+        );
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
+
+        window.addEventListener(
+            "resize",
+            handleResize
+        );
+
+
+        return () => {
+            document.body.classList.remove(
+                "mobile-nav-open"
+            );
+
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
+
+            window.removeEventListener(
+                "resize",
+                handleResize
+            );
+        };
+    }, [isMenuOpen]);
+
+
     return (
         <header className="navbar">
+            {isMenuOpen && (
+                <button
+                    type="button"
+                    className="navbar-backdrop"
+                    aria-label="Close navigation menu"
+                    onClick={
+                        closeMenu
+                    }
+                />
+            )}
+
             <div className="navbar-container">
                 <NavLink
                     to="/"
                     className="brand"
+                    aria-label="MovieShelf home"
+                    onClick={
+                        closeMenu
+                    }
                 >
-                    MovieShelf
+                    <span>
+                        Movie
+                    </span>
+
+                    <span className="brand-accent">
+                        Shelf
+                    </span>
                 </NavLink>
 
-                <nav className="nav-links">
+                <button
+                    type="button"
+                    className={
+                        isMenuOpen
+                            ? "nav-menu-button open"
+                            : "nav-menu-button"
+                    }
+                    aria-label={
+                        isMenuOpen
+                            ? "Close navigation menu"
+                            : "Open navigation menu"
+                    }
+                    aria-expanded={
+                        isMenuOpen
+                    }
+                    aria-controls="primary-navigation"
+                    onClick={
+                        toggleMenu
+                    }
+                >
+                    <span />
+                    <span />
+                    <span />
+                </button>
+
+                <nav
+                    id="primary-navigation"
+                    className={
+                        isMenuOpen
+                            ? "nav-links open"
+                            : "nav-links"
+                    }
+                    aria-label="Primary navigation"
+                >
                     <NavLink
                         to="/"
+                        end
                         className={
                             getNavLinkClass
+                        }
+                        onClick={
+                            closeMenu
                         }
                     >
                         Home
@@ -62,6 +210,9 @@ function Navbar() {
                                     className={
                                         getNavLinkClass
                                     }
+                                    onClick={
+                                        closeMenu
+                                    }
                                 >
                                     Favorites
                                 </NavLink>
@@ -71,19 +222,44 @@ function Navbar() {
                                     className={
                                         getNavLinkClass
                                     }
+                                    onClick={
+                                        closeMenu
+                                    }
                                 >
                                     Watchlist
                                 </NavLink>
 
                                 <NavLink
                                     to="/profile"
-                                    className={
-                                        getNavLinkClass
+                                    className={({
+                                        isActive,
+                                    }) =>
+                                        isActive
+                                            ? "nav-link nav-user-link active"
+                                            : "nav-link nav-user-link"
+                                    }
+                                    onClick={
+                                        closeMenu
+                                    }
+                                    title={
+                                        user?.name ||
+                                        "Profile"
                                     }
                                 >
-                                    {user?.name ||
-                                        "Profile"}
+                                    <span className="nav-profile-label">
+                                        Profile
+                                    </span>
+
+                                    <span className="nav-profile-name">
+                                        {user?.name ||
+                                            "Profile"}
+                                    </span>
                                 </NavLink>
+
+                                <div
+                                    className="nav-divider"
+                                    aria-hidden="true"
+                                />
 
                                 <button
                                     type="button"
@@ -105,6 +281,9 @@ function Navbar() {
                                     className={
                                         getNavLinkClass
                                     }
+                                    onClick={
+                                        closeMenu
+                                    }
                                 >
                                     Login
                                 </NavLink>
@@ -117,6 +296,9 @@ function Navbar() {
                                         isActive
                                             ? "nav-link nav-link-primary active"
                                             : "nav-link nav-link-primary"
+                                    }
+                                    onClick={
+                                        closeMenu
                                     }
                                 >
                                     Register
