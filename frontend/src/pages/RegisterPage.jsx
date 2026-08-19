@@ -24,18 +24,24 @@ function RegisterPage() {
     } = useAuth();
 
 
-    const [formData, setFormData] =
-        useState({
-            name: "",
-            email: "",
-            password: "",
-        });
+    const [
+        formData,
+        setFormData,
+    ] = useState({
+        name: "",
+        email: "",
+        password: "",
+    });
 
-    const [error, setError] =
-        useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
 
-    const [isSubmitting, setIsSubmitting] =
-        useState(false);
+    const [
+        isSubmitting,
+        setIsSubmitting,
+    ] = useState(false);
 
 
     if (isAuthenticated) {
@@ -48,29 +54,88 @@ function RegisterPage() {
     }
 
 
-    const handleChange = (
-        event
-    ) => {
-        const {
-            name,
-            value,
-        } = event.target;
+    const handleChange =
+        (
+            event
+        ) => {
+            const {
+                name,
+                value,
+            } = event.target;
 
 
-        setFormData(
-            (current) => ({
-                ...current,
-                [name]: value,
-            })
-        );
-    };
+            setFormData(
+                (
+                    current
+                ) => ({
+                    ...current,
+
+                    [name]:
+                        value,
+                })
+            );
+        };
 
 
     const handleSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
 
+
             setError("");
+
+
+            const normalizedName =
+                formData.name.trim();
+
+            const normalizedEmail =
+                formData.email
+                    .trim()
+                    .toLowerCase();
+
+
+            if (!normalizedName) {
+                setError(
+                    "Name cannot be empty."
+                );
+
+                return;
+            }
+
+
+            if (
+                normalizedName.length >
+                100
+            ) {
+                setError(
+                    "Name can be at most 100 characters."
+                );
+
+                return;
+            }
+
+
+            if (!normalizedEmail) {
+                setError(
+                    "Enter your email address."
+                );
+
+                return;
+            }
+
+
+            if (
+                normalizedEmail.length >
+                255
+            ) {
+                setError(
+                    "Email is too long."
+                );
+
+                return;
+            }
 
 
             if (
@@ -78,7 +143,7 @@ function RegisterPage() {
                 8
             ) {
                 setError(
-                    "Şifre en az 8 karakter olmalıdır."
+                    "Password must be at least 8 characters."
                 );
 
                 return;
@@ -89,9 +154,16 @@ function RegisterPage() {
 
 
             try {
-                await register(
-                    formData
-                );
+                await register({
+                    name:
+                        normalizedName,
+
+                    email:
+                        normalizedEmail,
+
+                    password:
+                        formData.password,
+                });
 
 
                 navigate(
@@ -101,11 +173,13 @@ function RegisterPage() {
 
                         state: {
                             message:
-                                "Hesabınız oluşturuldu. Şimdi giriş yapabilirsiniz.",
+                                "Your account was created. You can sign in now.",
                         },
                     }
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
                 setError(
                     requestError.message
                 );
@@ -136,7 +210,10 @@ function RegisterPage() {
                 </div>
 
                 {error && (
-                    <div className="form-error">
+                    <div
+                        className="form-error"
+                        role="alert"
+                    >
                         {error}
                     </div>
                 )}
@@ -167,7 +244,12 @@ function RegisterPage() {
                             }
                             placeholder="Your name"
                             autoComplete="name"
-                            maxLength="100"
+                            maxLength={
+                                100
+                            }
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>
@@ -192,7 +274,12 @@ function RegisterPage() {
                             }
                             placeholder="you@example.com"
                             autoComplete="email"
-                            maxLength="255"
+                            maxLength={
+                                255
+                            }
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>
@@ -217,7 +304,12 @@ function RegisterPage() {
                             }
                             placeholder="Minimum 8 characters"
                             autoComplete="new-password"
-                            minLength="8"
+                            minLength={
+                                8
+                            }
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>

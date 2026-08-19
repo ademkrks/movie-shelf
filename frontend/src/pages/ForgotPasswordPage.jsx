@@ -20,17 +20,25 @@ function ForgotPasswordPage() {
     } = useAuth();
 
 
-    const [email, setEmail] =
-        useState("");
+    const [
+        email,
+        setEmail,
+    ] = useState("");
 
-    const [error, setError] =
-        useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
 
-    const [successMessage, setSuccessMessage] =
-        useState("");
+    const [
+        successMessage,
+        setSuccessMessage,
+    ] = useState("");
 
-    const [isSubmitting, setIsSubmitting] =
-        useState(false);
+    const [
+        isSubmitting,
+        setIsSubmitting,
+    ] = useState(false);
 
 
     if (isAuthenticated) {
@@ -44,26 +52,55 @@ function ForgotPasswordPage() {
 
 
     const handleSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
 
+
+            const normalizedEmail =
+                email
+                    .trim()
+                    .toLowerCase();
+
+
             setError("");
+
             setSuccessMessage("");
+
+
+            if (!normalizedEmail) {
+                setError(
+                    "Enter your email address."
+                );
+
+                return;
+            }
+
+
             setIsSubmitting(true);
 
 
             try {
                 const response =
                     await forgotPassword({
-                        email,
+                        email:
+                            normalizedEmail,
                     });
+
+
+                setEmail(
+                    normalizedEmail
+                );
 
 
                 setSuccessMessage(
                     response.message ||
-                    "Eğer bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderilecektir."
+                    "If an account exists for this email, a password reset link will be sent."
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
                 setError(
                     requestError.message
                 );
@@ -95,13 +132,19 @@ function ForgotPasswordPage() {
                 </div>
 
                 {successMessage && (
-                    <div className="form-success">
+                    <div
+                        className="form-success"
+                        role="status"
+                    >
                         {successMessage}
                     </div>
                 )}
 
                 {error && (
-                    <div className="form-error">
+                    <div
+                        className="form-error"
+                        role="alert"
+                    >
                         {error}
                     </div>
                 )}
@@ -137,7 +180,12 @@ function ForgotPasswordPage() {
                             }
                             placeholder="you@example.com"
                             autoComplete="email"
-                            maxLength="255"
+                            maxLength={
+                                255
+                            }
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>

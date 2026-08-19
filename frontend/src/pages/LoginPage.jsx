@@ -25,17 +25,23 @@ function LoginPage() {
     } = useAuth();
 
 
-    const [formData, setFormData] =
-        useState({
-            email: "",
-            password: "",
-        });
+    const [
+        formData,
+        setFormData,
+    ] = useState({
+        email: "",
+        password: "",
+    });
 
-    const [error, setError] =
-        useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
 
-    const [isSubmitting, setIsSubmitting] =
-        useState(false);
+    const [
+        isSubmitting,
+        setIsSubmitting,
+    ] = useState(false);
 
 
     if (isAuthenticated) {
@@ -48,42 +54,79 @@ function LoginPage() {
     }
 
 
-    const handleChange = (
-        event
-    ) => {
-        const {
-            name,
-            value,
-        } = event.target;
+    const handleChange =
+        (
+            event
+        ) => {
+            const {
+                name,
+                value,
+            } = event.target;
 
 
-        setFormData(
-            (current) => ({
-                ...current,
-                [name]: value,
-            })
-        );
-    };
+            setFormData(
+                (
+                    current
+                ) => ({
+                    ...current,
+
+                    [name]:
+                        value,
+                })
+            );
+        };
 
 
     const handleSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
 
+
+            const normalizedEmail =
+                formData.email
+                    .trim()
+                    .toLowerCase();
+
+
             setError("");
+
+
+            if (
+                !normalizedEmail ||
+                !formData.password
+            ) {
+                setError(
+                    "Enter your email and password."
+                );
+
+                return;
+            }
+
+
             setIsSubmitting(true);
 
 
             try {
-                await login(
-                    formData
-                );
+                await login({
+                    email:
+                        normalizedEmail,
+
+                    password:
+                        formData.password,
+                });
+
+
+                const from =
+                    location.state
+                        ?.from;
 
 
                 const destination =
-                    location.state
-                        ?.from?.pathname ||
-                    "/";
+                    from?.pathname
+                        ? `${from.pathname}${from.search || ""}${from.hash || ""}`
+                        : "/";
 
 
                 navigate(
@@ -92,7 +135,9 @@ function LoginPage() {
                         replace: true,
                     }
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
                 setError(
                     requestError.message
                 );
@@ -123,7 +168,10 @@ function LoginPage() {
                 </div>
 
                 {location.state?.message && (
-                    <div className="form-success">
+                    <div
+                        className="form-success"
+                        role="status"
+                    >
                         {
                             location.state
                                 .message
@@ -132,7 +180,10 @@ function LoginPage() {
                 )}
 
                 {error && (
-                    <div className="form-error">
+                    <div
+                        className="form-error"
+                        role="alert"
+                    >
                         {error}
                     </div>
                 )}
@@ -163,6 +214,12 @@ function LoginPage() {
                             }
                             placeholder="you@example.com"
                             autoComplete="email"
+                            maxLength={
+                                255
+                            }
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>
@@ -187,6 +244,9 @@ function LoginPage() {
                             }
                             placeholder="••••••••"
                             autoComplete="current-password"
+                            disabled={
+                                isSubmitting
+                            }
                             required
                         />
                     </label>

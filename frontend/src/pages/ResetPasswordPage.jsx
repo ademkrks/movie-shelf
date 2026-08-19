@@ -34,6 +34,7 @@ function ResetPasswordPage() {
             "token"
         ) || "";
 
+
     const isValidToken =
         /^[a-fA-F0-9]{64}$/.test(
             token
@@ -48,8 +49,10 @@ function ResetPasswordPage() {
         confirmPassword: "",
     });
 
-    const [error, setError] =
-        useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
 
     const [
         isSubmitting,
@@ -67,34 +70,42 @@ function ResetPasswordPage() {
     }
 
 
-    const handleChange = (
-        event
-    ) => {
-        const {
-            name,
-            value,
-        } = event.target;
+    const handleChange =
+        (
+            event
+        ) => {
+            const {
+                name,
+                value,
+            } = event.target;
 
 
-        setFormData(
-            (current) => ({
-                ...current,
-                [name]: value,
-            })
-        );
-    };
+            setFormData(
+                (
+                    current
+                ) => ({
+                    ...current,
+
+                    [name]:
+                        value,
+                })
+            );
+        };
 
 
     const handleSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
+
 
             setError("");
 
 
             if (!isValidToken) {
                 setError(
-                    "Şifre sıfırlama bağlantısı geçersiz."
+                    "This password reset link is invalid."
                 );
 
                 return;
@@ -106,7 +117,7 @@ function ResetPasswordPage() {
                 8
             ) {
                 setError(
-                    "Yeni şifre en az 8 karakter olmalıdır."
+                    "New password must be at least 8 characters."
                 );
 
                 return;
@@ -118,7 +129,7 @@ function ResetPasswordPage() {
                 formData.confirmPassword
             ) {
                 setError(
-                    "Şifreler eşleşmiyor."
+                    "Passwords do not match."
                 );
 
                 return;
@@ -146,11 +157,13 @@ function ResetPasswordPage() {
                         state: {
                             message:
                                 response.message ||
-                                "Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.",
+                                "Your password was updated successfully. You can sign in with your new password.",
                         },
                     }
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
                 setError(
                     requestError.message
                 );
@@ -182,14 +195,20 @@ function ResetPasswordPage() {
                 </div>
 
                 {!isValidToken && (
-                    <div className="form-error">
+                    <div
+                        className="form-error"
+                        role="alert"
+                    >
                         This password reset
                         link is invalid.
                     </div>
                 )}
 
                 {error && (
-                    <div className="form-error">
+                    <div
+                        className="form-error"
+                        role="alert"
+                    >
                         {error}
                     </div>
                 )}
@@ -222,7 +241,12 @@ function ResetPasswordPage() {
                                 }
                                 placeholder="Minimum 8 characters"
                                 autoComplete="new-password"
-                                minLength="8"
+                                minLength={
+                                    8
+                                }
+                                disabled={
+                                    isSubmitting
+                                }
                                 required
                             />
                         </label>
@@ -248,7 +272,12 @@ function ResetPasswordPage() {
                                 }
                                 placeholder="Repeat your password"
                                 autoComplete="new-password"
-                                minLength="8"
+                                minLength={
+                                    8
+                                }
+                                disabled={
+                                    isSubmitting
+                                }
                                 required
                             />
                         </label>

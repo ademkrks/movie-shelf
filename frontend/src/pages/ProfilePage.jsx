@@ -3,6 +3,7 @@ import {
 } from "react";
 
 import {
+    useLocation,
     useNavigate,
 } from "react-router";
 
@@ -15,11 +16,15 @@ function ProfilePage() {
     const navigate =
         useNavigate();
 
+    const location =
+        useLocation();
+
 
     const {
         user,
         updateProfile,
         changePassword,
+        logout,
     } = useAuth();
 
 
@@ -71,8 +76,32 @@ function ProfilePage() {
     ] = useState(false);
 
 
+    const handleUnauthorized =
+        () => {
+            logout();
+
+
+            navigate(
+                "/login",
+                {
+                    replace: true,
+
+                    state: {
+                        from:
+                            location,
+
+                        message:
+                            "Your session has expired. Please sign in again.",
+                    },
+                }
+            );
+        };
+
+
     const handleProfileChange =
-        (event) => {
+        (
+            event
+        ) => {
             const {
                 name,
                 value,
@@ -80,16 +109,22 @@ function ProfilePage() {
 
 
             setProfileForm(
-                (current) => ({
+                (
+                    current
+                ) => ({
                     ...current,
-                    [name]: value,
+
+                    [name]:
+                        value,
                 })
             );
         };
 
 
     const handlePasswordChange =
-        (event) => {
+        (
+            event
+        ) => {
             const {
                 name,
                 value,
@@ -97,19 +132,27 @@ function ProfilePage() {
 
 
             setPasswordForm(
-                (current) => ({
+                (
+                    current
+                ) => ({
                     ...current,
-                    [name]: value,
+
+                    [name]:
+                        value,
                 })
             );
         };
 
 
     const handleProfileSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
 
+
             setProfileError("");
+
             setProfileSuccess("");
 
 
@@ -131,7 +174,10 @@ function ProfilePage() {
             }
 
 
-            if (name.length > 100) {
+            if (
+                name.length >
+                100
+            ) {
                 setProfileError(
                     "Name can be at most 100 characters."
                 );
@@ -149,7 +195,10 @@ function ProfilePage() {
             }
 
 
-            if (email.length > 255) {
+            if (
+                email.length >
+                255
+            ) {
                 setProfileError(
                     "Email is too long."
                 );
@@ -174,6 +223,7 @@ function ProfilePage() {
                 setProfileForm({
                     name:
                         result.data.name,
+
                     email:
                         result.data.email,
                 });
@@ -183,7 +233,19 @@ function ProfilePage() {
                     result.message ||
                     "Profile updated successfully."
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
+                if (
+                    requestError.status ===
+                    401
+                ) {
+                    handleUnauthorized();
+
+                    return;
+                }
+
+
                 setProfileError(
                     requestError.message
                 );
@@ -196,8 +258,11 @@ function ProfilePage() {
 
 
     const handlePasswordSubmit =
-        async (event) => {
+        async (
+            event
+        ) => {
             event.preventDefault();
+
 
             setPasswordError("");
 
@@ -218,7 +283,10 @@ function ProfilePage() {
             }
 
 
-            if (newPassword.length < 8) {
+            if (
+                newPassword.length <
+                8
+            ) {
                 setPasswordError(
                     "New password must be at least 8 characters."
                 );
@@ -276,7 +344,19 @@ function ProfilePage() {
                         },
                     }
                 );
-            } catch (requestError) {
+            } catch (
+                requestError
+            ) {
+                if (
+                    requestError.status ===
+                    401
+                ) {
+                    handleUnauthorized();
+
+                    return;
+                }
+
+
                 setPasswordError(
                     requestError.message
                 );
@@ -310,7 +390,9 @@ function ProfilePage() {
                 <div className="account-identity">
                     <div className="account-avatar">
                         {user?.name
-                            ?.charAt(0)
+                            ?.charAt(
+                                0
+                            )
                             .toUpperCase() ||
                             "U"}
                     </div>
@@ -379,7 +461,10 @@ function ProfilePage() {
 
 
                     {profileSuccess && (
-                        <div className="form-success">
+                        <div
+                            className="form-success"
+                            role="status"
+                        >
                             {
                                 profileSuccess
                             }
@@ -388,7 +473,10 @@ function ProfilePage() {
 
 
                     {profileError && (
-                        <div className="form-error">
+                        <div
+                            className="form-error"
+                            role="alert"
+                        >
                             {
                                 profileError
                             }
@@ -420,8 +508,13 @@ function ProfilePage() {
                                 onChange={
                                     handleProfileChange
                                 }
-                                maxLength={100}
+                                maxLength={
+                                    100
+                                }
                                 autoComplete="name"
+                                disabled={
+                                    isProfileSubmitting
+                                }
                                 required
                             />
                         </label>
@@ -445,8 +538,13 @@ function ProfilePage() {
                                 onChange={
                                     handleProfileChange
                                 }
-                                maxLength={255}
+                                maxLength={
+                                    255
+                                }
                                 autoComplete="email"
+                                disabled={
+                                    isProfileSubmitting
+                                }
                                 required
                             />
                         </label>
@@ -488,7 +586,10 @@ function ProfilePage() {
 
 
                     {passwordError && (
-                        <div className="form-error">
+                        <div
+                            className="form-error"
+                            role="alert"
+                        >
                             {
                                 passwordError
                             }
@@ -522,6 +623,9 @@ function ProfilePage() {
                                     handlePasswordChange
                                 }
                                 autoComplete="current-password"
+                                disabled={
+                                    isPasswordSubmitting
+                                }
                                 required
                             />
                         </label>
@@ -546,8 +650,13 @@ function ProfilePage() {
                                 onChange={
                                     handlePasswordChange
                                 }
-                                minLength={8}
+                                minLength={
+                                    8
+                                }
                                 autoComplete="new-password"
+                                disabled={
+                                    isPasswordSubmitting
+                                }
                                 required
                             />
 
@@ -576,8 +685,13 @@ function ProfilePage() {
                                 onChange={
                                     handlePasswordChange
                                 }
-                                minLength={8}
+                                minLength={
+                                    8
+                                }
                                 autoComplete="new-password"
+                                disabled={
+                                    isPasswordSubmitting
+                                }
                                 required
                             />
                         </label>
