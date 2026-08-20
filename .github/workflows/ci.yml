@@ -125,4 +125,6 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          VITE_API_BASE_URL: https://api.movieshelf.example
         run: npm run build
