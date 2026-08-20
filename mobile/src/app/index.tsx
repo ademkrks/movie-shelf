@@ -1,4 +1,11 @@
 import {
+    useEffect,
+    useState,
+} from "react";
+
+import {
+    ActivityIndicator,
+    Pressable,
     StyleSheet,
     Text,
     View,
@@ -8,12 +15,152 @@ import {
     SafeAreaView,
 } from "react-native-safe-area-context";
 
+import {
+    getConfiguredApiBaseUrl,
+} from "../api/client";
+
+import {
+    getHealth,
+} from "../api/health.api";
+
 import { colors } from "../theme/colors";
+import { radius } from "../theme/radius";
 import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 
 
+type ConnectionState = {
+    status:
+        | "checking"
+        | "connected"
+        | "error";
+
+    message: string;
+};
+
+
+const checkBackendConnection =
+    async (): Promise<ConnectionState> => {
+        try {
+            const response =
+                await getHealth();
+
+            if (
+                response.success &&
+                response.status ===
+                    "ok"
+            ) {
+                return {
+                    status:
+                        "connected",
+
+                    message:
+                        "Backend connection established",
+                };
+            }
+
+            return {
+                status:
+                    "error",
+
+                message:
+                    "Backend beklenmeyen bir yanıt döndürdü.",
+            };
+        } catch (error) {
+            return {
+                status:
+                    "error",
+
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : "Backend bağlantısı kurulamadı.",
+            };
+        }
+    };
+
+
 export default function HomeScreen() {
+    const [
+        connection,
+        setConnection,
+    ] =
+        useState<ConnectionState>({
+            status:
+                "checking",
+
+            message:
+                "Backend bağlantısı kontrol ediliyor...",
+        });
+
+    const [
+        apiBaseUrl,
+    ] =
+        useState(() => {
+            try {
+                return getConfiguredApiBaseUrl();
+            } catch {
+                return "API adresi yapılandırılmamış";
+            }
+        });
+
+
+    useEffect(
+        () => {
+            let isActive =
+                true;
+
+            const runCheck =
+                async () => {
+                    const result =
+                        await checkBackendConnection();
+
+                    if (isActive) {
+                        setConnection(
+                            result
+                        );
+                    }
+                };
+
+            void runCheck();
+
+            return () => {
+                isActive =
+                    false;
+            };
+        },
+        []
+    );
+
+
+    const handleRetry =
+        async () => {
+            setConnection({
+                status:
+                    "checking",
+
+                message:
+                    "Backend bağlantısı kontrol ediliyor...",
+            });
+
+            const result =
+                await checkBackendConnection();
+
+            setConnection(
+                result
+            );
+        };
+
+
+    const isChecking =
+        connection.status ===
+        "checking";
+
+    const isConnected =
+        connection.status ===
+        "connected";
+
+
     return (
         <SafeAreaView
             style={styles.safeArea}
@@ -22,7 +169,9 @@ export default function HomeScreen() {
                 style={styles.container}
             >
                 <View
-                    style={styles.brandContainer}
+                    style={
+                        styles.brandContainer
+                    }
                 >
                     <Text
                         style={styles.brand}
@@ -46,17 +195,87 @@ export default function HomeScreen() {
                 </View>
 
                 <View
-                    style={styles.statusContainer}
+                    style={styles.card}
                 >
+                    <Text
+                        style={
+                            styles.cardTitle
+                        }
+                    >
+                        API Connection
+                    </Text>
+
                     <View
-                        style={styles.statusDot}
-                    />
+                        style={
+                            styles.statusRow
+                        }
+                    >
+                        {isChecking ? (
+                            <ActivityIndicator
+                                size="small"
+                                color={
+                                    colors.primary
+                                }
+                            />
+                        ) : (
+                            <View
+                                style={[
+                                    styles.statusDot,
+
+                                    {
+                                        backgroundColor:
+                                            isConnected
+                                                ? colors.success
+                                                : colors.error,
+                                    },
+                                ]}
+                            />
+                        )}
+
+                        <Text
+                            style={
+                                styles.statusText
+                            }
+                        >
+                            {
+                                connection.message
+                            }
+                        </Text>
+                    </View>
 
                     <Text
-                        style={styles.statusText}
+                        style={
+                            styles.apiUrl
+                        }
+                        numberOfLines={1}
                     >
-                        Mobile foundation ready
+                        {apiBaseUrl}
                     </Text>
+
+                    {connection.status ===
+                        "error" && (
+                        <Pressable
+                            style={({
+                                pressed,
+                            }) => [
+                                styles.retryButton,
+
+                                pressed &&
+                                    styles.retryButtonPressed,
+                            ]}
+                            onPress={
+                                handleRetry
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.retryButtonText
+                                }
+                            >
+                                Tekrar Dene
+                            </Text>
+                        </Pressable>
+                    )}
                 </View>
             </View>
         </SafeAreaView>
@@ -122,7 +341,37 @@ const styles =
                 "center",
         },
 
-        statusContainer: {
+        card: {
+            width: "100%",
+
+            maxWidth: 420,
+
+            marginTop:
+                spacing.xxl,
+
+            padding:
+                spacing.lg,
+
+            borderWidth: 1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        cardTitle: {
+            ...typography.heading,
+
+            color:
+                colors.text,
+        },
+
+        statusRow: {
             flexDirection:
                 "row",
 
@@ -130,27 +379,73 @@ const styles =
                 "center",
 
             marginTop:
-                spacing.xxl,
+                spacing.lg,
         },
 
         statusDot: {
-            width: 8,
-            height: 8,
+            width: 10,
+            height: 10,
 
             marginRight:
                 spacing.sm,
 
             borderRadius:
-                4,
-
-            backgroundColor:
-                colors.success,
+                radius.full,
         },
 
         statusText: {
-            ...typography.caption,
+            ...typography.body,
+
+            flex: 1,
+
+            marginLeft:
+                spacing.sm,
 
             color:
                 colors.textSecondary,
+        },
+
+        apiUrl: {
+            ...typography.caption,
+
+            marginTop:
+                spacing.md,
+
+            color:
+                colors.textMuted,
+        },
+
+        retryButton: {
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            marginTop:
+                spacing.lg,
+
+            minHeight: 48,
+
+            paddingHorizontal:
+                spacing.lg,
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.primary,
+        },
+
+        retryButtonPressed: {
+            backgroundColor:
+                colors.primaryPressed,
+        },
+
+        retryButtonText: {
+            ...typography.button,
+
+            color:
+                colors.text,
         },
     });
