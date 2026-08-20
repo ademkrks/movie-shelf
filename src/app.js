@@ -79,11 +79,9 @@ const getApiRateLimit = () => {
         return 10000;
     }
 
-
     if (env.isDevelopment) {
         return 5000;
     }
-
 
     return 500;
 };
@@ -104,17 +102,17 @@ const apiLimiter = rateLimit({
         false,
 
     /*
-     * CORS preflight istekleri ve
-     * Swagger dokümantasyonu genel API
+     * CORS preflight istekleri genel API
      * kotasını tüketmez.
+     *
+     * Swagger yalnızca development/test
+     * ortamlarında açık olduğundan ayrıca
+     * limiter istisnasına ihtiyaç duymaz.
      */
     skip: (req) => {
         return (
             req.method ===
-                "OPTIONS" ||
-            req.path.startsWith(
-                "/api-docs"
-            )
+            "OPTIONS"
         );
     },
 
@@ -147,13 +145,16 @@ app.use(
 
 
 // Swagger API dokümantasyonu
-app.use(
-    "/api-docs",
-    swaggerUi.serve,
-    swaggerUi.setup(
-        swaggerSpec
-    )
-);
+// Production ortamında public olarak yayınlanmaz
+if (!env.isProduction) {
+    app.use(
+        "/api-docs",
+        swaggerUi.serve,
+        swaggerUi.setup(
+            swaggerSpec
+        )
+    );
+}
 
 
 // Route'lar

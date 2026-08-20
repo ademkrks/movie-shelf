@@ -1,9 +1,19 @@
 // Sunucuya gelen istekleri terminale yazdırır
 const logger = (req, res, next) => {
     // Test ortamında gereksiz terminal çıktısı oluşturmaz
-    if (process.env.NODE_ENV !== "test") {
+    if (
+        process.env.NODE_ENV !==
+        "test"
+    ) {
+        /*
+         * Query string loglanmaz.
+         *
+         * Böylece gelecekte URL üzerinde
+         * hassas query parametreleri kullanılırsa
+         * log dosyalarına taşınmaları engellenir.
+         */
         console.log(
-            `${req.method} ${req.originalUrl}`
+            `${req.method} ${req.path}`
         );
     }
 
