@@ -1,3 +1,8 @@
+import {
+    getAuthToken,
+} from "../storage/secureStorage";
+
+
 const DEFAULT_TIMEOUT_MS =
     10000;
 
@@ -6,12 +11,14 @@ type ApiErrorPayload = {
     success?: boolean;
     status?: string;
     message?: string;
+    errors?: string[];
 };
 
 
 type RequestOptions =
     RequestInit & {
         timeoutMs?: number;
+        auth?: boolean;
     };
 
 
@@ -64,6 +71,8 @@ export class ApiClientError
 
     payload?: ApiErrorPayload;
 
+    errors: string[];
+
     constructor(
         message: string,
         statusCode?: number,
@@ -79,6 +88,13 @@ export class ApiClientError
 
         this.payload =
             payload;
+
+        this.errors =
+            Array.isArray(
+                payload?.errors
+            )
+                ? payload.errors
+                : [];
     }
 }
 
@@ -112,6 +128,8 @@ export const apiRequest =
         const {
             timeoutMs =
                 DEFAULT_TIMEOUT_MS,
+
+            auth = true,
 
             signal:
                 externalSignal,
@@ -151,10 +169,11 @@ export const apiRequest =
                 controller.abort();
             }
             else {
-                externalSignal.addEventListener(
-                    "abort",
-                    handleExternalAbort
-                );
+                externalSignal
+                    .addEventListener(
+                        "abort",
+                        handleExternalAbort
+                    );
             }
         }
 
@@ -167,6 +186,56 @@ export const apiRequest =
                     ? path
                     : `/${path}`;
 
+            const headers =
+                new Headers(
+                    customHeaders
+                );
+
+            if (
+                !headers.has(
+                    "Accept"
+                )
+            ) {
+                headers.set(
+                    "Accept",
+                    "application/json"
+                );
+            }
+
+            const hasStringBody =
+                typeof fetchOptions
+                    .body ===
+                "string";
+
+            if (
+                hasStringBody &&
+                !headers.has(
+                    "Content-Type"
+                )
+            ) {
+                headers.set(
+                    "Content-Type",
+                    "application/json"
+                );
+            }
+
+            if (
+                auth &&
+                !headers.has(
+                    "Authorization"
+                )
+            ) {
+                const token =
+                    await getAuthToken();
+
+                if (token) {
+                    headers.set(
+                        "Authorization",
+                        `Bearer ${token}`
+                    );
+                }
+            }
+
             const response =
                 await fetch(
                     `${baseUrl}${normalizedPath}`,
@@ -176,12 +245,7 @@ export const apiRequest =
                         signal:
                             controller.signal,
 
-                        headers: {
-                            Accept:
-                                "application/json",
-
-                            ...customHeaders,
-                        },
+                        headers,
                     }
                 );
 
@@ -216,9 +280,7 @@ export const apiRequest =
                 throw error;
             }
 
-            if (
-                didTimeout
-            ) {
+            if (didTimeout) {
                 throw new ApiClientError(
                     "Sunucu isteği zaman aşımına uğradı."
                 );

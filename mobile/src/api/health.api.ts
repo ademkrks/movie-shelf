@@ -12,6 +12,9 @@ export type HealthResponse = {
 export const getHealth =
     async () => {
         return apiRequest<HealthResponse>(
-            "/health"
+            "/health",
+            {
+                auth: false,
+            }
         );
     };
