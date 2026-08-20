@@ -46,12 +46,27 @@ describe(
         beforeEach(() => {
             jest.clearAllMocks();
 
-            // Transaction içindeki mock işlemleri çalıştırır
+            /*
+             * Prisma'nın hem array transaction
+             * hem interactive callback transaction
+             * kullanımını mocklar.
+             */
             prisma.$transaction
                 .mockImplementation(
-                    async (operations) => {
+                    async (
+                        transactionInput
+                    ) => {
+                        if (
+                            typeof transactionInput ===
+                            "function"
+                        ) {
+                            return transactionInput(
+                                prisma
+                            );
+                        }
+
                         return Promise.all(
-                            operations
+                            transactionInput
                         );
                     }
                 );
@@ -61,16 +76,21 @@ describe(
         test(
             "auth - güncel tokenVersion değerine sahip JWT'yi kabul etmeli",
             async () => {
-                const token = jwt.sign(
-                    {
-                        id: 1,
-                        tokenVersion: 2,
-                    },
-                    process.env.JWT_SECRET,
-                    {
-                        expiresIn: "1h",
-                    }
-                );
+                const token =
+                    jwt.sign(
+                        {
+                            id: 1,
+                            tokenVersion: 2,
+                        },
+                        process.env.JWT_SECRET,
+                        {
+                            algorithm:
+                                "HS256",
+
+                            expiresIn:
+                                "1h",
+                        }
+                    );
 
                 prisma.user.findUnique
                     .mockResolvedValue({
@@ -94,7 +114,8 @@ describe(
                 };
 
                 const res = {};
-                const next = jest.fn();
+                const next =
+                    jest.fn();
 
                 await auth(
                     req,
@@ -108,6 +129,7 @@ describe(
                     where: {
                         id: 1,
                     },
+
                     select: {
                         id: true,
                         name: true,
@@ -118,20 +140,25 @@ describe(
                     },
                 });
 
-                expect(next)
-                    .toHaveBeenCalledTimes(
-                        1
-                    );
+                expect(
+                    next
+                ).toHaveBeenCalledTimes(
+                    1
+                );
 
-                expect(next)
-                    .toHaveBeenCalledWith();
+                expect(
+                    next
+                ).toHaveBeenCalledWith();
 
                 // tokenVersion kullanıcı verisine taşınmaz
-                expect(req.user).toEqual({
+                expect(
+                    req.user
+                ).toEqual({
                     id: 1,
                     name: "Ali",
                     email:
                         "ali@example.com",
+
                     createdAt:
                         new Date(
                             "2026-08-13T10:00:00.000Z"
@@ -143,7 +170,9 @@ describe(
                 ).toBeUndefined();
 
                 // Rol ayrı authorization alanında tutulur
-                expect(req.auth).toEqual({
+                expect(
+                    req.auth
+                ).toEqual({
                     role: "USER",
                 });
             }
@@ -157,16 +186,21 @@ describe(
                  * Kullanıcı password reset öncesinde
                  * tokenVersion 0 ile JWT almış olsun.
                  */
-                const oldToken = jwt.sign(
-                    {
-                        id: 1,
-                        tokenVersion: 0,
-                    },
-                    process.env.JWT_SECRET,
-                    {
-                        expiresIn: "1h",
-                    }
-                );
+                const oldToken =
+                    jwt.sign(
+                        {
+                            id: 1,
+                            tokenVersion: 0,
+                        },
+                        process.env.JWT_SECRET,
+                        {
+                            algorithm:
+                                "HS256",
+
+                            expiresIn:
+                                "1h",
+                        }
+                    );
 
                 /*
                  * Password reset sonrasında DB'deki
@@ -192,7 +226,8 @@ describe(
                 };
 
                 const res = {};
-                const next = jest.fn();
+                const next =
+                    jest.fn();
 
                 await auth(
                     req,
@@ -200,20 +235,24 @@ describe(
                     next
                 );
 
-                expect(next)
-                    .toHaveBeenCalledTimes(
-                        1
-                    );
+                expect(
+                    next
+                ).toHaveBeenCalledTimes(
+                    1
+                );
 
                 const error =
                     next.mock.calls[0][0];
 
-                expect(error)
-                    .toMatchObject({
-                        statusCode: 401,
-                        message:
-                            "Geçersiz veya süresi dolmuş token.",
-                    });
+                expect(
+                    error
+                ).toMatchObject({
+                    statusCode:
+                        401,
+
+                    message:
+                        "Geçersiz veya süresi dolmuş token.",
+                });
 
                 expect(
                     req.user
@@ -240,7 +279,9 @@ describe(
                         .update(
                             resetToken
                         )
-                        .digest("hex");
+                        .digest(
+                            "hex"
+                        );
 
                 prisma
                     .passwordResetToken
@@ -249,13 +290,28 @@ describe(
                         id: 10,
                         userId: 1,
                         tokenHash,
+
                         expiresAt:
                             new Date(
                                 Date.now() +
-                                10 *
-                                60 *
-                                1000
+                                    10 *
+                                        60 *
+                                        1000
                             ),
+                    });
+
+                /*
+                 * İlk deleteMany tokenı atomik olarak tüketir.
+                 * İkinci deleteMany diğer reset tokenlarını temizler.
+                 */
+                prisma
+                    .passwordResetToken
+                    .deleteMany
+                    .mockResolvedValueOnce({
+                        count: 1,
+                    })
+                    .mockResolvedValueOnce({
+                        count: 0,
                     });
 
                 prisma.user.update
@@ -263,24 +319,51 @@ describe(
                         id: 1,
                     });
 
-                prisma
-                    .passwordResetToken
-                    .deleteMany
-                    .mockResolvedValue({
-                        count: 1,
-                    });
-
                 const result =
                     await authService
                         .resetPassword({
                             token:
                                 resetToken,
+
                             password:
                                 "YeniGucluSifre123",
                         });
 
-                expect(result)
-                    .toBeNull();
+                expect(
+                    result
+                ).toBeNull();
+
+                expect(
+                    prisma.$transaction
+                ).toHaveBeenCalledTimes(
+                    1
+                );
+
+                /*
+                 * Reset token transaction içinde
+                 * atomik olarak tüketilmelidir.
+                 */
+                expect(
+                    prisma
+                        .passwordResetToken
+                        .deleteMany
+                ).toHaveBeenNthCalledWith(
+                    1,
+                    {
+                        where: {
+                            id: 10,
+                            tokenHash,
+
+                            expiresAt: {
+                                gt:
+                                    expect
+                                        .any(
+                                            Date
+                                        ),
+                            },
+                        },
+                    }
+                );
 
                 expect(
                     prisma.user.update
@@ -299,22 +382,36 @@ describe(
                 });
 
                 expect(
-                    updateCall.data.password
+                    updateCall
+                        .data
+                        .password
                 ).not.toBe(
                     "YeniGucluSifre123"
                 );
 
                 expect(
-                    updateCall.data
+                    updateCall
+                        .data
                         .tokenVersion
                 ).toEqual({
                     increment: 1,
                 });
 
+                /*
+                 * Şifre değişiminden sonra kullanıcıya
+                 * ait kalan reset tokenları temizlenir.
+                 */
                 expect(
-                    prisma.$transaction
-                ).toHaveBeenCalledTimes(
-                    1
+                    prisma
+                        .passwordResetToken
+                        .deleteMany
+                ).toHaveBeenNthCalledWith(
+                    2,
+                    {
+                        where: {
+                            userId: 1,
+                        },
+                    }
                 );
             }
         );
