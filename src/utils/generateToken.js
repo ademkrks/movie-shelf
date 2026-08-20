@@ -14,6 +14,7 @@ const generateToken = (
         },
         env.jwtSecret,
         {
+            algorithm: "HS256",
             expiresIn: env.jwtExpiresIn,
         }
     );

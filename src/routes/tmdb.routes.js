@@ -2,16 +2,27 @@ const express = require(
     "express"
 );
 
+const rateLimit = require(
+    "express-rate-limit"
+);
+
+
 const router =
     express.Router();
+
 
 const tmdbController = require(
     "../controllers/tmdb.controller"
 );
 
+const auth = require(
+    "../middleware/auth"
+);
+
 const validateRequest = require(
     "../middleware/validateRequest"
 );
+
 
 const {
     tmdbIdValidation,
@@ -20,6 +31,29 @@ const {
 } = require(
     "../validations/tmdb.validation"
 );
+
+
+// Batch endpoint'in upstream TMDB çağrılarını sınırlar
+const tmdbBatchLimiter =
+    rateLimit({
+        windowMs:
+            15 * 60 * 1000,
+
+        limit: 30,
+
+        standardHeaders:
+            "draft-8",
+
+        legacyHeaders:
+            false,
+
+        message: {
+            success: false,
+            status: "error",
+            message:
+                "Çok fazla toplu film isteği gönderildi. Lütfen daha sonra tekrar deneyin.",
+        },
+    });
 
 
 /**
@@ -143,6 +177,8 @@ router.get(
  *   post:
  *     summary: Birden fazla filmin detaylarını toplu getirir
  *     tags: [TMDB]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -168,6 +204,10 @@ router.get(
  *         description: Film detayları başarıyla getirildi
  *       400:
  *         description: Film ID listesi geçersiz
+ *       401:
+ *         description: Yetkilendirme gerekli
+ *       429:
+ *         description: Çok fazla toplu film isteği
  *       502:
  *         description: TMDB servisine ulaşılamadı
  *       504:
@@ -175,6 +215,8 @@ router.get(
  */
 router.post(
     "/movies/batch",
+    auth,
+    tmdbBatchLimiter,
     validateRequest({
         body:
             movieBatchValidation,

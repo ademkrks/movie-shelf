@@ -37,10 +37,15 @@ const auth = async (req, res, next) => {
         let decoded;
 
         try {
-            // Token'ı doğrular
+            // Token'ı yalnızca HS256 algoritmasıyla doğrular
             decoded = jwt.verify(
                 token,
-                env.jwtSecret
+                env.jwtSecret,
+                {
+                    algorithms: [
+                        "HS256",
+                    ],
+                }
             );
         } catch (error) {
             // Süresi dolmuş veya geçersiz token
@@ -62,7 +67,13 @@ const auth = async (req, res, next) => {
         }
 
         // Token içerisindeki kullanıcı ID'sini kontrol eder
-        if (!decoded || !decoded.id) {
+        if (
+            !decoded ||
+            !Number.isSafeInteger(
+                decoded.id
+            ) ||
+            decoded.id <= 0
+        ) {
             throw new AppError(
                 "Geçersiz yetkilendirme token'ı.",
                 401

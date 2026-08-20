@@ -3,6 +3,18 @@ const request = require(
 );
 
 
+// Gerçek veritabanı yerine Prisma mock kullanır
+jest.mock(
+    "../src/config/prisma",
+    () => ({
+        user: {
+            findUnique:
+                jest.fn(),
+        },
+    })
+);
+
+
 // TMDB dış servisini mocklar
 jest.mock(
     "../src/services/tmdb.service",
@@ -13,8 +25,16 @@ jest.mock(
 );
 
 
+const prisma = require(
+    "../src/config/prisma"
+);
+
 const tmdbService = require(
     "../src/services/tmdb.service"
+);
+
+const generateToken = require(
+    "../src/utils/generateToken"
 );
 
 const app = require(
@@ -27,7 +47,69 @@ describe(
     () => {
         beforeEach(() => {
             jest.clearAllMocks();
+
+            prisma.user.findUnique
+                .mockResolvedValue({
+                    id: 1,
+                    name: "Ali",
+                    email:
+                        "ali@example.com",
+                    role: "USER",
+                    tokenVersion: 0,
+                    createdAt:
+                        new Date(
+                            "2026-08-20T10:00:00.000Z"
+                        ),
+                });
         });
+
+
+        const createAuthorization =
+            () => {
+                return `Bearer ${generateToken(
+                    1,
+                    0
+                )}`;
+            };
+
+
+        test(
+            "POST /tmdb/movies/batch - token olmadan 401 dönmeli",
+            async () => {
+                const response =
+                    await request(app)
+                        .post(
+                            "/tmdb/movies/batch"
+                        )
+                        .send({
+                            movieIds: [
+                                157336,
+                            ],
+                        });
+
+
+                expect(
+                    response.statusCode
+                ).toBe(401);
+
+
+                expect(
+                    response.body
+                ).toMatchObject({
+                    success: false,
+                    status: "fail",
+                    message:
+                        "Yetkilendirme başarısız.",
+                });
+
+
+                expect(
+                    tmdbService
+                        .getMovieDetailsBatch
+                ).not
+                    .toHaveBeenCalled();
+            }
+        );
 
 
         test(
@@ -63,6 +145,10 @@ describe(
                     await request(app)
                         .post(
                             "/tmdb/movies/batch"
+                        )
+                        .set(
+                            "Authorization",
+                            createAuthorization()
                         )
                         .send({
                             movieIds: [
@@ -111,6 +197,10 @@ describe(
                         .post(
                             "/tmdb/movies/batch"
                         )
+                        .set(
+                            "Authorization",
+                            createAuthorization()
+                        )
                         .send({});
 
 
@@ -143,6 +233,10 @@ describe(
                     await request(app)
                         .post(
                             "/tmdb/movies/batch"
+                        )
+                        .set(
+                            "Authorization",
+                            createAuthorization()
                         )
                         .send({
                             movieIds: [],
@@ -178,6 +272,10 @@ describe(
                     await request(app)
                         .post(
                             "/tmdb/movies/batch"
+                        )
+                        .set(
+                            "Authorization",
+                            createAuthorization()
                         )
                         .send({
                             movieIds:
@@ -225,6 +323,10 @@ describe(
                     await request(app)
                         .post(
                             "/tmdb/movies/batch"
+                        )
+                        .set(
+                            "Authorization",
+                            createAuthorization()
                         )
                         .send({
                             movieIds: [

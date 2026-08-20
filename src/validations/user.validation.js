@@ -1,5 +1,15 @@
+const {
+    BCRYPT_MAX_PASSWORD_BYTES,
+    isPasswordWithinBcryptLimit,
+} = require(
+    "../utils/password"
+);
+
+
 // Kullanıcı profil güncelleme validation'ı
-const updateProfileValidation = (body) => {
+const updateProfileValidation = (
+    body
+) => {
     // Request body kontrolü
     if (
         !body ||
@@ -9,51 +19,81 @@ const updateProfileValidation = (body) => {
         return "İstek gövdesi geçersiz.";
     }
 
-    const { name, email } = body;
+    const {
+        name,
+        email,
+    } = body;
 
     // En az bir alan gönderilmeli
     if (
-        (name === undefined || name === null) &&
-        (email === undefined || email === null)
+        (
+            name === undefined ||
+            name === null
+        ) &&
+        (
+            email === undefined ||
+            email === null
+        )
     ) {
         return "Güncellenecek en az bir alan gönderilmelidir.";
     }
 
     // İsim kontrolü
-    if (name !== undefined) {
-        if (typeof name !== "string") {
+    if (
+        name !== undefined
+    ) {
+        if (
+            typeof name !== "string"
+        ) {
             return "Ad alanı metin olmalıdır.";
         }
 
-        if (name.trim().length === 0) {
+        if (
+            name.trim().length === 0
+        ) {
             return "Ad alanı boş bırakılamaz.";
         }
 
-        if (name.trim().length > 100) {
+        if (
+            name.trim().length > 100
+        ) {
             return "Ad alanı en fazla 100 karakter olabilir.";
         }
     }
 
     // E-posta kontrolü
-    if (email !== undefined) {
-        if (typeof email !== "string") {
+    if (
+        email !== undefined
+    ) {
+        if (
+            typeof email !== "string"
+        ) {
             return "E-posta alanı metin olmalıdır.";
         }
 
-        const trimmedEmail = email.trim();
+        const trimmedEmail =
+            email.trim();
 
-        if (trimmedEmail.length === 0) {
+        if (
+            trimmedEmail.length === 0
+        ) {
             return "E-posta alanı boş bırakılamaz.";
         }
 
-        if (trimmedEmail.length > 255) {
+        if (
+            trimmedEmail.length > 255
+        ) {
             return "E-posta alanı en fazla 255 karakter olabilir.";
         }
 
         const emailRegex =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!emailRegex.test(trimmedEmail)) {
+        if (
+            !emailRegex.test(
+                trimmedEmail
+            )
+        ) {
             return "Geçerli bir e-posta adresi giriniz.";
         }
     }
@@ -63,7 +103,9 @@ const updateProfileValidation = (body) => {
 
 
 // Şifre değiştirme validation'ı
-const changePasswordValidation = (body) => {
+const changePasswordValidation = (
+    body
+) => {
     // Request body kontrolü
     if (
         !body ||
@@ -80,18 +122,33 @@ const changePasswordValidation = (body) => {
 
     // Mevcut şifre zorunludur
     if (
-        currentPassword === undefined ||
-        currentPassword === null
+        currentPassword ===
+            undefined ||
+        currentPassword ===
+            null
     ) {
         return "Mevcut şifre alanı zorunludur.";
     }
 
-    if (typeof currentPassword !== "string") {
+    if (
+        typeof currentPassword !==
+        "string"
+    ) {
         return "Mevcut şifre metin olmalıdır.";
     }
 
-    if (currentPassword.length === 0) {
+    if (
+        currentPassword.length === 0
+    ) {
         return "Mevcut şifre boş bırakılamaz.";
+    }
+
+    if (
+        !isPasswordWithinBcryptLimit(
+            currentPassword
+        )
+    ) {
+        return `Mevcut şifre UTF-8 olarak en fazla ${BCRYPT_MAX_PASSWORD_BYTES} byte olabilir.`;
     }
 
     // Yeni şifre zorunludur
@@ -102,12 +159,25 @@ const changePasswordValidation = (body) => {
         return "Yeni şifre alanı zorunludur.";
     }
 
-    if (typeof newPassword !== "string") {
+    if (
+        typeof newPassword !==
+        "string"
+    ) {
         return "Yeni şifre metin olmalıdır.";
     }
 
-    if (newPassword.length < 8) {
+    if (
+        newPassword.length < 8
+    ) {
         return "Yeni şifre en az 8 karakter olmalıdır.";
+    }
+
+    if (
+        !isPasswordWithinBcryptLimit(
+            newPassword
+        )
+    ) {
+        return `Yeni şifre UTF-8 olarak en fazla ${BCRYPT_MAX_PASSWORD_BYTES} byte olabilir.`;
     }
 
     return true;
