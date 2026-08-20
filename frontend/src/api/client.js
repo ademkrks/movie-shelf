@@ -1,6 +1,53 @@
-const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
+const DEFAULT_LOCAL_API_BASE_URL =
     "http://localhost:5000";
+
+const configuredApiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL
+        ?.trim();
+
+
+// API adresinin geçerli HTTP/HTTPS URL olduğunu doğrular
+const validateApiBaseUrl = (
+    value
+) => {
+    let parsedUrl;
+
+    try {
+        parsedUrl =
+            new URL(value);
+    } catch {
+        throw new Error(
+            "VITE_API_BASE_URL geçerli bir URL olmalıdır."
+        );
+    }
+
+    if (
+        parsedUrl.protocol !==
+            "http:" &&
+        parsedUrl.protocol !==
+            "https:"
+    ) {
+        throw new Error(
+            "VITE_API_BASE_URL HTTP veya HTTPS kullanmalıdır."
+        );
+    }
+
+    /*
+     * Endpoint birleştirilirken çift slash
+     * oluşmaması için sondaki slash'leri kaldırır.
+     */
+    return value.replace(
+        /\/+$/,
+        ""
+    );
+};
+
+
+const API_BASE_URL =
+    validateApiBaseUrl(
+        configuredApiBaseUrl ||
+        DEFAULT_LOCAL_API_BASE_URL
+    );
 
 
 const TOKEN_KEY =
@@ -30,7 +77,6 @@ const createRequestError = (
             message
         );
 
-
     error.status =
         status;
 
@@ -39,7 +85,6 @@ const createRequestError = (
 
     error.code =
         code;
-
 
     return error;
 };
@@ -56,12 +101,10 @@ const parseResponseBody =
             return null;
         }
 
-
         const contentType =
             response.headers.get(
                 "content-type"
             ) || "";
-
 
         try {
             if (
@@ -72,15 +115,12 @@ const parseResponseBody =
                 return await response.json();
             }
 
-
             const text =
                 await response.text();
-
 
             if (!text) {
                 return null;
             }
-
 
             return {
                 message: text,
@@ -108,17 +148,14 @@ const apiRequest = async (
         ...fetchOptions
     } = options;
 
-
     const token =
         getStoredToken();
-
 
     const headers =
         new Headers(
             customHeaders ||
             {}
         );
-
 
     if (
         !headers.has(
@@ -131,13 +168,11 @@ const apiRequest = async (
         );
     }
 
-
     const hasBody =
         fetchOptions.body !==
             undefined &&
         fetchOptions.body !==
             null;
-
 
     const isFormData =
         typeof FormData !==
@@ -145,13 +180,11 @@ const apiRequest = async (
         fetchOptions.body instanceof
             FormData;
 
-
     const isUrlSearchParams =
         typeof URLSearchParams !==
             "undefined" &&
         fetchOptions.body instanceof
             URLSearchParams;
-
 
     if (
         hasBody &&
@@ -167,7 +200,6 @@ const apiRequest = async (
         );
     }
 
-
     if (
         token &&
         !headers.has(
@@ -180,14 +212,11 @@ const apiRequest = async (
         );
     }
 
-
     const controller =
         new AbortController();
 
-
     let didTimeout =
         false;
-
 
     const normalizedTimeout =
         Number.isFinite(
@@ -196,7 +225,6 @@ const apiRequest = async (
         timeoutMs > 0
             ? timeoutMs
             : DEFAULT_REQUEST_TIMEOUT_MS;
-
 
     const timeoutId =
         setTimeout(
@@ -209,12 +237,10 @@ const apiRequest = async (
             normalizedTimeout
         );
 
-
     const handleExternalAbort =
         () => {
             controller.abort();
         };
-
 
     if (
         externalSignal
@@ -234,7 +260,6 @@ const apiRequest = async (
         }
     }
 
-
     try {
         const response =
             await fetch(
@@ -249,12 +274,10 @@ const apiRequest = async (
                 }
             );
 
-
         const body =
             await parseResponseBody(
                 response
             );
-
 
         if (
             !response.ok
@@ -276,7 +299,6 @@ const apiRequest = async (
             );
         }
 
-
         return body;
     } catch (error) {
         if (
@@ -285,7 +307,6 @@ const apiRequest = async (
         ) {
             throw error;
         }
-
 
         if (
             controller.signal
@@ -303,7 +324,6 @@ const apiRequest = async (
                 );
             }
 
-
             throw createRequestError(
                 "İstek iptal edildi.",
                 {
@@ -312,7 +332,6 @@ const apiRequest = async (
                 }
             );
         }
-
 
         throw createRequestError(
             "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
@@ -325,7 +344,6 @@ const apiRequest = async (
         clearTimeout(
             timeoutId
         );
-
 
         if (
             externalSignal
