@@ -16,7 +16,6 @@ import {
 
 import {
     Redirect,
-    useLocalSearchParams,
     useRouter,
 } from "expo-router";
 
@@ -24,11 +23,15 @@ import {
     SafeAreaView,
 } from "react-native-safe-area-context";
 
-import useAuth from "../hooks/useAuth";
+import {
+    register,
+} from "../api/auth.api";
 
 import {
     ApiClientError,
 } from "../api/client";
+
+import useAuth from "../hooks/useAuth";
 
 import { colors } from "../theme/colors";
 import { radius } from "../theme/radius";
@@ -36,21 +39,25 @@ import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 
 
-export default function LoginScreen() {
+const EMAIL_REGEX =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+export default function RegisterScreen() {
     const router =
         useRouter();
 
-    const params =
-        useLocalSearchParams<{
-            registered?: string;
-        }>();
-
     const {
-        login,
         isAuthenticated,
         isRestoring,
     } =
         useAuth();
+
+    const [
+        name,
+        setName,
+    ] =
+        useState("");
 
     const [
         email,
@@ -61,6 +68,12 @@ export default function LoginScreen() {
     const [
         password,
         setPassword,
+    ] =
+        useState("");
+
+    const [
+        confirmPassword,
+        setConfirmPassword,
     ] =
         useState("");
 
@@ -100,8 +113,11 @@ export default function LoginScreen() {
     }
 
 
-    const handleLogin =
+    const handleRegister =
         async () => {
+            const normalizedName =
+                name.trim();
+
             const normalizedEmail =
                 email
                     .trim()
@@ -115,9 +131,21 @@ export default function LoginScreen() {
                 []
             );
 
-            if (!normalizedEmail) {
+            if (!normalizedName) {
                 setError(
-                    "E-posta adresinizi girin."
+                    "Adınızı girin."
+                );
+
+                return;
+            }
+
+            if (
+                !EMAIL_REGEX.test(
+                    normalizedEmail
+                )
+            ) {
+                setError(
+                    "Geçerli bir e-posta adresi girin."
                 );
 
                 return;
@@ -134,21 +162,41 @@ export default function LoginScreen() {
                 return;
             }
 
+            if (
+                password !==
+                confirmPassword
+            ) {
+                setError(
+                    "Şifreler eşleşmiyor."
+                );
+
+                return;
+            }
+
             setIsSubmitting(
                 true
             );
 
             try {
-                await login({
+                await register({
+                    name:
+                        normalizedName,
+
                     email:
                         normalizedEmail,
 
                     password,
                 });
 
-                router.replace(
-                    "/"
-                );
+                router.replace({
+                    pathname:
+                        "/login",
+
+                    params: {
+                        registered:
+                            "1",
+                    },
+                });
             } catch (
                 requestError
             ) {
@@ -171,7 +219,7 @@ export default function LoginScreen() {
                     requestError instanceof
                         Error
                         ? requestError.message
-                        : "Giriş yapılırken bilinmeyen bir hata oluştu."
+                        : "Hesap oluşturulurken bilinmeyen bir hata oluştu."
                 );
             } finally {
                 setIsSubmitting(
@@ -244,7 +292,7 @@ export default function LoginScreen() {
                             }
                             onPress={() =>
                                 router.replace(
-                                    "/"
+                                    "/login"
                                 )
                             }
                         >
@@ -282,7 +330,7 @@ export default function LoginScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                WELCOME BACK
+                                JOIN MOVIESHELF
                             </Text>
 
                             <Text
@@ -290,7 +338,7 @@ export default function LoginScreen() {
                                     styles.title
                                 }
                             >
-                                Hesabına giriş yap
+                                Hesabını oluştur
                             </Text>
 
                             <Text
@@ -298,7 +346,7 @@ export default function LoginScreen() {
                                     styles.description
                                 }
                             >
-                                Film koleksiyonuna kaldığın yerden devam et.
+                                Kendi film arşivini oluşturmaya başla.
                             </Text>
                         </View>
 
@@ -307,22 +355,45 @@ export default function LoginScreen() {
                                 styles.card
                             }
                         >
-                            {params.registered ===
-                                "1" && (
-                                <View
+                            <View
+                                style={
+                                    styles.field
+                                }
+                            >
+                                <Text
                                     style={
-                                        styles.successBox
+                                        styles.label
                                     }
                                 >
-                                    <Text
-                                        style={
-                                            styles.successText
-                                        }
-                                    >
-                                        Hesabın oluşturuldu. Şimdi giriş yapabilirsin.
-                                    </Text>
-                                </View>
-                            )}
+                                    Ad
+                                </Text>
+
+                                <TextInput
+                                    style={
+                                        styles.input
+                                    }
+                                    value={
+                                        name
+                                    }
+                                    onChangeText={
+                                        setName
+                                    }
+                                    placeholder="Adınız"
+                                    placeholderTextColor={
+                                        colors.textMuted
+                                    }
+                                    autoCapitalize="words"
+                                    autoCorrect={
+                                        false
+                                    }
+                                    autoComplete="name"
+                                    textContentType="name"
+                                    editable={
+                                        !isSubmitting
+                                    }
+                                    returnKeyType="next"
+                                />
+                            </View>
 
                             <View
                                 style={
@@ -400,8 +471,49 @@ export default function LoginScreen() {
                                     autoCorrect={
                                         false
                                     }
-                                    autoComplete="password"
-                                    textContentType="password"
+                                    autoComplete="new-password"
+                                    textContentType="newPassword"
+                                    editable={
+                                        !isSubmitting
+                                    }
+                                    returnKeyType="next"
+                                />
+                            </View>
+
+                            <View
+                                style={
+                                    styles.field
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.label
+                                    }
+                                >
+                                    Şifre Tekrar
+                                </Text>
+
+                                <TextInput
+                                    style={
+                                        styles.input
+                                    }
+                                    value={
+                                        confirmPassword
+                                    }
+                                    onChangeText={
+                                        setConfirmPassword
+                                    }
+                                    placeholder="Şifrenizi tekrar girin"
+                                    placeholderTextColor={
+                                        colors.textMuted
+                                    }
+                                    secureTextEntry
+                                    autoCapitalize="none"
+                                    autoCorrect={
+                                        false
+                                    }
+                                    autoComplete="new-password"
+                                    textContentType="newPassword"
                                     editable={
                                         !isSubmitting
                                     }
@@ -410,7 +522,7 @@ export default function LoginScreen() {
                                         if (
                                             !isSubmitting
                                         ) {
-                                            void handleLogin();
+                                            void handleRegister();
                                         }
                                     }}
                                 />
@@ -457,11 +569,11 @@ export default function LoginScreen() {
                                 style={({
                                     pressed,
                                 }) => [
-                                    styles.loginButton,
+                                    styles.registerButton,
 
                                     pressed &&
                                         !isSubmitting &&
-                                        styles.loginButtonPressed,
+                                        styles.registerButtonPressed,
 
                                     isSubmitting &&
                                         styles.buttonDisabled,
@@ -470,7 +582,7 @@ export default function LoginScreen() {
                                     isSubmitting
                                 }
                                 onPress={() => {
-                                    void handleLogin();
+                                    void handleRegister();
                                 }}
                             >
                                 {isSubmitting ? (
@@ -483,10 +595,10 @@ export default function LoginScreen() {
                                 ) : (
                                     <Text
                                         style={
-                                            styles.loginButtonText
+                                            styles.registerButtonText
                                         }
                                     >
-                                        Giriş Yap
+                                        Hesap Oluştur
                                     </Text>
                                 )}
                             </Pressable>
@@ -501,7 +613,7 @@ export default function LoginScreen() {
                                         styles.footerText
                                     }
                                 >
-                                    Hesabın yok mu?
+                                    Zaten hesabın var?
                                 </Text>
 
                                 <Pressable
@@ -509,8 +621,8 @@ export default function LoginScreen() {
                                         isSubmitting
                                     }
                                     onPress={() =>
-                                        router.push(
-                                            "/register"
+                                        router.replace(
+                                            "/login"
                                         )
                                     }
                                 >
@@ -519,18 +631,10 @@ export default function LoginScreen() {
                                             styles.footerLink
                                         }
                                     >
-                                        Kayıt ol
+                                        Giriş yap
                                     </Text>
                                 </Pressable>
                             </View>
-
-                            <Text
-                                style={
-                                    styles.securityText
-                                }
-                            >
-                                Oturum tokenı cihazın güvenli depolama alanında saklanır.
-                            </Text>
                         </View>
                     </View>
                 </ScrollView>
@@ -693,35 +797,6 @@ const styles =
                 colors.surface,
         },
 
-        successBox: {
-            marginBottom:
-                spacing.lg,
-
-            padding:
-                spacing.md,
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.success,
-
-            borderRadius:
-                radius.md,
-
-            backgroundColor:
-                colors.surfaceSoft,
-        },
-
-        successText: {
-            ...typography.caption,
-
-            color:
-                colors.success,
-
-            fontWeight:
-                "600",
-        },
-
         field: {
             marginBottom:
                 spacing.lg,
@@ -802,7 +877,7 @@ const styles =
                 colors.error,
         },
 
-        loginButton: {
+        registerButton: {
             minHeight: 52,
 
             alignItems:
@@ -821,7 +896,7 @@ const styles =
                 colors.primary,
         },
 
-        loginButtonPressed: {
+        registerButtonPressed: {
             backgroundColor:
                 colors.primaryPressed,
         },
@@ -831,7 +906,7 @@ const styles =
                 0.65,
         },
 
-        loginButtonText: {
+        registerButtonText: {
             ...typography.button,
 
             color:
@@ -873,18 +948,5 @@ const styles =
 
             fontWeight:
                 "700",
-        },
-
-        securityText: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.lg,
-
-            color:
-                colors.textMuted,
-
-            textAlign:
-                "center",
         },
     });
