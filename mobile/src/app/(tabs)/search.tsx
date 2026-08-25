@@ -20,6 +20,10 @@ import {
 } from "@expo/vector-icons";
 
 import {
+    useRouter,
+} from "expo-router";
+
+import {
     SafeAreaView,
 } from "react-native-safe-area-context";
 
@@ -118,16 +122,50 @@ type MovieCardProps = {
 function MovieCard({
     movie,
 }: MovieCardProps) {
+    const router =
+        useRouter();
+
     const hasPoster =
         Boolean(
             movie.poster_path
         );
 
+    const movieTitle =
+        movie.title ||
+        movie.original_title ||
+        "İsimsiz film";
+
+    const handleOpenDetails =
+        () => {
+            router.push({
+                pathname:
+                    "/movie/[id]",
+
+                params: {
+                    id:
+                        String(
+                            movie.id
+                        ),
+                },
+            });
+        };
+
     return (
-        <View
-            style={
-                styles.movieCard
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${movieTitle} detaylarını aç`}
+            onPress={
+                handleOpenDetails
             }
+            style={({
+                pressed,
+            }) => [
+                styles.movieCard,
+
+                pressed
+                    ? styles.movieCardPressed
+                    : null,
+            ]}
         >
             <View
                 style={
@@ -215,9 +253,7 @@ function MovieCard({
                     }
                 >
                     {
-                        movie.title ||
-                        movie.original_title ||
-                        "İsimsiz film"
+                        movieTitle
                     }
                 </Text>
 
@@ -233,7 +269,7 @@ function MovieCard({
                     }
                 </Text>
             </View>
-        </View>
+        </Pressable>
     );
 }
 
@@ -1416,6 +1452,11 @@ const styles =
 
             backgroundColor:
                 colors.surface,
+        },
+
+        movieCardPressed: {
+            opacity:
+                0.78,
         },
 
         posterContainer: {

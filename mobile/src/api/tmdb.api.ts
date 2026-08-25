@@ -7,9 +7,30 @@ import type {
 } from "../types/api";
 
 import type {
+    TmdbCastMember,
     TmdbMovie,
+    TmdbMovieDetail,
     TmdbSearchData,
+    TmdbTrailer,
 } from "../types/tmdb";
+
+
+const normalizeMovieId = (
+    movieId: number
+) => {
+    if (
+        !Number.isInteger(
+            movieId
+        ) ||
+        movieId <= 0
+    ) {
+        throw new Error(
+            "Geçersiz film ID."
+        );
+    }
+
+    return movieId;
+};
 
 
 export const getTrendingMovies =
@@ -89,6 +110,66 @@ export const searchMovies =
             ApiResponse<TmdbSearchData>
         >(
             `/tmdb/search?q=${encodedQuery}&page=${normalizedPage}`,
+            {
+                auth: false,
+            }
+        );
+    };
+
+
+export const getMovieDetails =
+    async (
+        movieId: number
+    ) => {
+        const normalizedMovieId =
+            normalizeMovieId(
+                movieId
+            );
+
+        return apiRequest<
+            ApiResponse<TmdbMovieDetail>
+        >(
+            `/tmdb/movie/${normalizedMovieId}`,
+            {
+                auth: false,
+            }
+        );
+    };
+
+
+export const getMovieCast =
+    async (
+        movieId: number
+    ) => {
+        const normalizedMovieId =
+            normalizeMovieId(
+                movieId
+            );
+
+        return apiRequest<
+            ApiResponse<TmdbCastMember[]>
+        >(
+            `/tmdb/movie/${normalizedMovieId}/cast`,
+            {
+                auth: false,
+            }
+        );
+    };
+
+
+export const getMovieTrailers =
+    async (
+        movieId: number
+    ) => {
+        const normalizedMovieId =
+            normalizeMovieId(
+                movieId
+            );
+
+        return apiRequest<
+            ApiResponse<TmdbTrailer[]>
+        >(
+            `/tmdb/movie/${normalizedMovieId}/trailers`,
             {
                 auth: false,
             }
