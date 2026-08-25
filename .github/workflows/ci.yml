@@ -128,3 +128,34 @@ jobs:
         env:
           VITE_API_BASE_URL: https://api.movieshelf.example
         run: npm run build
+
+
+  mobile:
+    name: Mobile Checks
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.22.2"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+
+      - name: Run mobile quality checks
+        working-directory: mobile
+        env:
+          CI: "true"
+          EXPO_NO_TELEMETRY: "1"
+        run: npm run check
