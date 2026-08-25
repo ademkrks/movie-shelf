@@ -8,6 +8,7 @@ import type {
 
 import type {
     AuthUser,
+    ForgotPasswordInput,
     LoginData,
     LoginInput,
     RegisterInput,
@@ -61,6 +62,28 @@ export const register =
 
                     password:
                         input.password,
+                }),
+            }
+        );
+    };
+
+
+export const forgotPassword =
+    async (
+        input: ForgotPasswordInput
+    ) => {
+        return apiRequest<
+            ApiResponse<null>
+        >(
+            "/auth/forgot-password",
+            {
+                method: "POST",
+
+                auth: false,
+
+                body: JSON.stringify({
+                    email:
+                        input.email,
                 }),
             }
         );

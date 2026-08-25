@@ -16,7 +16,6 @@ import {
 
 import {
     Redirect,
-    useLocalSearchParams,
     useRouter,
 } from "expo-router";
 
@@ -24,11 +23,15 @@ import {
     SafeAreaView,
 } from "react-native-safe-area-context";
 
-import useAuth from "../hooks/useAuth";
+import {
+    forgotPassword,
+} from "../api/auth.api";
 
 import {
     ApiClientError,
 } from "../api/client";
+
+import useAuth from "../hooks/useAuth";
 
 import { colors } from "../theme/colors";
 import { radius } from "../theme/radius";
@@ -36,17 +39,15 @@ import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 
 
-export default function LoginScreen() {
+const EMAIL_REGEX =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+export default function ForgotPasswordScreen() {
     const router =
         useRouter();
 
-    const params =
-        useLocalSearchParams<{
-            registered?: string;
-        }>();
-
     const {
-        login,
         isAuthenticated,
         isRestoring,
     } =
@@ -59,14 +60,18 @@ export default function LoginScreen() {
         useState("");
 
     const [
-        password,
-        setPassword,
-    ] =
-        useState("");
-
-    const [
         error,
         setError,
+    ] =
+        useState<
+            string | null
+        >(
+            null
+        );
+
+    const [
+        successMessage,
+        setSuccessMessage,
     ] =
         useState<
             string | null
@@ -100,7 +105,7 @@ export default function LoginScreen() {
     }
 
 
-    const handleLogin =
+    const handleSubmit =
         async () => {
             const normalizedEmail =
                 email
@@ -111,24 +116,21 @@ export default function LoginScreen() {
                 null
             );
 
+            setSuccessMessage(
+                null
+            );
+
             setValidationErrors(
                 []
             );
 
-            if (!normalizedEmail) {
-                setError(
-                    "E-posta adresinizi girin."
-                );
-
-                return;
-            }
-
             if (
-                password.length <
-                8
+                !EMAIL_REGEX.test(
+                    normalizedEmail
+                )
             ) {
                 setError(
-                    "Şifre en az 8 karakter olmalıdır."
+                    "Geçerli bir e-posta adresi girin."
                 );
 
                 return;
@@ -139,15 +141,14 @@ export default function LoginScreen() {
             );
 
             try {
-                await login({
-                    email:
-                        normalizedEmail,
+                const response =
+                    await forgotPassword({
+                        email:
+                            normalizedEmail,
+                    });
 
-                    password,
-                });
-
-                router.replace(
-                    "/"
+                setSuccessMessage(
+                    response.message
                 );
             } catch (
                 requestError
@@ -171,7 +172,7 @@ export default function LoginScreen() {
                     requestError instanceof
                         Error
                         ? requestError.message
-                        : "Giriş yapılırken bilinmeyen bir hata oluştu."
+                        : "Şifre sıfırlama isteği gönderilemedi."
                 );
             } finally {
                 setIsSubmitting(
@@ -244,7 +245,7 @@ export default function LoginScreen() {
                             }
                             onPress={() =>
                                 router.replace(
-                                    "/"
+                                    "/login"
                                 )
                             }
                         >
@@ -282,7 +283,7 @@ export default function LoginScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                WELCOME BACK
+                                PASSWORD RECOVERY
                             </Text>
 
                             <Text
@@ -290,7 +291,7 @@ export default function LoginScreen() {
                                     styles.title
                                 }
                             >
-                                Hesabına giriş yap
+                                Şifreni sıfırla
                             </Text>
 
                             <Text
@@ -298,7 +299,7 @@ export default function LoginScreen() {
                                     styles.description
                                 }
                             >
-                                Film koleksiyonuna kaldığın yerden devam et.
+                                Hesabına bağlı e-posta adresini gir. Kayıtlıysa sana şifre sıfırlama bağlantısı göndereceğiz.
                             </Text>
                         </View>
 
@@ -307,23 +308,6 @@ export default function LoginScreen() {
                                 styles.card
                             }
                         >
-                            {params.registered ===
-                                "1" && (
-                                <View
-                                    style={
-                                        styles.successBox
-                                    }
-                                >
-                                    <Text
-                                        style={
-                                            styles.successText
-                                        }
-                                    >
-                                        Hesabın oluşturuldu. Şimdi giriş yapabilirsin.
-                                    </Text>
-                                </View>
-                            )}
-
                             <View
                                 style={
                                     styles.field
@@ -364,79 +348,34 @@ export default function LoginScreen() {
                                     maxLength={
                                         255
                                     }
-                                    returnKeyType="next"
-                                />
-                            </View>
-
-                            <View
-                                style={
-                                    styles.field
-                                }
-                            >
-                                <Text
-                                    style={
-                                        styles.label
-                                    }
-                                >
-                                    Şifre
-                                </Text>
-
-                                <TextInput
-                                    style={
-                                        styles.input
-                                    }
-                                    value={
-                                        password
-                                    }
-                                    onChangeText={
-                                        setPassword
-                                    }
-                                    placeholder="En az 8 karakter"
-                                    placeholderTextColor={
-                                        colors.textMuted
-                                    }
-                                    secureTextEntry
-                                    autoCapitalize="none"
-                                    autoCorrect={
-                                        false
-                                    }
-                                    autoComplete="password"
-                                    textContentType="password"
-                                    editable={
-                                        !isSubmitting
-                                    }
-                                    returnKeyType="done"
+                                    returnKeyType="send"
                                     onSubmitEditing={() => {
                                         if (
                                             !isSubmitting
                                         ) {
-                                            void handleLogin();
+                                            void handleSubmit();
                                         }
                                     }}
                                 />
                             </View>
 
-                            <Pressable
-                                style={
-                                    styles.forgotPasswordButton
-                                }
-                                disabled={
-                                    isSubmitting
-                                }
-                                onPress={() =>
-                                    router.push(
-                                        "/forgot-password"
-                                    )
-                                }
-                            >
-                                <Text
+                            {successMessage && (
+                                <View
                                     style={
-                                        styles.forgotPasswordText
+                                        styles.successBox
                                     }
                                 >
-                                    Şifremi unuttum
-                                </Text>
-                            </Pressable>
+                                    <Text
+                                        style={
+                                            styles.successText
+                                        }
+                                    >
+                                        {
+                                            successMessage
+                                        }
+                                    </Text>
+                                </View>
+                            )}
 
                             {error && (
                                 <View
@@ -479,11 +418,11 @@ export default function LoginScreen() {
                                 style={({
                                     pressed,
                                 }) => [
-                                    styles.loginButton,
+                                    styles.submitButton,
 
                                     pressed &&
                                         !isSubmitting &&
-                                        styles.loginButtonPressed,
+                                        styles.submitButtonPressed,
 
                                     isSubmitting &&
                                         styles.buttonDisabled,
@@ -492,7 +431,7 @@ export default function LoginScreen() {
                                     isSubmitting
                                 }
                                 onPress={() => {
-                                    void handleLogin();
+                                    void handleSubmit();
                                 }}
                             >
                                 {isSubmitting ? (
@@ -505,54 +444,35 @@ export default function LoginScreen() {
                                 ) : (
                                     <Text
                                         style={
-                                            styles.loginButtonText
+                                            styles.submitButtonText
                                         }
                                     >
-                                        Giriş Yap
+                                        Sıfırlama Bağlantısı Gönder
                                     </Text>
                                 )}
                             </Pressable>
 
-                            <View
+                            <Pressable
                                 style={
-                                    styles.footer
+                                    styles.loginLink
+                                }
+                                disabled={
+                                    isSubmitting
+                                }
+                                onPress={() =>
+                                    router.replace(
+                                        "/login"
+                                    )
                                 }
                             >
                                 <Text
                                     style={
-                                        styles.footerText
+                                        styles.loginLinkText
                                     }
                                 >
-                                    Hesabın yok mu?
+                                    Giriş ekranına dön
                                 </Text>
-
-                                <Pressable
-                                    disabled={
-                                        isSubmitting
-                                    }
-                                    onPress={() =>
-                                        router.push(
-                                            "/register"
-                                        )
-                                    }
-                                >
-                                    <Text
-                                        style={
-                                            styles.footerLink
-                                        }
-                                    >
-                                        Kayıt ol
-                                    </Text>
-                                </Pressable>
-                            </View>
-
-                            <Text
-                                style={
-                                    styles.securityText
-                                }
-                            >
-                                Oturum tokenı cihazın güvenli depolama alanında saklanır.
-                            </Text>
+                            </Pressable>
                         </View>
                     </View>
                 </ScrollView>
@@ -715,35 +635,6 @@ const styles =
                 colors.surface,
         },
 
-        successBox: {
-            marginBottom:
-                spacing.lg,
-
-            padding:
-                spacing.md,
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.success,
-
-            borderRadius:
-                radius.md,
-
-            backgroundColor:
-                colors.surfaceSoft,
-        },
-
-        successText: {
-            ...typography.caption,
-
-            color:
-                colors.success,
-
-            fontWeight:
-                "600",
-        },
-
         field: {
             marginBottom:
                 spacing.lg,
@@ -785,28 +676,33 @@ const styles =
                 colors.surfaceSoft,
         },
 
-        forgotPasswordButton: {
-            alignSelf:
-                "flex-end",
-
-            marginTop:
-                -spacing.sm,
-
+        successBox: {
             marginBottom:
                 spacing.lg,
 
-            paddingVertical:
-                spacing.xs,
+            padding:
+                spacing.md,
+
+            borderWidth: 1,
+
+            borderColor:
+                colors.success,
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.surfaceSoft,
         },
 
-        forgotPasswordText: {
+        successText: {
             ...typography.caption,
 
             color:
-                colors.primary,
+                colors.success,
 
             fontWeight:
-                "700",
+                "600",
         },
 
         errorBox: {
@@ -848,7 +744,7 @@ const styles =
                 colors.error,
         },
 
-        loginButton: {
+        submitButton: {
             minHeight: 52,
 
             alignItems:
@@ -867,7 +763,7 @@ const styles =
                 colors.primary,
         },
 
-        loginButtonPressed: {
+        submitButtonPressed: {
             backgroundColor:
                 colors.primaryPressed,
         },
@@ -877,41 +773,28 @@ const styles =
                 0.65,
         },
 
-        loginButtonText: {
+        submitButtonText: {
             ...typography.button,
 
             color:
                 colors.text,
+
+            textAlign:
+                "center",
         },
 
-        footer: {
-            flexDirection:
-                "row",
-
+        loginLink: {
             alignItems:
                 "center",
 
-            justifyContent:
-                "center",
-
-            flexWrap:
-                "wrap",
-
             marginTop:
                 spacing.xl,
+
+            paddingVertical:
+                spacing.sm,
         },
 
-        footerText: {
-            ...typography.caption,
-
-            marginRight:
-                spacing.xs,
-
-            color:
-                colors.textSecondary,
-        },
-
-        footerLink: {
+        loginLinkText: {
             ...typography.caption,
 
             color:
@@ -919,18 +802,5 @@ const styles =
 
             fontWeight:
                 "700",
-        },
-
-        securityText: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.lg,
-
-            color:
-                colors.textMuted,
-
-            textAlign:
-                "center",
         },
     });

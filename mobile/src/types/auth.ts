@@ -25,6 +25,11 @@ export type RegisterInput = {
 };
 
 
+export type ForgotPasswordInput = {
+    email: string;
+};
+
+
 export type SessionStatus =
     | "restoring"
     | "authenticated"
