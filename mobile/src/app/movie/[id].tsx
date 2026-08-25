@@ -34,24 +34,13 @@ import {
 } from "../../api/client";
 
 import {
-    addFavorite,
-    getFavoriteStatus,
-    removeFavorite,
-} from "../../api/favorites.api";
-
-import {
     getMovieCast,
     getMovieDetails,
     getMovieTrailers,
 } from "../../api/tmdb.api";
 
-import {
-    addToWatchlist,
-    getWatchlistStatus,
-    removeFromWatchlist,
-} from "../../api/watchlist.api";
-
 import useAuth from "../../hooks/useAuth";
+import useMovieLibrary from "../../hooks/useMovieLibrary";
 
 import type {
     TmdbCastMember,
@@ -381,60 +370,23 @@ export default function MovieDetailScreen() {
         );
 
 
-    const [
+    const {
         isFavorite,
-        setIsFavorite,
-    ] =
-        useState(
-            false
-        );
-
-
-    const [
         isWatchlisted,
-        setIsWatchlisted,
-    ] =
-        useState(
-            false
-        );
-
-
-    const [
         isLibraryStatusLoading,
-        setIsLibraryStatusLoading,
-    ] =
-        useState(
-            false
-        );
-
-
-    const [
         isFavoritePending,
-        setIsFavoritePending,
-    ] =
-        useState(
-            false
-        );
-
-
-    const [
         isWatchlistPending,
-        setIsWatchlistPending,
-    ] =
-        useState(
-            false
-        );
-
-
-    const [
         libraryActionError,
-        setLibraryActionError,
-    ] =
-        useState<
-            string | null
-        >(
-            null
-        );
+        loadLibraryStatus,
+        handleFavoriteToggle,
+        handleWatchlistToggle,
+    } =
+        useMovieLibrary({
+            movieId,
+            isValidMovieId,
+            isAuthenticated,
+            isRestoring,
+        });
 
 
     const loadMovie =
@@ -622,160 +574,6 @@ export default function MovieDetailScreen() {
         );
 
 
-    const loadLibraryStatus =
-        useCallback(
-            async () => {
-                if (
-                    isRestoring
-                ) {
-                    return;
-                }
-
-
-                if (
-                    !isValidMovieId
-                ) {
-                    setIsFavorite(
-                        false
-                    );
-
-                    setIsWatchlisted(
-                        false
-                    );
-
-                    setIsLibraryStatusLoading(
-                        false
-                    );
-
-                    setLibraryActionError(
-                        null
-                    );
-
-                    return;
-                }
-
-
-                if (
-                    !isAuthenticated
-                ) {
-                    setIsFavorite(
-                        false
-                    );
-
-                    setIsWatchlisted(
-                        false
-                    );
-
-                    setIsLibraryStatusLoading(
-                        false
-                    );
-
-                    setLibraryActionError(
-                        null
-                    );
-
-                    return;
-                }
-
-
-                setIsFavorite(
-                    false
-                );
-
-                setIsWatchlisted(
-                    false
-                );
-
-                setIsLibraryStatusLoading(
-                    true
-                );
-
-                setLibraryActionError(
-                    null
-                );
-
-
-                const results =
-                    await Promise.allSettled([
-                        getFavoriteStatus(
-                            movieId
-                        ),
-
-                        getWatchlistStatus(
-                            movieId
-                        ),
-                    ]);
-
-
-                const [
-                    favoriteResult,
-                    watchlistResult,
-                ] =
-                    results;
-
-
-                if (
-                    favoriteResult.status ===
-                    "fulfilled"
-                ) {
-                    setIsFavorite(
-                        favoriteResult.value
-                            .data
-                            ?.isFavorite ??
-                            false
-                    );
-                }
-
-
-                if (
-                    watchlistResult.status ===
-                    "fulfilled"
-                ) {
-                    setIsWatchlisted(
-                        watchlistResult.value
-                            .data
-                            ?.isWatchlisted ??
-                            false
-                    );
-                }
-
-
-                if (
-                    favoriteResult.status ===
-                        "rejected" ||
-                    watchlistResult.status ===
-                        "rejected"
-                ) {
-                    const failedResult =
-                        favoriteResult.status ===
-                        "rejected"
-                            ? favoriteResult
-                            : watchlistResult;
-
-                    setLibraryActionError(
-                        failedResult.status ===
-                            "rejected"
-                            ? getRequestErrorMessage(
-                                failedResult.reason
-                            )
-                            : "Koleksiyon durumu yüklenemedi."
-                    );
-                }
-
-
-                setIsLibraryStatusLoading(
-                    false
-                );
-            },
-            [
-                isAuthenticated,
-                isRestoring,
-                isValidMovieId,
-                movieId,
-            ]
-        );
-
-
     useEffect(
         () => {
             const timeoutId =
@@ -837,140 +635,6 @@ export default function MovieDetailScreen() {
                 ),
                 loadLibraryStatus(),
             ]);
-        };
-
-
-    const handleFavoriteToggle =
-        async () => {
-            setLibraryActionError(
-                null
-            );
-
-
-            if (
-                !isAuthenticated
-            ) {
-                router.push(
-                    "/login"
-                );
-
-                return;
-            }
-
-
-            if (
-                isFavoritePending ||
-                isLibraryStatusLoading
-            ) {
-                return;
-            }
-
-
-            setIsFavoritePending(
-                true
-            );
-
-
-            try {
-                if (
-                    isFavorite
-                ) {
-                    await removeFavorite(
-                        movieId
-                    );
-
-                    setIsFavorite(
-                        false
-                    );
-                } else {
-                    await addFavorite(
-                        movieId
-                    );
-
-                    setIsFavorite(
-                        true
-                    );
-                }
-            } catch (
-                requestError
-            ) {
-                setLibraryActionError(
-                    getRequestErrorMessage(
-                        requestError
-                    )
-                );
-            } finally {
-                setIsFavoritePending(
-                    false
-                );
-            }
-        };
-
-
-    const handleWatchlistToggle =
-        async () => {
-            setLibraryActionError(
-                null
-            );
-
-
-            if (
-                !isAuthenticated
-            ) {
-                router.push(
-                    "/login"
-                );
-
-                return;
-            }
-
-
-            if (
-                isWatchlistPending ||
-                isLibraryStatusLoading
-            ) {
-                return;
-            }
-
-
-            setIsWatchlistPending(
-                true
-            );
-
-
-            try {
-                if (
-                    isWatchlisted
-                ) {
-                    await removeFromWatchlist(
-                        movieId
-                    );
-
-                    setIsWatchlisted(
-                        false
-                    );
-                } else {
-                    await addToWatchlist(
-                        movieId
-                    );
-
-                    setIsWatchlisted(
-                        true
-                    );
-                }
-            } catch (
-                requestError
-            ) {
-                setLibraryActionError(
-                    getRequestErrorMessage(
-                        requestError
-                    )
-                );
-            } finally {
-                setIsWatchlistPending(
-                    false
-                );
-            }
         };
 
 
