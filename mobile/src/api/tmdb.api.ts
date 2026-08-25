@@ -15,6 +15,15 @@ import type {
 } from "../types/tmdb";
 
 
+type TmdbMovieBatchData = {
+    items:
+        TmdbMovieDetail[];
+
+    failedMovieIds:
+        number[];
+};
+
+
 const normalizeMovieId = (
     movieId: number
 ) => {
@@ -30,6 +39,48 @@ const normalizeMovieId = (
     }
 
     return movieId;
+};
+
+
+const normalizeMovieIds = (
+    movieIds: number[]
+) => {
+    const normalizedMovieIds =
+        [
+            ...new Set(
+                movieIds.map(
+                    (
+                        movieId
+                    ) =>
+                        normalizeMovieId(
+                            movieId
+                        )
+                )
+            ),
+        ];
+
+
+    if (
+        normalizedMovieIds.length ===
+        0
+    ) {
+        throw new Error(
+            "En az bir film ID gereklidir."
+        );
+    }
+
+
+    if (
+        normalizedMovieIds.length >
+        20
+    ) {
+        throw new Error(
+            "Tek istekte en fazla 20 film getirilebilir."
+        );
+    }
+
+
+    return normalizedMovieIds;
 };
 
 
@@ -132,6 +183,35 @@ export const getMovieDetails =
             `/tmdb/movie/${normalizedMovieId}`,
             {
                 auth: false,
+            }
+        );
+    };
+
+
+export const getMovieDetailsBatch =
+    async (
+        movieIds: number[]
+    ) => {
+        const normalizedMovieIds =
+            normalizeMovieIds(
+                movieIds
+            );
+
+        return apiRequest<
+            ApiResponse<TmdbMovieBatchData>
+        >(
+            "/tmdb/movies/batch",
+            {
+                method:
+                    "POST",
+
+                auth: true,
+
+                body:
+                    JSON.stringify({
+                        movieIds:
+                            normalizedMovieIds,
+                    }),
             }
         );
     };

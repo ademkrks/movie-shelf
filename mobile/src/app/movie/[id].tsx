@@ -34,10 +34,24 @@ import {
 } from "../../api/client";
 
 import {
+    addFavorite,
+    getFavoriteStatus,
+    removeFavorite,
+} from "../../api/favorites.api";
+
+import {
     getMovieCast,
     getMovieDetails,
     getMovieTrailers,
 } from "../../api/tmdb.api";
+
+import {
+    addToWatchlist,
+    getWatchlistStatus,
+    removeFromWatchlist,
+} from "../../api/watchlist.api";
+
+import useAuth from "../../hooks/useAuth";
 
 import type {
     TmdbCastMember,
@@ -247,6 +261,12 @@ export default function MovieDetailScreen() {
         useRouter();
 
     const {
+        isAuthenticated,
+        isRestoring,
+    } =
+        useAuth();
+
+    const {
         id,
     } =
         useLocalSearchParams<{
@@ -353,6 +373,62 @@ export default function MovieDetailScreen() {
     const [
         trailerError,
         setTrailerError,
+    ] =
+        useState<
+            string | null
+        >(
+            null
+        );
+
+
+    const [
+        isFavorite,
+        setIsFavorite,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        isWatchlisted,
+        setIsWatchlisted,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        isLibraryStatusLoading,
+        setIsLibraryStatusLoading,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        isFavoritePending,
+        setIsFavoritePending,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        isWatchlistPending,
+        setIsWatchlistPending,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        libraryActionError,
+        setLibraryActionError,
     ] =
         useState<
             string | null
@@ -546,6 +622,160 @@ export default function MovieDetailScreen() {
         );
 
 
+    const loadLibraryStatus =
+        useCallback(
+            async () => {
+                if (
+                    isRestoring
+                ) {
+                    return;
+                }
+
+
+                if (
+                    !isValidMovieId
+                ) {
+                    setIsFavorite(
+                        false
+                    );
+
+                    setIsWatchlisted(
+                        false
+                    );
+
+                    setIsLibraryStatusLoading(
+                        false
+                    );
+
+                    setLibraryActionError(
+                        null
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !isAuthenticated
+                ) {
+                    setIsFavorite(
+                        false
+                    );
+
+                    setIsWatchlisted(
+                        false
+                    );
+
+                    setIsLibraryStatusLoading(
+                        false
+                    );
+
+                    setLibraryActionError(
+                        null
+                    );
+
+                    return;
+                }
+
+
+                setIsFavorite(
+                    false
+                );
+
+                setIsWatchlisted(
+                    false
+                );
+
+                setIsLibraryStatusLoading(
+                    true
+                );
+
+                setLibraryActionError(
+                    null
+                );
+
+
+                const results =
+                    await Promise.allSettled([
+                        getFavoriteStatus(
+                            movieId
+                        ),
+
+                        getWatchlistStatus(
+                            movieId
+                        ),
+                    ]);
+
+
+                const [
+                    favoriteResult,
+                    watchlistResult,
+                ] =
+                    results;
+
+
+                if (
+                    favoriteResult.status ===
+                    "fulfilled"
+                ) {
+                    setIsFavorite(
+                        favoriteResult.value
+                            .data
+                            ?.isFavorite ??
+                            false
+                    );
+                }
+
+
+                if (
+                    watchlistResult.status ===
+                    "fulfilled"
+                ) {
+                    setIsWatchlisted(
+                        watchlistResult.value
+                            .data
+                            ?.isWatchlisted ??
+                            false
+                    );
+                }
+
+
+                if (
+                    favoriteResult.status ===
+                        "rejected" ||
+                    watchlistResult.status ===
+                        "rejected"
+                ) {
+                    const failedResult =
+                        favoriteResult.status ===
+                        "rejected"
+                            ? favoriteResult
+                            : watchlistResult;
+
+                    setLibraryActionError(
+                        failedResult.status ===
+                            "rejected"
+                            ? getRequestErrorMessage(
+                                failedResult.reason
+                            )
+                            : "Koleksiyon durumu yüklenemedi."
+                    );
+                }
+
+
+                setIsLibraryStatusLoading(
+                    false
+                );
+            },
+            [
+                isAuthenticated,
+                isRestoring,
+                isValidMovieId,
+                movieId,
+            ]
+        );
+
+
     useEffect(
         () => {
             const timeoutId =
@@ -568,17 +798,179 @@ export default function MovieDetailScreen() {
     );
 
 
+    useEffect(
+        () => {
+            const timeoutId =
+                setTimeout(
+                    () => {
+                        void loadLibraryStatus();
+                    },
+                    0
+                );
+
+            return () => {
+                clearTimeout(
+                    timeoutId
+                );
+            };
+        },
+        [
+            loadLibraryStatus,
+        ]
+    );
+
+
     const handleRetry =
         () => {
-            void loadMovie();
+            void Promise.all([
+                loadMovie(),
+                loadLibraryStatus(),
+            ]);
         };
 
 
     const handleRefresh =
         () => {
-            void loadMovie(
+            void Promise.all([
+                loadMovie(
+                    true
+                ),
+                loadLibraryStatus(),
+            ]);
+        };
+
+
+    const handleFavoriteToggle =
+        async () => {
+            setLibraryActionError(
+                null
+            );
+
+
+            if (
+                !isAuthenticated
+            ) {
+                router.push(
+                    "/login"
+                );
+
+                return;
+            }
+
+
+            if (
+                isFavoritePending ||
+                isLibraryStatusLoading
+            ) {
+                return;
+            }
+
+
+            setIsFavoritePending(
                 true
             );
+
+
+            try {
+                if (
+                    isFavorite
+                ) {
+                    await removeFavorite(
+                        movieId
+                    );
+
+                    setIsFavorite(
+                        false
+                    );
+                } else {
+                    await addFavorite(
+                        movieId
+                    );
+
+                    setIsFavorite(
+                        true
+                    );
+                }
+            } catch (
+                requestError
+            ) {
+                setLibraryActionError(
+                    getRequestErrorMessage(
+                        requestError
+                    )
+                );
+            } finally {
+                setIsFavoritePending(
+                    false
+                );
+            }
+        };
+
+
+    const handleWatchlistToggle =
+        async () => {
+            setLibraryActionError(
+                null
+            );
+
+
+            if (
+                !isAuthenticated
+            ) {
+                router.push(
+                    "/login"
+                );
+
+                return;
+            }
+
+
+            if (
+                isWatchlistPending ||
+                isLibraryStatusLoading
+            ) {
+                return;
+            }
+
+
+            setIsWatchlistPending(
+                true
+            );
+
+
+            try {
+                if (
+                    isWatchlisted
+                ) {
+                    await removeFromWatchlist(
+                        movieId
+                    );
+
+                    setIsWatchlisted(
+                        false
+                    );
+                } else {
+                    await addToWatchlist(
+                        movieId
+                    );
+
+                    setIsWatchlisted(
+                        true
+                    );
+                }
+            } catch (
+                requestError
+            ) {
+                setLibraryActionError(
+                    getRequestErrorMessage(
+                        requestError
+                    )
+                );
+            } finally {
+                setIsWatchlistPending(
+                    false
+                );
+            }
         };
 
 
@@ -1111,6 +1503,235 @@ export default function MovieDetailScreen() {
 
                     <View
                         style={
+                            styles.actionsSection
+                        }
+                    >
+                        <Text
+                            style={
+                                styles.sectionEyebrow
+                            }
+                        >
+                            YOUR SHELF
+                        </Text>
+
+                        <Text
+                            style={
+                                styles.sectionTitle
+                            }
+                        >
+                            Koleksiyonun
+                        </Text>
+
+                        {!isAuthenticated &&
+                        !isRestoring ? (
+                            <Text
+                                style={
+                                    styles.actionHint
+                                }
+                            >
+                                Favori ve izleme listesi özelliklerini kullanmak için giriş yap.
+                            </Text>
+                        ) : null}
+
+                        <View
+                            style={
+                                styles.actionButtons
+                            }
+                        >
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    isFavorite
+                                        ? "Favorilerden kaldır"
+                                        : "Favorilere ekle"
+                                }
+                                onPress={() => {
+                                    void handleFavoriteToggle();
+                                }}
+                                disabled={
+                                    isRestoring ||
+                                    isFavoritePending ||
+                                    isLibraryStatusLoading
+                                }
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.collectionActionButton,
+
+                                    isFavorite
+                                        ? styles.collectionActionButtonActive
+                                        : null,
+
+                                    pressed &&
+                                    !isFavoritePending
+                                        ? styles.collectionActionButtonPressed
+                                        : null,
+
+                                    isRestoring ||
+                                    isFavoritePending ||
+                                    isLibraryStatusLoading
+                                        ? styles.collectionActionButtonDisabled
+                                        : null,
+                                ]}
+                            >
+                                {isFavoritePending ||
+                                (
+                                    isLibraryStatusLoading &&
+                                    isAuthenticated
+                                ) ? (
+                                    <ActivityIndicator
+                                        size="small"
+                                        color={
+                                            colors.text
+                                        }
+                                    />
+                                ) : (
+                                    <Ionicons
+                                        name={
+                                            isFavorite
+                                                ? "heart"
+                                                : "heart-outline"
+                                        }
+                                        size={
+                                            20
+                                        }
+                                        color={
+                                            isFavorite
+                                                ? colors.text
+                                                : colors.textSecondary
+                                        }
+                                    />
+                                )}
+
+                                <Text
+                                    style={
+                                        styles.collectionActionText
+                                    }
+                                    numberOfLines={
+                                        1
+                                    }
+                                >
+                                    {
+                                        isFavorite
+                                            ? "Favoride"
+                                            : "Favoriye Ekle"
+                                    }
+                                </Text>
+                            </Pressable>
+
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    isWatchlisted
+                                        ? "İzleme listesinden kaldır"
+                                        : "İzleme listesine ekle"
+                                }
+                                onPress={() => {
+                                    void handleWatchlistToggle();
+                                }}
+                                disabled={
+                                    isRestoring ||
+                                    isWatchlistPending ||
+                                    isLibraryStatusLoading
+                                }
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.collectionActionButton,
+
+                                    isWatchlisted
+                                        ? styles.collectionActionButtonActive
+                                        : null,
+
+                                    pressed &&
+                                    !isWatchlistPending
+                                        ? styles.collectionActionButtonPressed
+                                        : null,
+
+                                    isRestoring ||
+                                    isWatchlistPending ||
+                                    isLibraryStatusLoading
+                                        ? styles.collectionActionButtonDisabled
+                                        : null,
+                                ]}
+                            >
+                                {isWatchlistPending ||
+                                (
+                                    isLibraryStatusLoading &&
+                                    isAuthenticated
+                                ) ? (
+                                    <ActivityIndicator
+                                        size="small"
+                                        color={
+                                            colors.text
+                                        }
+                                    />
+                                ) : (
+                                    <Ionicons
+                                        name={
+                                            isWatchlisted
+                                                ? "bookmark"
+                                                : "bookmark-outline"
+                                        }
+                                        size={
+                                            20
+                                        }
+                                        color={
+                                            isWatchlisted
+                                                ? colors.text
+                                                : colors.textSecondary
+                                        }
+                                    />
+                                )}
+
+                                <Text
+                                    style={
+                                        styles.collectionActionText
+                                    }
+                                    numberOfLines={
+                                        1
+                                    }
+                                >
+                                    {
+                                        isWatchlisted
+                                            ? "Listemde"
+                                            : "Listeme Ekle"
+                                    }
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        {libraryActionError ? (
+                            <View
+                                style={
+                                    styles.actionError
+                                }
+                            >
+                                <Ionicons
+                                    name="alert-circle-outline"
+                                    size={
+                                        18
+                                    }
+                                    color={
+                                        colors.error
+                                    }
+                                />
+
+                                <Text
+                                    style={
+                                        styles.actionErrorText
+                                    }
+                                >
+                                    {
+                                        libraryActionError
+                                    }
+                                </Text>
+                            </View>
+                        ) : null}
+                    </View>
+
+                    <View
+                        style={
                             styles.section
                         }
                     >
@@ -1355,44 +1976,6 @@ export default function MovieDetailScreen() {
                             </Text>
                         </View>
                     ) : null}
-
-                    <View
-                        style={
-                            styles.nextStepCard
-                        }
-                    >
-                        <Ionicons
-                            name="library-outline"
-                            size={
-                                22
-                            }
-                            color={
-                                colors.primary
-                            }
-                        />
-
-                        <View
-                            style={
-                                styles.nextStepContent
-                            }
-                        >
-                            <Text
-                                style={
-                                    styles.nextStepTitle
-                                }
-                            >
-                                MovieShelf
-                            </Text>
-
-                            <Text
-                                style={
-                                    styles.nextStepDescription
-                                }
-                            >
-                                Favorilere ekleme ve izleme listesi işlemleri bir sonraki adımda bu ekrana bağlanacak.
-                            </Text>
-                        </View>
-                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -1877,6 +2460,129 @@ const styles =
                 "600",
         },
 
+        actionsSection: {
+            marginTop:
+                spacing.xxxl,
+        },
+
+        actionHint: {
+            ...typography.caption,
+
+            marginTop:
+                spacing.sm,
+
+            color:
+                colors.textSecondary,
+        },
+
+        actionButtons: {
+            flexDirection:
+                "row",
+
+            gap:
+                spacing.md,
+
+            marginTop:
+                spacing.lg,
+        },
+
+        collectionActionButton: {
+            flex: 1,
+
+            minHeight: 54,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            gap:
+                spacing.sm,
+
+            paddingHorizontal:
+                spacing.md,
+
+            borderWidth: 1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        collectionActionButtonActive: {
+            borderColor:
+                colors.primary,
+
+            backgroundColor:
+                colors.primary,
+        },
+
+        collectionActionButtonPressed: {
+            opacity: 0.74,
+        },
+
+        collectionActionButtonDisabled: {
+            opacity: 0.55,
+        },
+
+        collectionActionText: {
+            ...typography.caption,
+
+            flexShrink: 1,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        actionError: {
+            flexDirection:
+                "row",
+
+            alignItems:
+                "flex-start",
+
+            gap:
+                spacing.sm,
+
+            marginTop:
+                spacing.md,
+
+            padding:
+                spacing.md,
+
+            borderWidth: 1,
+
+            borderColor:
+                colors.error,
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        actionErrorText: {
+            ...typography.caption,
+
+            flex: 1,
+
+            color:
+                colors.error,
+        },
+
         section: {
             marginTop:
                 spacing.xxxl,
@@ -2130,58 +2836,6 @@ const styles =
             ...typography.caption,
 
             flex: 1,
-
-            color:
-                colors.textSecondary,
-        },
-
-        nextStepCard: {
-            flexDirection:
-                "row",
-
-            alignItems:
-                "flex-start",
-
-            gap:
-                spacing.md,
-
-            marginTop:
-                spacing.xxxl,
-
-            padding:
-                spacing.lg,
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.border,
-
-            borderRadius:
-                radius.lg,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        nextStepContent: {
-            flex: 1,
-        },
-
-        nextStepTitle: {
-            ...typography.body,
-
-            color:
-                colors.text,
-
-            fontWeight:
-                "700",
-        },
-
-        nextStepDescription: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.xs,
 
             color:
                 colors.textSecondary,
