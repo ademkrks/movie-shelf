@@ -30,6 +30,12 @@ export type ForgotPasswordInput = {
 };
 
 
+export type ResetPasswordInput = {
+    token: string;
+    password: string;
+};
+
+
 export type SessionStatus =
     | "restoring"
     | "authenticated"

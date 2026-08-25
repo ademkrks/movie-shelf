@@ -12,6 +12,7 @@ import type {
     LoginData,
     LoginInput,
     RegisterInput,
+    ResetPasswordInput,
 } from "../types/auth";
 
 
@@ -84,6 +85,31 @@ export const forgotPassword =
                 body: JSON.stringify({
                     email:
                         input.email,
+                }),
+            }
+        );
+    };
+
+
+export const resetPassword =
+    async (
+        input: ResetPasswordInput
+    ) => {
+        return apiRequest<
+            ApiResponse<null>
+        >(
+            "/auth/reset-password",
+            {
+                method: "POST",
+
+                auth: false,
+
+                body: JSON.stringify({
+                    token:
+                        input.token,
+
+                    password:
+                        input.password,
                 }),
             }
         );
