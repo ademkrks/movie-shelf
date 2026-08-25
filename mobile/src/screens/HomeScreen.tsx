@@ -1,15 +1,23 @@
 import {
+    useCallback,
     useEffect,
     useState,
 } from "react";
 
 import {
     ActivityIndicator,
+    Image,
     Pressable,
+    RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+
+import {
+    Ionicons,
+} from "@expo/vector-icons";
 
 import {
     useRouter,
@@ -20,71 +28,353 @@ import {
 } from "react-native-safe-area-context";
 
 import {
-    getConfiguredApiBaseUrl,
+    ApiClientError,
 } from "../api/client";
 
 import {
-    getHealth,
-} from "../api/health.api";
+    getPopularMovies,
+    getTopRatedMovies,
+    getTrendingMovies,
+    getUpcomingMovies,
+} from "../api/tmdb.api";
 
 import useAuth from "../hooks/useAuth";
 
-import { colors } from "../theme/colors";
-import { radius } from "../theme/radius";
-import { spacing } from "../theme/spacing";
-import { typography } from "../theme/typography";
+import type {
+    TmdbMovie,
+} from "../types/tmdb";
+
+import {
+    colors,
+} from "../theme/colors";
+
+import {
+    radius,
+} from "../theme/radius";
+
+import {
+    spacing,
+} from "../theme/spacing";
+
+import {
+    typography,
+} from "../theme/typography";
 
 
-type ConnectionState = {
-    status:
-        | "checking"
-        | "connected"
-        | "error";
+const POSTER_BASE_URL =
+    "https://image.tmdb.org/t/p/w500";
 
-    message: string;
+
+type DiscoveryState = {
+    trending: TmdbMovie[];
+
+    popular: TmdbMovie[];
+
+    topRated: TmdbMovie[];
+
+    upcoming: TmdbMovie[];
 };
 
 
-const checkBackendConnection =
-    async (): Promise<ConnectionState> => {
-        try {
-            const response =
-                await getHealth();
+const EMPTY_DISCOVERY: DiscoveryState = {
+    trending: [],
 
-            if (
-                response.success &&
-                response.status ===
-                    "ok"
-            ) {
-                return {
-                    status:
-                        "connected",
+    popular: [],
 
-                    message:
-                        "Backend connection established",
-                };
-            }
+    topRated: [],
 
-            return {
-                status:
-                    "error",
+    upcoming: [],
+};
 
-                message:
-                    "Backend beklenmeyen bir yanıt döndürdü.",
-            };
-        } catch (error) {
-            return {
-                status:
-                    "error",
 
-                message:
-                    error instanceof
-                        Error
-                        ? error.message
-                        : "Backend bağlantısı kurulamadı.",
-            };
+type MovieCardProps = {
+    movie: TmdbMovie;
+};
+
+
+type MovieSectionProps = {
+    eyebrow: string;
+
+    title: string;
+
+    description: string;
+
+    movies: TmdbMovie[];
+};
+
+
+const getMovieYear =
+    (
+        releaseDate?: string
+    ) => {
+        if (!releaseDate) {
+            return "—";
         }
+
+        const year =
+            releaseDate.slice(
+                0,
+                4
+            );
+
+        return /^\d{4}$/.test(
+            year
+        )
+            ? year
+            : "—";
     };
+
+
+const getMovieRating =
+    (
+        rating?: number
+    ) => {
+        if (
+            typeof rating !==
+                "number" ||
+            !Number.isFinite(
+                rating
+            )
+        ) {
+            return "—";
+        }
+
+        return rating.toFixed(
+            1
+        );
+    };
+
+
+const getRequestErrorMessage =
+    (
+        error: unknown
+    ) => {
+        if (
+            error instanceof
+            ApiClientError
+        ) {
+            return (
+                error.errors[0] ??
+                error.message
+            );
+        }
+
+        if (
+            error instanceof
+            Error
+        ) {
+            return error.message;
+        }
+
+        return "Filmler yüklenirken bilinmeyen bir hata oluştu.";
+    };
+
+
+function MovieCard({
+    movie,
+}: MovieCardProps) {
+    const hasPoster =
+        Boolean(
+            movie.poster_path
+        );
+
+    return (
+        <View
+            style={
+                styles.movieCard
+            }
+        >
+            <View
+                style={
+                    styles.posterContainer
+                }
+            >
+                {hasPoster ? (
+                    <Image
+                        source={{
+                            uri:
+                                POSTER_BASE_URL +
+                                movie.poster_path,
+                        }}
+                        style={
+                            styles.poster
+                        }
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View
+                        style={
+                            styles.posterFallback
+                        }
+                    >
+                        <Ionicons
+                            name="film-outline"
+                            size={
+                                30
+                            }
+                            color={
+                                colors.textMuted
+                            }
+                        />
+
+                        <Text
+                            style={
+                                styles.posterFallbackText
+                            }
+                        >
+                            Afiş yok
+                        </Text>
+                    </View>
+                )}
+
+                <View
+                    style={
+                        styles.ratingBadge
+                    }
+                >
+                    <Ionicons
+                        name="star"
+                        size={
+                            12
+                        }
+                        color={
+                            colors.warning
+                        }
+                    />
+
+                    <Text
+                        style={
+                            styles.ratingText
+                        }
+                    >
+                        {
+                            getMovieRating(
+                                movie.vote_average
+                            )
+                        }
+                    </Text>
+                </View>
+            </View>
+
+            <View
+                style={
+                    styles.movieInfo
+                }
+            >
+                <Text
+                    style={
+                        styles.movieTitle
+                    }
+                    numberOfLines={
+                        2
+                    }
+                >
+                    {
+                        movie.title ||
+                        movie.original_title ||
+                        "İsimsiz film"
+                    }
+                </Text>
+
+                <Text
+                    style={
+                        styles.movieYear
+                    }
+                >
+                    {
+                        getMovieYear(
+                            movie.release_date
+                        )
+                    }
+                </Text>
+            </View>
+        </View>
+    );
+}
+
+
+function MovieSection({
+    eyebrow,
+    title,
+    description,
+    movies,
+}: MovieSectionProps) {
+    if (
+        movies.length ===
+        0
+    ) {
+        return null;
+    }
+
+    return (
+        <View
+            style={
+                styles.movieSection
+            }
+        >
+            <View
+                style={
+                    styles.sectionHeading
+                }
+            >
+                <Text
+                    style={
+                        styles.sectionEyebrow
+                    }
+                >
+                    {
+                        eyebrow
+                    }
+                </Text>
+
+                <Text
+                    style={
+                        styles.sectionTitle
+                    }
+                >
+                    {
+                        title
+                    }
+                </Text>
+
+                <Text
+                    style={
+                        styles.sectionDescription
+                    }
+                >
+                    {
+                        description
+                    }
+                </Text>
+            </View>
+
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={
+                    false
+                }
+                contentContainerStyle={
+                    styles.movieRow
+                }
+            >
+                {movies.map(
+                    (
+                        movie
+                    ) => (
+                        <MovieCard
+                            key={
+                                movie.id
+                            }
+                            movie={
+                                movie
+                            }
+                        />
+                    )
+                )}
+            </ScrollView>
+        </View>
+    );
+}
 
 
 export default function HomeScreen() {
@@ -102,28 +392,55 @@ export default function HomeScreen() {
     } =
         useAuth();
 
-    const [
-        connection,
-        setConnection,
-    ] =
-        useState<ConnectionState>({
-            status:
-                "checking",
-
-            message:
-                "Backend bağlantısı kontrol ediliyor...",
-        });
 
     const [
-        apiBaseUrl,
+        discovery,
+        setDiscovery,
     ] =
-        useState(() => {
-            try {
-                return getConfiguredApiBaseUrl();
-            } catch {
-                return "API adresi yapılandırılmamış";
-            }
-        });
+        useState<
+            DiscoveryState
+        >(
+            EMPTY_DISCOVERY
+        );
+
+
+    const [
+        isLoading,
+        setIsLoading,
+    ] =
+        useState(
+            true
+        );
+
+
+    const [
+        isRefreshing,
+        setIsRefreshing,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        isLoggingOut,
+        setIsLoggingOut,
+    ] =
+        useState(
+            false
+        );
+
+
+    const [
+        error,
+        setError,
+    ] =
+        useState<
+            string | null
+        >(
+            null
+        );
+
 
     const [
         authActionError,
@@ -135,57 +452,182 @@ export default function HomeScreen() {
             null
         );
 
-    const [
-        isLoggingOut,
-        setIsLoggingOut,
-    ] =
-        useState(false);
+
+    const loadDiscovery =
+        useCallback(
+            async (
+                refreshing =
+                    false
+            ) => {
+                if (
+                    refreshing
+                ) {
+                    setIsRefreshing(
+                        true
+                    );
+                } else {
+                    setIsLoading(
+                        true
+                    );
+                }
+
+                setError(
+                    null
+                );
+
+
+                const results =
+                    await Promise.allSettled([
+                        getTrendingMovies(),
+                        getPopularMovies(),
+                        getTopRatedMovies(),
+                        getUpcomingMovies(),
+                    ]);
+
+
+                const [
+                    trendingResult,
+                    popularResult,
+                    topRatedResult,
+                    upcomingResult,
+                ] =
+                    results;
+
+
+                const successfulRequests =
+                    results.filter(
+                        (
+                            result
+                        ) =>
+                            result.status ===
+                            "fulfilled"
+                    );
+
+
+                if (
+                    successfulRequests.length ===
+                    0
+                ) {
+                    const firstFailure =
+                        results.find(
+                            (
+                                result
+                            ) =>
+                                result.status ===
+                                "rejected"
+                        );
+
+                    setError(
+                        firstFailure &&
+                        firstFailure.status ===
+                            "rejected"
+                            ? getRequestErrorMessage(
+                                firstFailure.reason
+                            )
+                            : "Film listeleri yüklenemedi."
+                    );
+                } else if (
+                    successfulRequests.length <
+                    results.length
+                ) {
+                    setError(
+                        "Bazı film listeleri yüklenemedi. Gösterilebilen içerikler aşağıda yer alıyor."
+                    );
+                }
+
+
+                setDiscovery(
+                    (
+                        current
+                    ) => ({
+                        trending:
+                            trendingResult.status ===
+                            "fulfilled"
+                                ? trendingResult
+                                    .value
+                                    .data ??
+                                    []
+                                : current
+                                    .trending,
+
+                        popular:
+                            popularResult.status ===
+                            "fulfilled"
+                                ? popularResult
+                                    .value
+                                    .data ??
+                                    []
+                                : current
+                                    .popular,
+
+                        topRated:
+                            topRatedResult.status ===
+                            "fulfilled"
+                                ? topRatedResult
+                                    .value
+                                    .data ??
+                                    []
+                                : current
+                                    .topRated,
+
+                        upcoming:
+                            upcomingResult.status ===
+                            "fulfilled"
+                                ? upcomingResult
+                                    .value
+                                    .data ??
+                                    []
+                                : current
+                                    .upcoming,
+                    })
+                );
+
+
+                setIsLoading(
+                    false
+                );
+
+                setIsRefreshing(
+                    false
+                );
+            },
+            []
+        );
 
 
     useEffect(
         () => {
-            let isActive =
-                true;
-
-            const runCheck =
-                async () => {
-                    const result =
-                        await checkBackendConnection();
-
-                    if (isActive) {
-                        setConnection(
-                            result
-                        );
-                    }
-                };
-
-            void runCheck();
+            const timeoutId =
+                setTimeout(
+                    () => {
+                        void loadDiscovery();
+                    },
+                    0
+                );
 
             return () => {
-                isActive =
-                    false;
+                clearTimeout(
+                    timeoutId
+                );
             };
         },
-        []
+        [
+            loadDiscovery,
+        ]
     );
 
 
-    const handleRetryConnection =
-        async () => {
-            setConnection({
-                status:
-                    "checking",
-
-                message:
-                    "Backend bağlantısı kontrol ediliyor...",
-            });
-
-            const result =
-                await checkBackendConnection();
-
-            setConnection(
-                result
+    const handleRefresh =
+        () => {
+            void loadDiscovery(
+                true
             );
+        };
+
+
+    const handleRetry =
+        () => {
+            void loadDiscovery();
         };
 
 
@@ -201,11 +643,13 @@ export default function HomeScreen() {
 
             try {
                 await logout();
-            } catch (error) {
+            } catch (
+                requestError
+            ) {
                 setAuthActionError(
-                    error instanceof
-                        Error
-                        ? error.message
+                    requestError instanceof
+                    Error
+                        ? requestError.message
                         : "Çıkış yapılırken bilinmeyen bir hata oluştu."
                 );
             } finally {
@@ -224,158 +668,142 @@ export default function HomeScreen() {
 
             try {
                 await restoreSession();
-            } catch (error) {
+            } catch (
+                requestError
+            ) {
                 setAuthActionError(
-                    error instanceof
-                        Error
-                        ? error.message
+                    requestError instanceof
+                    Error
+                        ? requestError.message
                         : "Oturum yeniden kontrol edilemedi."
                 );
             }
         };
 
 
-    const isChecking =
-        connection.status ===
-        "checking";
-
-    const isConnected =
-        connection.status ===
-        "connected";
+    const hasDiscoveryContent =
+        discovery.trending.length >
+            0 ||
+        discovery.popular.length >
+            0 ||
+        discovery.topRated.length >
+            0 ||
+        discovery.upcoming.length >
+            0;
 
 
     return (
         <SafeAreaView
-            style={styles.safeArea}
+            style={
+                styles.safeArea
+            }
+            edges={[
+                "top",
+                "left",
+                "right",
+            ]}
         >
-            <View
-                style={styles.container}
+            <ScrollView
+                style={
+                    styles.scrollView
+                }
+                contentContainerStyle={
+                    styles.contentContainer
+                }
+                showsVerticalScrollIndicator={
+                    false
+                }
+                refreshControl={
+                    <RefreshControl
+                        refreshing={
+                            isRefreshing
+                        }
+                        onRefresh={
+                            handleRefresh
+                        }
+                        tintColor={
+                            colors.primary
+                        }
+                        colors={[
+                            colors.primary,
+                        ]}
+                        progressBackgroundColor={
+                            colors.surface
+                        }
+                    />
+                }
             >
                 <View
                     style={
-                        styles.brandContainer
+                        styles.header
                     }
                 >
-                    <Text
-                        style={styles.brand}
-                    >
-                        Movie
-                        <Text
-                            style={
-                                styles.brandAccent
-                            }
-                        >
-                            Shelf
-                        </Text>
-                    </Text>
-
-                    <Text
-                        style={styles.tagline}
-                    >
-                        Your movies.
-                        Your shelf.
-                    </Text>
-                </View>
-
-                <View
-                    style={styles.card}
-                >
-                    <Text
-                        style={
-                            styles.cardTitle
-                        }
-                    >
-                        API Connection
-                    </Text>
-
                     <View
                         style={
-                            styles.statusRow
+                            styles.brandContainer
                         }
                     >
-                        {isChecking ? (
-                            <ActivityIndicator
-                                size="small"
-                                color={
-                                    colors.primary
+                        <Text
+                            style={
+                                styles.brand
+                            }
+                        >
+                            Movie
+                            <Text
+                                style={
+                                    styles.brandAccent
                                 }
-                            />
-                        ) : (
-                            <View
-                                style={[
-                                    styles.statusDot,
-
-                                    {
-                                        backgroundColor:
-                                            isConnected
-                                                ? colors.success
-                                                : colors.error,
-                                    },
-                                ]}
-                            />
-                        )}
+                            >
+                                Shelf
+                            </Text>
+                        </Text>
 
                         <Text
                             style={
-                                styles.statusText
+                                styles.tagline
                             }
                         >
-                            {
-                                connection.message
-                            }
+                            Your movies. Your shelf.
                         </Text>
                     </View>
 
-                    <Text
-                        style={
-                            styles.apiUrl
+                    <Pressable
+                        onPress={() =>
+                            router.push(
+                                "/search"
+                            )
                         }
-                        numberOfLines={1}
+                        style={({
+                            pressed,
+                        }) => [
+                            styles.searchShortcut,
+
+                            pressed
+                                ? styles.shortcutPressed
+                                : null,
+                        ]}
                     >
-                        {apiBaseUrl}
-                    </Text>
-
-                    {connection.status ===
-                        "error" && (
-                        <Pressable
-                            style={({
-                                pressed,
-                            }) => [
-                                styles.primaryButton,
-
-                                pressed &&
-                                    styles.primaryButtonPressed,
-                            ]}
-                            onPress={() => {
-                                void handleRetryConnection();
-                            }}
-                        >
-                            <Text
-                                style={
-                                    styles.primaryButtonText
-                                }
-                            >
-                                Tekrar Dene
-                            </Text>
-                        </Pressable>
-                    )}
+                        <Ionicons
+                            name="search"
+                            size={
+                                20
+                            }
+                            color={
+                                colors.text
+                            }
+                        />
+                    </Pressable>
                 </View>
 
                 <View
-                    style={styles.card}
+                    style={
+                        styles.sessionCard
+                    }
                 >
-                    <Text
-                        style={
-                            styles.cardTitle
-                        }
-                    >
-                        Session
-                    </Text>
-
                     {isRestoring ? (
                         <View
                             style={
-                                styles.statusRow
+                                styles.sessionRow
                             }
                         >
                             <ActivityIndicator
@@ -387,7 +815,7 @@ export default function HomeScreen() {
 
                             <Text
                                 style={
-                                    styles.statusText
+                                    styles.sessionText
                                 }
                             >
                                 Oturum kontrol ediliyor...
@@ -395,143 +823,143 @@ export default function HomeScreen() {
                         </View>
                     ) : isAuthenticated &&
                       user ? (
-                        <>
-                            <View
+                        <View
+                            style={
+                                styles.accountContainer
+                            }
+                        >
+                            <Pressable
+                                onPress={() =>
+                                    router.push(
+                                        "/profile"
+                                    )
+                                }
                                 style={
-                                    styles.statusRow
+                                    styles.accountInfo
                                 }
                             >
                                 <View
-                                    style={[
-                                        styles.statusDot,
+                                    style={
+                                        styles.avatar
+                                    }
+                                >
+                                    <Ionicons
+                                        name="person"
+                                        size={
+                                            18
+                                        }
+                                        color={
+                                            colors.primary
+                                        }
+                                    />
+                                </View>
 
+                                <View
+                                    style={
+                                        styles.accountTextContainer
+                                    }
+                                >
+                                    <Text
+                                        style={
+                                            styles.accountName
+                                        }
+                                        numberOfLines={
+                                            1
+                                        }
+                                    >
                                         {
-                                            backgroundColor:
-                                                colors.success,
-                                        },
-                                    ]}
-                                />
+                                            user.name
+                                        }
+                                    </Text>
 
-                                <Text
-                                    style={
-                                        styles.statusText
-                                    }
-                                >
-                                    Authenticated
-                                </Text>
-                            </View>
-
-                            <View
-                                style={
-                                    styles.userContainer
-                                }
-                            >
-                                <Text
-                                    style={
-                                        styles.userName
-                                    }
-                                >
-                                    {
-                                        user.name
-                                    }
-                                </Text>
-
-                                <Text
-                                    style={
-                                        styles.userEmail
-                                    }
-                                >
-                                    {
-                                        user.email
-                                    }
-                                </Text>
-
-                                <Text
-                                    style={
-                                        styles.userMeta
-                                    }
-                                >
-                                    User #
-                                    {
-                                        user.id
-                                    }
-                                </Text>
-                            </View>
+                                    <Text
+                                        style={
+                                            styles.accountEmail
+                                        }
+                                        numberOfLines={
+                                            1
+                                        }
+                                    >
+                                        {
+                                            user.email
+                                        }
+                                    </Text>
+                                </View>
+                            </Pressable>
 
                             <Pressable
-                                style={({
-                                    pressed,
-                                }) => [
-                                    styles.secondaryButton,
-
-                                    pressed &&
-                                        styles.secondaryButtonPressed,
-
-                                    isLoggingOut &&
-                                        styles.buttonDisabled,
-                                ]}
-                                disabled={
-                                    isLoggingOut
-                                }
                                 onPress={() => {
                                     void handleLogout();
                                 }}
+                                disabled={
+                                    isLoggingOut
+                                }
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.logoutButton,
+
+                                    pressed &&
+                                    !isLoggingOut
+                                        ? styles.shortcutPressed
+                                        : null,
+
+                                    isLoggingOut
+                                        ? styles.buttonDisabled
+                                        : null,
+                                ]}
                             >
                                 {isLoggingOut ? (
                                     <ActivityIndicator
                                         size="small"
                                         color={
-                                            colors.text
+                                            colors.textSecondary
                                         }
                                     />
                                 ) : (
-                                    <Text
-                                        style={
-                                            styles.secondaryButtonText
+                                    <Ionicons
+                                        name="log-out-outline"
+                                        size={
+                                            20
                                         }
-                                    >
-                                        Çıkış Yap
-                                    </Text>
+                                        color={
+                                            colors.textSecondary
+                                        }
+                                    />
                                 )}
                             </Pressable>
-                        </>
-                    ) : (
-                        <>
+                        </View>
+                    ) : sessionStatus ===
+                      "unavailable" ? (
+                        <View>
                             <View
                                 style={
-                                    styles.statusRow
+                                    styles.sessionRow
                                 }
                             >
-                                <View
-                                    style={[
-                                        styles.statusDot,
-
-                                        {
-                                            backgroundColor:
-                                                sessionStatus ===
-                                                "unavailable"
-                                                    ? colors.warning
-                                                    : colors.textMuted,
-                                        },
-                                    ]}
+                                <Ionicons
+                                    name="warning-outline"
+                                    size={
+                                        20
+                                    }
+                                    color={
+                                        colors.warning
+                                    }
                                 />
 
                                 <Text
                                     style={
-                                        styles.statusText
+                                        styles.sessionText
                                     }
                                 >
-                                    {sessionStatus ===
-                                    "unavailable"
-                                        ? "Oturum doğrulanamadı"
-                                        : "Guest"}
+                                    Oturum doğrulanamadı
                                 </Text>
                             </View>
 
                             {sessionError && (
                                 <Text
                                     style={
-                                        styles.errorText
+                                        styles.sessionError
                                     }
                                 >
                                     {
@@ -540,61 +968,104 @@ export default function HomeScreen() {
                                 </Text>
                             )}
 
-                            {sessionStatus ===
-                            "unavailable" ? (
-                                <Pressable
-                                    style={({
-                                        pressed,
-                                    }) => [
-                                        styles.secondaryButton,
+                            <Pressable
+                                onPress={() => {
+                                    void handleRestoreSession();
+                                }}
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.sessionButton,
 
-                                        pressed &&
-                                            styles.secondaryButtonPressed,
-                                    ]}
-                                    onPress={() => {
-                                        void handleRestoreSession();
-                                    }}
+                                    pressed
+                                        ? styles.sessionButtonPressed
+                                        : null,
+                                ]}
+                            >
+                                <Text
+                                    style={
+                                        styles.sessionButtonText
+                                    }
                                 >
-                                    <Text
-                                        style={
-                                            styles.secondaryButtonText
-                                        }
-                                    >
-                                        Oturumu Tekrar Kontrol Et
-                                    </Text>
-                                </Pressable>
-                            ) : (
-                                <Pressable
-                                    style={({
-                                        pressed,
-                                    }) => [
-                                        styles.primaryButton,
+                                    Oturumu Tekrar Kontrol Et
+                                </Text>
+                            </Pressable>
+                        </View>
+                    ) : (
+                        <View
+                            style={
+                                styles.guestContainer
+                            }
+                        >
+                            <View
+                                style={
+                                    styles.sessionRow
+                                }
+                            >
+                                <Ionicons
+                                    name="person-outline"
+                                    size={
+                                        20
+                                    }
+                                    color={
+                                        colors.textSecondary
+                                    }
+                                />
 
-                                        pressed &&
-                                            styles.primaryButtonPressed,
-                                    ]}
-                                    onPress={() =>
-                                        router.push(
-                                            "/login"
-                                        )
+                                <View
+                                    style={
+                                        styles.guestTextContainer
                                     }
                                 >
                                     <Text
                                         style={
-                                            styles.primaryButtonText
+                                            styles.guestTitle
                                         }
                                     >
-                                        Giriş Yap
+                                        MovieShelf hesabına giriş yap
                                     </Text>
-                                </Pressable>
-                            )}
-                        </>
+
+                                    <Text
+                                        style={
+                                            styles.guestDescription
+                                        }
+                                    >
+                                        Listelerini ve profilini kullanmaya devam et.
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <Pressable
+                                onPress={() =>
+                                    router.push(
+                                        "/login"
+                                    )
+                                }
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.loginButton,
+
+                                    pressed
+                                        ? styles.loginButtonPressed
+                                        : null,
+                                ]}
+                            >
+                                <Text
+                                    style={
+                                        styles.loginButtonText
+                                    }
+                                >
+                                    Giriş Yap
+                                </Text>
+                            </Pressable>
+                        </View>
                     )}
 
                     {authActionError && (
                         <Text
                             style={
-                                styles.errorText
+                                styles.sessionError
                             }
                         >
                             {
@@ -603,7 +1074,207 @@ export default function HomeScreen() {
                         </Text>
                     )}
                 </View>
-            </View>
+
+                <View
+                    style={
+                        styles.hero
+                    }
+                >
+                    <Text
+                        style={
+                            styles.heroEyebrow
+                        }
+                    >
+                        DISCOVER
+                    </Text>
+
+                    <Text
+                        style={
+                            styles.heroTitle
+                        }
+                    >
+                        Sıradaki filmini keşfet.
+                    </Text>
+
+                    <Text
+                        style={
+                            styles.heroDescription
+                        }
+                    >
+                        Trendlerden klasiklere, MovieShelf için seçilmiş güncel film listelerine göz at.
+                    </Text>
+
+                    <Pressable
+                        onPress={() =>
+                            router.push(
+                                "/search"
+                            )
+                        }
+                        style={({
+                            pressed,
+                        }) => [
+                            styles.heroButton,
+
+                            pressed
+                                ? styles.heroButtonPressed
+                                : null,
+                        ]}
+                    >
+                        <Ionicons
+                            name="search-outline"
+                            size={
+                                18
+                            }
+                            color={
+                                colors.text
+                            }
+                        />
+
+                        <Text
+                            style={
+                                styles.heroButtonText
+                            }
+                        >
+                            Film Ara
+                        </Text>
+                    </Pressable>
+                </View>
+
+                {error && (
+                    <View
+                        style={
+                            styles.errorCard
+                        }
+                    >
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={
+                                22
+                            }
+                            color={
+                                colors.error
+                            }
+                        />
+
+                        <View
+                            style={
+                                styles.errorContent
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.errorTitle
+                                }
+                            >
+                                Bazı içerikler yüklenemedi
+                            </Text>
+
+                            <Text
+                                style={
+                                    styles.errorDescription
+                                }
+                            >
+                                {
+                                    error
+                                }
+                            </Text>
+
+                            <Pressable
+                                onPress={
+                                    handleRetry
+                                }
+                                style={({
+                                    pressed,
+                                }) => [
+                                    styles.retryButton,
+
+                                    pressed
+                                        ? styles.retryButtonPressed
+                                        : null,
+                                ]}
+                            >
+                                <Text
+                                    style={
+                                        styles.retryButtonText
+                                    }
+                                >
+                                    Tekrar Dene
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                )}
+
+                {isLoading &&
+                !hasDiscoveryContent ? (
+                    <View
+                        style={
+                            styles.loadingContainer
+                        }
+                    >
+                        <ActivityIndicator
+                            size="large"
+                            color={
+                                colors.primary
+                            }
+                        />
+
+                        <Text
+                            style={
+                                styles.loadingTitle
+                            }
+                        >
+                            Filmler yükleniyor
+                        </Text>
+
+                        <Text
+                            style={
+                                styles.loadingDescription
+                            }
+                        >
+                            MovieShelf keşif akışı hazırlanıyor.
+                        </Text>
+                    </View>
+                ) : (
+                    <>
+                        <MovieSection
+                            eyebrow="TRENDING"
+                            title="Trend Filmler"
+                            description="Bu hafta izleyicilerin en çok konuştuğu filmler."
+                            movies={
+                                discovery.trending
+                            }
+                        />
+
+                        <MovieSection
+                            eyebrow="POPULAR"
+                            title="Popüler Filmler"
+                            description="Şu anda dünya genelinde en çok ilgi gören yapımlar."
+                            movies={
+                                discovery.popular
+                            }
+                        />
+
+                        <MovieSection
+                            eyebrow="TOP RATED"
+                            title="En Yüksek Puanlılar"
+                            description="İzleyicilerden yüksek puan alan güçlü yapımlar."
+                            movies={
+                                discovery.topRated
+                            }
+                        />
+
+                        <MovieSection
+                            eyebrow="COMING SOON"
+                            title="Yakında Vizyonda"
+                            description="Yakında izleyiciyle buluşacak filmlere göz at."
+                            movies={
+                                discovery.upcoming
+                            }
+                        />
+                    </>
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -618,36 +1289,51 @@ const styles =
                 colors.background,
         },
 
-        container: {
+        scrollView: {
             flex: 1,
-
-            width: "100%",
-
-            maxWidth: 480,
-
-            alignSelf:
-                "center",
-
-            justifyContent:
-                "center",
-
-            paddingHorizontal:
-                spacing.lg,
 
             backgroundColor:
                 colors.background,
         },
 
-        brandContainer: {
+        contentContainer: {
+            paddingBottom:
+                spacing.xxxl,
+        },
+
+        header: {
+            flexDirection:
+                "row",
+
             alignItems:
                 "center",
 
-            marginBottom:
-                spacing.xl,
+            justifyContent:
+                "space-between",
+
+            paddingHorizontal:
+                spacing.lg,
+
+            paddingTop:
+                spacing.md,
+
+            paddingBottom:
+                spacing.lg,
+        },
+
+        brandContainer: {
+            flex: 1,
         },
 
         brand: {
-            ...typography.title,
+            fontSize:
+                28,
+
+            lineHeight:
+                34,
+
+            fontWeight:
+                "800",
 
             color:
                 colors.text,
@@ -662,28 +1348,58 @@ const styles =
         },
 
         tagline: {
-            ...typography.body,
+            ...typography.caption,
 
             marginTop:
-                spacing.sm,
+                2,
 
             color:
-                colors.textSecondary,
-
-            textAlign:
-                "center",
+                colors.textMuted,
         },
 
-        card: {
-            width: "100%",
+        searchShortcut: {
+            width:
+                44,
+
+            height:
+                44,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.full,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        shortcutPressed: {
+            opacity:
+                0.7,
+        },
+
+        sessionCard: {
+            marginHorizontal:
+                spacing.lg,
 
             marginBottom:
                 spacing.lg,
 
             padding:
-                spacing.lg,
+                spacing.md,
 
-            borderWidth: 1,
+            borderWidth:
+                1,
 
             borderColor:
                 colors.border,
@@ -695,37 +1411,19 @@ const styles =
                 colors.surface,
         },
 
-        cardTitle: {
-            ...typography.heading,
-
-            color:
-                colors.text,
-        },
-
-        statusRow: {
+        sessionRow: {
             flexDirection:
                 "row",
 
             alignItems:
                 "center",
 
-            marginTop:
-                spacing.lg,
-        },
-
-        statusDot: {
-            width: 10,
-            height: 10,
-
-            marginRight:
+            gap:
                 spacing.md,
-
-            borderRadius:
-                radius.full,
         },
 
-        statusText: {
-            ...typography.body,
+        sessionText: {
+            ...typography.caption,
 
             flex: 1,
 
@@ -733,59 +1431,119 @@ const styles =
                 colors.textSecondary,
         },
 
-        apiUrl: {
+        accountContainer: {
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "space-between",
+
+            gap:
+                spacing.md,
+        },
+
+        accountInfo: {
+            flex:
+                1,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            gap:
+                spacing.md,
+        },
+
+        avatar: {
+            width:
+                42,
+
+            height:
+                42,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            borderRadius:
+                radius.full,
+
+            backgroundColor:
+                colors.surfaceSoft,
+        },
+
+        accountTextContainer: {
+            flex: 1,
+        },
+
+        accountName: {
+            ...typography.body,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        accountEmail: {
+            ...typography.caption,
+
+            color:
+                colors.textSecondary,
+        },
+
+        logoutButton: {
+            width:
+                42,
+
+            height:
+                42,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.full,
+
+            backgroundColor:
+                colors.surfaceSoft,
+        },
+
+        buttonDisabled: {
+            opacity:
+                0.55,
+        },
+
+        sessionError: {
             ...typography.caption,
 
             marginTop:
                 spacing.md,
 
             color:
-                colors.textMuted,
+                colors.error,
         },
 
-        userContainer: {
-            marginTop:
-                spacing.lg,
-
-            padding:
-                spacing.lg,
-
-            borderRadius:
-                radius.md,
-
-            backgroundColor:
-                colors.surfaceSoft,
-        },
-
-        userName: {
-            ...typography.heading,
-
-            color:
-                colors.text,
-        },
-
-        userEmail: {
-            ...typography.body,
-
-            marginTop:
-                spacing.xs,
-
-            color:
-                colors.textSecondary,
-        },
-
-        userMeta: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.sm,
-
-            color:
-                colors.textMuted,
-        },
-
-        primaryButton: {
-            minHeight: 48,
+        sessionButton: {
+            minHeight:
+                42,
 
             alignItems:
                 "center",
@@ -794,46 +1552,10 @@ const styles =
                 "center",
 
             marginTop:
-                spacing.lg,
+                spacing.md,
 
-            paddingHorizontal:
-                spacing.lg,
-
-            borderRadius:
-                radius.md,
-
-            backgroundColor:
-                colors.primary,
-        },
-
-        primaryButtonPressed: {
-            backgroundColor:
-                colors.primaryPressed,
-        },
-
-        primaryButtonText: {
-            ...typography.button,
-
-            color:
-                colors.text,
-        },
-
-        secondaryButton: {
-            minHeight: 48,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-
-            marginTop:
-                spacing.lg,
-
-            paddingHorizontal:
-                spacing.lg,
-
-            borderWidth: 1,
+            borderWidth:
+                1,
 
             borderColor:
                 colors.border,
@@ -845,30 +1567,523 @@ const styles =
                 colors.surfaceSoft,
         },
 
-        secondaryButtonPressed: {
+        sessionButtonPressed: {
             backgroundColor:
                 colors.surfaceElevated,
         },
 
-        secondaryButtonText: {
+        sessionButtonText: {
+            ...typography.caption,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "600",
+        },
+
+        guestContainer: {
+            gap:
+                spacing.md,
+        },
+
+        guestTextContainer: {
+            flex: 1,
+        },
+
+        guestTitle: {
+            ...typography.caption,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        guestDescription: {
+            fontSize:
+                12,
+
+            lineHeight:
+                17,
+
+            marginTop:
+                spacing.xs,
+
+            color:
+                colors.textSecondary,
+        },
+
+        loginButton: {
+            minHeight:
+                42,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.primary,
+        },
+
+        loginButtonPressed: {
+            backgroundColor:
+                colors.primaryPressed,
+        },
+
+        loginButtonText: {
+            ...typography.caption,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        hero: {
+            marginHorizontal:
+                spacing.lg,
+
+            padding:
+                spacing.xl,
+
+            overflow:
+                "hidden",
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                24,
+
+            backgroundColor:
+                colors.surfaceElevated,
+        },
+
+        heroEyebrow: {
+            ...typography.caption,
+
+            color:
+                colors.primary,
+
+            fontWeight:
+                "800",
+
+            letterSpacing:
+                1.5,
+        },
+
+        heroTitle: {
+            ...typography.title,
+
+            marginTop:
+                spacing.sm,
+
+            color:
+                colors.text,
+        },
+
+        heroDescription: {
+            ...typography.body,
+
+            marginTop:
+                spacing.md,
+
+            color:
+                colors.textSecondary,
+        },
+
+        heroButton: {
+            minHeight:
+                48,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            alignSelf:
+                "flex-start",
+
+            gap:
+                spacing.sm,
+
+            marginTop:
+                spacing.xl,
+
+            paddingHorizontal:
+                spacing.lg,
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.primary,
+        },
+
+        heroButtonPressed: {
+            backgroundColor:
+                colors.primaryPressed,
+        },
+
+        heroButtonText: {
             ...typography.button,
 
             color:
                 colors.text,
         },
 
-        buttonDisabled: {
-            opacity:
-                0.65,
+        errorCard: {
+            flexDirection:
+                "row",
+
+            alignItems:
+                "flex-start",
+
+            gap:
+                spacing.md,
+
+            marginHorizontal:
+                spacing.lg,
+
+            marginTop:
+                spacing.lg,
+
+            padding:
+                spacing.lg,
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.error,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
         },
 
-        errorText: {
+        errorContent: {
+            flex: 1,
+        },
+
+        errorTitle: {
+            ...typography.body,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        errorDescription: {
             ...typography.caption,
+
+            marginTop:
+                spacing.xs,
+
+            color:
+                colors.textSecondary,
+        },
+
+        retryButton: {
+            alignSelf:
+                "flex-start",
 
             marginTop:
                 spacing.md,
 
+            paddingHorizontal:
+                spacing.md,
+
+            paddingVertical:
+                spacing.sm,
+
+            borderRadius:
+                radius.md,
+
+            backgroundColor:
+                colors.surfaceSoft,
+        },
+
+        retryButtonPressed: {
+            backgroundColor:
+                colors.surfaceElevated,
+        },
+
+        retryButtonText: {
+            ...typography.caption,
+
             color:
-                colors.error,
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        loadingContainer: {
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            marginHorizontal:
+                spacing.lg,
+
+            marginTop:
+                spacing.xxl,
+
+            paddingVertical:
+                spacing.xxxl,
+
+            paddingHorizontal:
+                spacing.xl,
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        loadingTitle: {
+            ...typography.heading,
+
+            marginTop:
+                spacing.lg,
+
+            color:
+                colors.text,
+        },
+
+        loadingDescription: {
+            ...typography.caption,
+
+            marginTop:
+                spacing.sm,
+
+            color:
+                colors.textSecondary,
+
+            textAlign:
+                "center",
+        },
+
+        movieSection: {
+            marginTop:
+                spacing.xxxl,
+        },
+
+        sectionHeading: {
+            paddingHorizontal:
+                spacing.lg,
+
+            marginBottom:
+                spacing.lg,
+        },
+
+        sectionEyebrow: {
+            ...typography.caption,
+
+            color:
+                colors.primary,
+
+            fontWeight:
+                "800",
+
+            letterSpacing:
+                1.4,
+        },
+
+        sectionTitle: {
+            ...typography.heading,
+
+            marginTop:
+                spacing.xs,
+
+            color:
+                colors.text,
+        },
+
+        sectionDescription: {
+            ...typography.caption,
+
+            marginTop:
+                spacing.sm,
+
+            color:
+                colors.textSecondary,
+        },
+
+        movieRow: {
+            gap:
+                spacing.md,
+
+            paddingHorizontal:
+                spacing.lg,
+        },
+
+        movieCard: {
+            width:
+                142,
+
+            overflow:
+                "hidden",
+
+            borderWidth:
+                1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        posterContainer: {
+            position:
+                "relative",
+
+            width:
+                "100%",
+
+            aspectRatio:
+                2 / 3,
+
+            overflow:
+                "hidden",
+
+            backgroundColor:
+                colors.surfaceSoft,
+        },
+
+        poster: {
+            width:
+                "100%",
+
+            height:
+                "100%",
+        },
+
+        posterFallback: {
+            flex: 1,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            gap:
+                spacing.sm,
+
+            padding:
+                spacing.md,
+        },
+
+        posterFallbackText: {
+            ...typography.caption,
+
+            color:
+                colors.textMuted,
+        },
+
+        ratingBadge: {
+            position:
+                "absolute",
+
+            top:
+                spacing.sm,
+
+            right:
+                spacing.sm,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            gap:
+                spacing.xs,
+
+            paddingHorizontal:
+                spacing.sm,
+
+            paddingVertical:
+                spacing.xs,
+
+            borderRadius:
+                radius.full,
+
+            backgroundColor:
+                colors.overlay,
+        },
+
+        ratingText: {
+            fontSize:
+                12,
+
+            fontWeight:
+                "800",
+
+            color:
+                colors.text,
+        },
+
+        movieInfo: {
+            padding:
+                spacing.md,
+        },
+
+        movieTitle: {
+            ...typography.caption,
+
+            minHeight:
+                40,
+
+            color:
+                colors.text,
+
+            fontWeight:
+                "700",
+        },
+
+        movieYear: {
+            marginTop:
+                spacing.xs,
+
+            fontSize:
+                12,
+
+            color:
+                colors.textSecondary,
         },
     });
