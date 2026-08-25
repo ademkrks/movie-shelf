@@ -39,6 +39,9 @@ import {
     getMovieTrailers,
 } from "../../api/tmdb.api";
 
+import MovieCastCard from "../../components/movie-detail/MovieCastCard";
+import MovieLibraryActions from "../../components/movie-detail/MovieLibraryActions";
+
 import useAuth from "../../hooks/useAuth";
 import useMovieLibrary from "../../hooks/useMovieLibrary";
 
@@ -70,9 +73,6 @@ const POSTER_BASE_URL =
 
 const BACKDROP_BASE_URL =
     "https://image.tmdb.org/t/p/w780";
-
-const PROFILE_BASE_URL =
-    "https://image.tmdb.org/t/p/w185";
 
 
 const getRequestErrorMessage = (
@@ -168,81 +168,6 @@ const getRuntime = (
 
     return `${hours} sa ${minutes} dk`;
 };
-
-
-type CastCardProps = {
-    person: TmdbCastMember;
-};
-
-
-function CastCard({
-    person,
-}: CastCardProps) {
-    return (
-        <View
-            style={
-                styles.castCard
-            }
-        >
-            {person.profile_path ? (
-                <Image
-                    source={{
-                        uri:
-                            PROFILE_BASE_URL +
-                            person.profile_path,
-                    }}
-                    style={
-                        styles.castImage
-                    }
-                    resizeMode="cover"
-                />
-            ) : (
-                <View
-                    style={
-                        styles.castImageFallback
-                    }
-                >
-                    <Ionicons
-                        name="person-outline"
-                        size={
-                            30
-                        }
-                        color={
-                            colors.textMuted
-                        }
-                    />
-                </View>
-            )}
-
-            <Text
-                style={
-                    styles.castName
-                }
-                numberOfLines={
-                    2
-                }
-            >
-                {
-                    person.name
-                }
-            </Text>
-
-            <Text
-                style={
-                    styles.castCharacter
-                }
-                numberOfLines={
-                    2
-                }
-            >
-                {
-                    person.character ||
-                    "—"
-                }
-            </Text>
-        </View>
-    );
-}
 
 
 export default function MovieDetailScreen() {
@@ -1165,234 +1090,38 @@ export default function MovieDetailScreen() {
                         </View>
                     ) : null}
 
-                    <View
-                        style={
-                            styles.actionsSection
+                    <MovieLibraryActions
+                        isAuthenticated={
+                            isAuthenticated
                         }
-                    >
-                        <Text
-                            style={
-                                styles.sectionEyebrow
-                            }
-                        >
-                            YOUR SHELF
-                        </Text>
-
-                        <Text
-                            style={
-                                styles.sectionTitle
-                            }
-                        >
-                            Koleksiyonun
-                        </Text>
-
-                        {!isAuthenticated &&
-                        !isRestoring ? (
-                            <Text
-                                style={
-                                    styles.actionHint
-                                }
-                            >
-                                Favori ve izleme listesi özelliklerini kullanmak için giriş yap.
-                            </Text>
-                        ) : null}
-
-                        <View
-                            style={
-                                styles.actionButtons
-                            }
-                        >
-                            <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={
-                                    isFavorite
-                                        ? "Favorilerden kaldır"
-                                        : "Favorilere ekle"
-                                }
-                                onPress={() => {
-                                    void handleFavoriteToggle();
-                                }}
-                                disabled={
-                                    isRestoring ||
-                                    isFavoritePending ||
-                                    isLibraryStatusLoading
-                                }
-                                style={({
-                                    pressed,
-                                }) => [
-                                    styles.collectionActionButton,
-
-                                    isFavorite
-                                        ? styles.collectionActionButtonActive
-                                        : null,
-
-                                    pressed &&
-                                    !isFavoritePending
-                                        ? styles.collectionActionButtonPressed
-                                        : null,
-
-                                    isRestoring ||
-                                    isFavoritePending ||
-                                    isLibraryStatusLoading
-                                        ? styles.collectionActionButtonDisabled
-                                        : null,
-                                ]}
-                            >
-                                {isFavoritePending ||
-                                (
-                                    isLibraryStatusLoading &&
-                                    isAuthenticated
-                                ) ? (
-                                    <ActivityIndicator
-                                        size="small"
-                                        color={
-                                            colors.text
-                                        }
-                                    />
-                                ) : (
-                                    <Ionicons
-                                        name={
-                                            isFavorite
-                                                ? "heart"
-                                                : "heart-outline"
-                                        }
-                                        size={
-                                            20
-                                        }
-                                        color={
-                                            isFavorite
-                                                ? colors.text
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                )}
-
-                                <Text
-                                    style={
-                                        styles.collectionActionText
-                                    }
-                                    numberOfLines={
-                                        1
-                                    }
-                                >
-                                    {
-                                        isFavorite
-                                            ? "Favoride"
-                                            : "Favoriye Ekle"
-                                    }
-                                </Text>
-                            </Pressable>
-
-                            <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel={
-                                    isWatchlisted
-                                        ? "İzleme listesinden kaldır"
-                                        : "İzleme listesine ekle"
-                                }
-                                onPress={() => {
-                                    void handleWatchlistToggle();
-                                }}
-                                disabled={
-                                    isRestoring ||
-                                    isWatchlistPending ||
-                                    isLibraryStatusLoading
-                                }
-                                style={({
-                                    pressed,
-                                }) => [
-                                    styles.collectionActionButton,
-
-                                    isWatchlisted
-                                        ? styles.collectionActionButtonActive
-                                        : null,
-
-                                    pressed &&
-                                    !isWatchlistPending
-                                        ? styles.collectionActionButtonPressed
-                                        : null,
-
-                                    isRestoring ||
-                                    isWatchlistPending ||
-                                    isLibraryStatusLoading
-                                        ? styles.collectionActionButtonDisabled
-                                        : null,
-                                ]}
-                            >
-                                {isWatchlistPending ||
-                                (
-                                    isLibraryStatusLoading &&
-                                    isAuthenticated
-                                ) ? (
-                                    <ActivityIndicator
-                                        size="small"
-                                        color={
-                                            colors.text
-                                        }
-                                    />
-                                ) : (
-                                    <Ionicons
-                                        name={
-                                            isWatchlisted
-                                                ? "bookmark"
-                                                : "bookmark-outline"
-                                        }
-                                        size={
-                                            20
-                                        }
-                                        color={
-                                            isWatchlisted
-                                                ? colors.text
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                )}
-
-                                <Text
-                                    style={
-                                        styles.collectionActionText
-                                    }
-                                    numberOfLines={
-                                        1
-                                    }
-                                >
-                                    {
-                                        isWatchlisted
-                                            ? "Listemde"
-                                            : "Listeme Ekle"
-                                    }
-                                </Text>
-                            </Pressable>
-                        </View>
-
-                        {libraryActionError ? (
-                            <View
-                                style={
-                                    styles.actionError
-                                }
-                            >
-                                <Ionicons
-                                    name="alert-circle-outline"
-                                    size={
-                                        18
-                                    }
-                                    color={
-                                        colors.error
-                                    }
-                                />
-
-                                <Text
-                                    style={
-                                        styles.actionErrorText
-                                    }
-                                >
-                                    {
-                                        libraryActionError
-                                    }
-                                </Text>
-                            </View>
-                        ) : null}
-                    </View>
+                        isRestoring={
+                            isRestoring
+                        }
+                        isFavorite={
+                            isFavorite
+                        }
+                        isWatchlisted={
+                            isWatchlisted
+                        }
+                        isLibraryStatusLoading={
+                            isLibraryStatusLoading
+                        }
+                        isFavoritePending={
+                            isFavoritePending
+                        }
+                        isWatchlistPending={
+                            isWatchlistPending
+                        }
+                        libraryActionError={
+                            libraryActionError
+                        }
+                        onFavoriteToggle={
+                            handleFavoriteToggle
+                        }
+                        onWatchlistToggle={
+                            handleWatchlistToggle
+                        }
+                    />
 
                     <View
                         style={
@@ -1597,7 +1326,7 @@ export default function MovieDetailScreen() {
                                         (
                                             person
                                         ) => (
-                                            <CastCard
+                                            <MovieCastCard
                                                 key={
                                                     person.credit_id ||
                                                     person.cast_id ||
@@ -2124,129 +1853,6 @@ const styles =
                 "600",
         },
 
-        actionsSection: {
-            marginTop:
-                spacing.xxxl,
-        },
-
-        actionHint: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.sm,
-
-            color:
-                colors.textSecondary,
-        },
-
-        actionButtons: {
-            flexDirection:
-                "row",
-
-            gap:
-                spacing.md,
-
-            marginTop:
-                spacing.lg,
-        },
-
-        collectionActionButton: {
-            flex: 1,
-
-            minHeight: 54,
-
-            flexDirection:
-                "row",
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-
-            gap:
-                spacing.sm,
-
-            paddingHorizontal:
-                spacing.md,
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.border,
-
-            borderRadius:
-                radius.lg,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        collectionActionButtonActive: {
-            borderColor:
-                colors.primary,
-
-            backgroundColor:
-                colors.primary,
-        },
-
-        collectionActionButtonPressed: {
-            opacity: 0.74,
-        },
-
-        collectionActionButtonDisabled: {
-            opacity: 0.55,
-        },
-
-        collectionActionText: {
-            ...typography.caption,
-
-            flexShrink: 1,
-
-            color:
-                colors.text,
-
-            fontWeight:
-                "700",
-        },
-
-        actionError: {
-            flexDirection:
-                "row",
-
-            alignItems:
-                "flex-start",
-
-            gap:
-                spacing.sm,
-
-            marginTop:
-                spacing.md,
-
-            padding:
-                spacing.md,
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.error,
-
-            borderRadius:
-                radius.md,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        actionErrorText: {
-            ...typography.caption,
-
-            flex: 1,
-
-            color:
-                colors.error,
-        },
-
         section: {
             marginTop:
                 spacing.xxxl,
@@ -2402,70 +2008,6 @@ const styles =
 
             paddingRight:
                 spacing.lg,
-        },
-
-        castCard: {
-            width: 108,
-        },
-
-        castImage: {
-            width: 108,
-
-            height: 145,
-
-            borderRadius:
-                radius.lg,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        castImageFallback: {
-            width: 108,
-
-            height: 145,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-
-            borderWidth: 1,
-
-            borderColor:
-                colors.border,
-
-            borderRadius:
-                radius.lg,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        castName: {
-            ...typography.caption,
-
-            marginTop:
-                spacing.sm,
-
-            color:
-                colors.text,
-
-            fontWeight:
-                "700",
-        },
-
-        castCharacter: {
-            fontSize: 12,
-
-            lineHeight: 16,
-
-            marginTop:
-                spacing.xs,
-
-            color:
-                colors.textSecondary,
         },
 
         warningCard: {
