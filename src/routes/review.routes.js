@@ -18,12 +18,12 @@ const {
     reviewBodyValidation,
     reviewUpdateValidation,
     reviewIdValidation,
-    reviewMovieIdValidation,
 } = require(
     "../validations/review.validation"
 );
 
 const {
+    tmdbMovieIdValidation,
     paginationValidation,
 } = require(
     "../validations/common.validation"
@@ -124,7 +124,7 @@ router.post(
 router.get(
     "/movie/:tmdbMovieId",
     validateRequest({
-        params: reviewMovieIdValidation,
+        params: tmdbMovieIdValidation,
         query: paginationValidation,
     }),
     reviewController.getMovieReviews

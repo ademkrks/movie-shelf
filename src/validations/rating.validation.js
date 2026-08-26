@@ -78,27 +78,8 @@ const ratingIdValidation = (params) => {
 };
 
 
-// TMDB film ID validation'ı
-const ratingMovieIdValidation = (params) => {
-    if (!params || !params.tmdbMovieId) {
-        return "TMDB film ID zorunludur.";
-    }
-
-    if (!/^\d+$/.test(String(params.tmdbMovieId))) {
-        return "TMDB film ID geçerli bir sayı olmalıdır.";
-    }
-
-    if (Number(params.tmdbMovieId) <= 0) {
-        return "TMDB film ID 0'dan büyük olmalıdır.";
-    }
-
-    return true;
-};
-
-
 module.exports = {
     ratingBodyValidation,
     ratingIdValidation,
-    ratingMovieIdValidation,
     ratingUpdateValidation,
 };

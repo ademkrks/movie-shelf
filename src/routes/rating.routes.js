@@ -17,13 +17,13 @@ const validateRequest = require(
 const {
     ratingBodyValidation,
     ratingIdValidation,
-    ratingMovieIdValidation,
     ratingUpdateValidation,
 } = require(
     "../validations/rating.validation"
 );
 
 const {
+    tmdbMovieIdValidation,
     paginationValidation,
 } = require(
     "../validations/common.validation"
@@ -112,7 +112,7 @@ router.get(
     "/movie/:tmdbMovieId/me",
     auth,
     validateRequest({
-        params: ratingMovieIdValidation,
+        params: tmdbMovieIdValidation,
     }),
     ratingController.getMyRating
 );
@@ -160,7 +160,7 @@ router.get(
 router.get(
     "/movie/:tmdbMovieId",
     validateRequest({
-        params: ratingMovieIdValidation,
+        params: tmdbMovieIdValidation,
         query: paginationValidation,
     }),
     ratingController.getMovieRatings

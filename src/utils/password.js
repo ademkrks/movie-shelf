@@ -29,6 +29,5 @@ const isPasswordWithinBcryptLimit = (
 
 module.exports = {
     BCRYPT_MAX_PASSWORD_BYTES,
-    getPasswordByteLength,
     isPasswordWithinBcryptLimit,
 };
