@@ -6,7 +6,6 @@ import {
 import {
     ActivityIndicator,
     FlatList,
-    Image,
     Keyboard,
     Pressable,
     StyleSheet,
@@ -20,12 +19,10 @@ import {
 } from "@expo/vector-icons";
 
 import {
-    useRouter,
-} from "expo-router";
-
-import {
     SafeAreaView,
 } from "react-native-safe-area-context";
+
+import MovieCard from "../../components/movie/MovieCard";
 
 import {
     searchMovies,
@@ -53,10 +50,6 @@ import {
 } from "../../theme/typography";
 
 
-const POSTER_BASE_URL =
-    "https://image.tmdb.org/t/p/w500";
-
-
 const EMPTY_PAGINATION: TmdbPagination = {
     page: 1,
 
@@ -68,210 +61,6 @@ const EMPTY_PAGINATION: TmdbPagination = {
 
     hasPreviousPage: false,
 };
-
-
-const getMovieYear =
-    (
-        releaseDate?: string
-    ) => {
-        if (
-            !releaseDate
-        ) {
-            return "Yıl bilinmiyor";
-        }
-
-        const year =
-            releaseDate.slice(
-                0,
-                4
-            );
-
-        return /^\d{4}$/.test(
-            year
-        )
-            ? year
-            : "Yıl bilinmiyor";
-    };
-
-
-const getMovieRating =
-    (
-        rating?: number
-    ) => {
-        if (
-            typeof rating !==
-                "number" ||
-            !Number.isFinite(
-                rating
-            )
-        ) {
-            return "—";
-        }
-
-        return rating.toFixed(
-            1
-        );
-    };
-
-
-type MovieCardProps = {
-    movie: TmdbMovie;
-};
-
-
-function MovieCard({
-    movie,
-}: MovieCardProps) {
-    const router =
-        useRouter();
-
-    const hasPoster =
-        Boolean(
-            movie.poster_path
-        );
-
-    const movieTitle =
-        movie.title ||
-        movie.original_title ||
-        "İsimsiz film";
-
-    const handleOpenDetails =
-        () => {
-            router.push({
-                pathname:
-                    "/movie/[id]",
-
-                params: {
-                    id:
-                        String(
-                            movie.id
-                        ),
-                },
-            });
-        };
-
-    return (
-        <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${movieTitle} detaylarını aç`}
-            onPress={
-                handleOpenDetails
-            }
-            style={({
-                pressed,
-            }) => [
-                styles.movieCard,
-
-                pressed
-                    ? styles.movieCardPressed
-                    : null,
-            ]}
-        >
-            <View
-                style={
-                    styles.posterContainer
-                }
-            >
-                {hasPoster ? (
-                    <Image
-                        source={{
-                            uri:
-                                POSTER_BASE_URL +
-                                movie.poster_path,
-                        }}
-                        style={
-                            styles.poster
-                        }
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <View
-                        style={
-                            styles.posterFallback
-                        }
-                    >
-                        <Ionicons
-                            name="film-outline"
-                            size={
-                                32
-                            }
-                            color={
-                                colors.textMuted
-                            }
-                        />
-
-                        <Text
-                            style={
-                                styles.posterFallbackText
-                            }
-                        >
-                            Afiş yok
-                        </Text>
-                    </View>
-                )}
-
-                <View
-                    style={
-                        styles.ratingBadge
-                    }
-                >
-                    <Ionicons
-                        name="star"
-                        size={
-                            13
-                        }
-                        color={
-                            colors.warning
-                        }
-                    />
-
-                    <Text
-                        style={
-                            styles.ratingText
-                        }
-                    >
-                        {
-                            getMovieRating(
-                                movie.vote_average
-                            )
-                        }
-                    </Text>
-                </View>
-            </View>
-
-            <View
-                style={
-                    styles.movieInfo
-                }
-            >
-                <Text
-                    style={
-                        styles.movieTitle
-                    }
-                    numberOfLines={
-                        2
-                    }
-                >
-                    {
-                        movieTitle
-                    }
-                </Text>
-
-                <Text
-                    style={
-                        styles.movieYear
-                    }
-                >
-                    {
-                        getMovieYear(
-                            movie.release_date
-                        )
-                    }
-                </Text>
-            </View>
-        </Pressable>
-    );
-}
 
 
 export default function SearchScreen() {
@@ -568,6 +357,7 @@ export default function SearchScreen() {
         }) => {
             return (
                 <MovieCard
+                    variant="grid"
                     movie={
                         item
                     }
@@ -1429,151 +1219,6 @@ const styles =
         columnWrapper: {
             gap:
                 spacing.md,
-        },
-
-        movieCard: {
-            flex:
-                1,
-
-            marginBottom:
-                spacing.lg,
-
-            overflow:
-                "hidden",
-
-            borderWidth:
-                1,
-
-            borderColor:
-                colors.border,
-
-            borderRadius:
-                16,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        movieCardPressed: {
-            opacity:
-                0.78,
-        },
-
-        posterContainer: {
-            position:
-                "relative",
-
-            aspectRatio:
-                2 / 3,
-
-            overflow:
-                "hidden",
-
-            backgroundColor:
-                colors.surfaceSoft,
-        },
-
-        poster: {
-            width:
-                "100%",
-
-            height:
-                "100%",
-        },
-
-        posterFallback: {
-            flex: 1,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-
-            gap:
-                spacing.sm,
-
-            padding:
-                spacing.md,
-        },
-
-        posterFallbackText: {
-            ...typography.caption,
-
-            color:
-                colors.textMuted,
-        },
-
-        ratingBadge: {
-            position:
-                "absolute",
-
-            top:
-                spacing.sm,
-
-            right:
-                spacing.sm,
-
-            flexDirection:
-                "row",
-
-            alignItems:
-                "center",
-
-            gap:
-                spacing.xs,
-
-            paddingHorizontal:
-                spacing.sm,
-
-            paddingVertical:
-                spacing.xs,
-
-            borderRadius:
-                12,
-
-            backgroundColor:
-                colors.overlay,
-        },
-
-        ratingText: {
-            fontSize:
-                12,
-
-            fontWeight:
-                "700",
-
-            color:
-                colors.text,
-        },
-
-        movieInfo: {
-            padding:
-                spacing.md,
-        },
-
-        movieTitle: {
-            ...typography.caption,
-
-            minHeight:
-                40,
-
-            color:
-                colors.text,
-
-            fontWeight:
-                "700",
-        },
-
-        movieYear: {
-            marginTop:
-                spacing.xs,
-
-            fontSize:
-                12,
-
-            color:
-                colors.textSecondary,
         },
 
         paginationContainer: {

@@ -6,7 +6,6 @@ import {
 
 import {
     ActivityIndicator,
-    Image,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -26,6 +25,8 @@ import {
 import {
     SafeAreaView,
 } from "react-native-safe-area-context";
+
+import MovieCard from "../components/movie/MovieCard";
 
 import {
     ApiClientError,
@@ -61,10 +62,6 @@ import {
 } from "../theme/typography";
 
 
-const POSTER_BASE_URL =
-    "https://image.tmdb.org/t/p/w500";
-
-
 type DiscoveryState = {
     trending: TmdbMovie[];
 
@@ -87,11 +84,6 @@ const EMPTY_DISCOVERY: DiscoveryState = {
 };
 
 
-type MovieCardProps = {
-    movie: TmdbMovie;
-};
-
-
 type MovieSectionProps = {
     eyebrow: string;
 
@@ -101,48 +93,6 @@ type MovieSectionProps = {
 
     movies: TmdbMovie[];
 };
-
-
-const getMovieYear =
-    (
-        releaseDate?: string
-    ) => {
-        if (!releaseDate) {
-            return "—";
-        }
-
-        const year =
-            releaseDate.slice(
-                0,
-                4
-            );
-
-        return /^\d{4}$/.test(
-            year
-        )
-            ? year
-            : "—";
-    };
-
-
-const getMovieRating =
-    (
-        rating?: number
-    ) => {
-        if (
-            typeof rating !==
-                "number" ||
-            !Number.isFinite(
-                rating
-            )
-        ) {
-            return "—";
-        }
-
-        return rating.toFixed(
-            1
-        );
-    };
 
 
 const getRequestErrorMessage =
@@ -168,161 +118,6 @@ const getRequestErrorMessage =
 
         return "Filmler yüklenirken bilinmeyen bir hata oluştu.";
     };
-
-
-function MovieCard({
-    movie,
-}: MovieCardProps) {
-    const router =
-        useRouter();
-
-    const hasPoster =
-        Boolean(
-            movie.poster_path
-        );
-
-    const movieTitle =
-        movie.title ||
-        movie.original_title ||
-        "İsimsiz film";
-
-    const handleOpenDetails =
-        () => {
-            router.push({
-                pathname:
-                    "/movie/[id]",
-
-                params: {
-                    id:
-                        String(
-                            movie.id
-                        ),
-                },
-            });
-        };
-
-    return (
-        <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${movieTitle} detaylarını aç`}
-            onPress={
-                handleOpenDetails
-            }
-            style={({
-                pressed,
-            }) => [
-                styles.movieCard,
-
-                pressed
-                    ? styles.movieCardPressed
-                    : null,
-            ]}
-        >
-            <View
-                style={
-                    styles.posterContainer
-                }
-            >
-                {hasPoster ? (
-                    <Image
-                        source={{
-                            uri:
-                                POSTER_BASE_URL +
-                                movie.poster_path,
-                        }}
-                        style={
-                            styles.poster
-                        }
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <View
-                        style={
-                            styles.posterFallback
-                        }
-                    >
-                        <Ionicons
-                            name="film-outline"
-                            size={
-                                30
-                            }
-                            color={
-                                colors.textMuted
-                            }
-                        />
-
-                        <Text
-                            style={
-                                styles.posterFallbackText
-                            }
-                        >
-                            Afiş yok
-                        </Text>
-                    </View>
-                )}
-
-                <View
-                    style={
-                        styles.ratingBadge
-                    }
-                >
-                    <Ionicons
-                        name="star"
-                        size={
-                            12
-                        }
-                        color={
-                            colors.warning
-                        }
-                    />
-
-                    <Text
-                        style={
-                            styles.ratingText
-                        }
-                    >
-                        {
-                            getMovieRating(
-                                movie.vote_average
-                            )
-                        }
-                    </Text>
-                </View>
-            </View>
-
-            <View
-                style={
-                    styles.movieInfo
-                }
-            >
-                <Text
-                    style={
-                        styles.movieTitle
-                    }
-                    numberOfLines={
-                        2
-                    }
-                >
-                    {
-                        movieTitle
-                    }
-                </Text>
-
-                <Text
-                    style={
-                        styles.movieYear
-                    }
-                >
-                    {
-                        getMovieYear(
-                            movie.release_date
-                        )
-                    }
-                </Text>
-            </View>
-        </Pressable>
-    );
-}
 
 
 function MovieSection({
@@ -394,6 +189,7 @@ function MovieSection({
                         movie
                     ) => (
                         <MovieCard
+                            variant="rail"
                             key={
                                 movie.id
                             }
@@ -1979,148 +1775,4 @@ const styles =
                 spacing.lg,
         },
 
-        movieCard: {
-            width:
-                142,
-
-            overflow:
-                "hidden",
-
-            borderWidth:
-                1,
-
-            borderColor:
-                colors.border,
-
-            borderRadius:
-                radius.lg,
-
-            backgroundColor:
-                colors.surface,
-        },
-
-        movieCardPressed: {
-            opacity:
-                0.78,
-        },
-
-        posterContainer: {
-            position:
-                "relative",
-
-            width:
-                "100%",
-
-            aspectRatio:
-                2 / 3,
-
-            overflow:
-                "hidden",
-
-            backgroundColor:
-                colors.surfaceSoft,
-        },
-
-        poster: {
-            width:
-                "100%",
-
-            height:
-                "100%",
-        },
-
-        posterFallback: {
-            flex: 1,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-
-            gap:
-                spacing.sm,
-
-            padding:
-                spacing.md,
-        },
-
-        posterFallbackText: {
-            ...typography.caption,
-
-            color:
-                colors.textMuted,
-        },
-
-        ratingBadge: {
-            position:
-                "absolute",
-
-            top:
-                spacing.sm,
-
-            right:
-                spacing.sm,
-
-            flexDirection:
-                "row",
-
-            alignItems:
-                "center",
-
-            gap:
-                spacing.xs,
-
-            paddingHorizontal:
-                spacing.sm,
-
-            paddingVertical:
-                spacing.xs,
-
-            borderRadius:
-                radius.full,
-
-            backgroundColor:
-                colors.overlay,
-        },
-
-        ratingText: {
-            fontSize:
-                12,
-
-            fontWeight:
-                "800",
-
-            color:
-                colors.text,
-        },
-
-        movieInfo: {
-            padding:
-                spacing.md,
-        },
-
-        movieTitle: {
-            ...typography.caption,
-
-            minHeight:
-                40,
-
-            color:
-                colors.text,
-
-            fontWeight:
-                "700",
-        },
-
-        movieYear: {
-            marginTop:
-                spacing.xs,
-
-            fontSize:
-                12,
-
-            color:
-                colors.textSecondary,
-        },
     });
