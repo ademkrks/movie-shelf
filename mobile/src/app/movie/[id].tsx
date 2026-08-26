@@ -41,9 +41,11 @@ import {
 
 import MovieCastCard from "../../components/movie-detail/MovieCastCard";
 import MovieLibraryActions from "../../components/movie-detail/MovieLibraryActions";
+import MovieRatingSection from "../../components/movie-detail/MovieRatingSection";
 
 import useAuth from "../../hooks/useAuth";
 import useMovieLibrary from "../../hooks/useMovieLibrary";
+import useMovieRating from "../../hooks/useMovieRating";
 
 import type {
     TmdbCastMember,
@@ -314,6 +316,25 @@ export default function MovieDetailScreen() {
         });
 
 
+    const {
+        myRating,
+        averageRating,
+        totalRatings,
+        isRatingLoading,
+        isRatingPending,
+        ratingError,
+        loadMovieRating,
+        handleRatingSubmit,
+        handleRatingDelete,
+    } =
+        useMovieRating({
+            movieId,
+            isValidMovieId,
+            isAuthenticated,
+            isRestoring,
+        });
+
+
     const loadMovie =
         useCallback(
             async (
@@ -543,11 +564,34 @@ export default function MovieDetailScreen() {
     );
 
 
+    useEffect(
+        () => {
+            const timeoutId =
+                setTimeout(
+                    () => {
+                        void loadMovieRating();
+                    },
+                    0
+                );
+
+            return () => {
+                clearTimeout(
+                    timeoutId
+                );
+            };
+        },
+        [
+            loadMovieRating,
+        ]
+    );
+
+
     const handleRetry =
         () => {
             void Promise.all([
                 loadMovie(),
                 loadLibraryStatus(),
+                loadMovieRating(),
             ]);
         };
 
@@ -559,6 +603,7 @@ export default function MovieDetailScreen() {
                     true
                 ),
                 loadLibraryStatus(),
+                loadMovieRating(),
             ]);
         };
 
@@ -1120,6 +1165,39 @@ export default function MovieDetailScreen() {
                         }
                         onWatchlistToggle={
                             handleWatchlistToggle
+                        }
+                    />
+
+                    <MovieRatingSection
+                        isAuthenticated={
+                            isAuthenticated
+                        }
+                        isRestoring={
+                            isRestoring
+                        }
+                        myRating={
+                            myRating
+                        }
+                        averageRating={
+                            averageRating
+                        }
+                        totalRatings={
+                            totalRatings
+                        }
+                        isRatingLoading={
+                            isRatingLoading
+                        }
+                        isRatingPending={
+                            isRatingPending
+                        }
+                        ratingError={
+                            ratingError
+                        }
+                        onRatingSubmit={
+                            handleRatingSubmit
+                        }
+                        onRatingDelete={
+                            handleRatingDelete
                         }
                     />
 
