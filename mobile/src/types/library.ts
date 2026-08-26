@@ -1,3 +1,13 @@
+import type {
+    TmdbMovieDetail,
+} from "./tmdb";
+
+
+export type CollectionKind =
+    | "favorites"
+    | "watchlist";
+
+
 export type CollectionRecord = {
     id: number;
 
@@ -33,6 +43,13 @@ export type CollectionPage<
     pagination:
         CollectionPagination;
 };
+
+
+export type CollectionMovie =
+    TmdbMovieDetail & {
+        collectionCreatedAt:
+            string;
+    };
 
 
 export type FavoriteStatus = {
