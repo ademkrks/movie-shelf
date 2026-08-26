@@ -42,10 +42,12 @@ import {
 import MovieCastCard from "../../components/movie-detail/MovieCastCard";
 import MovieLibraryActions from "../../components/movie-detail/MovieLibraryActions";
 import MovieRatingSection from "../../components/movie-detail/MovieRatingSection";
+import MovieReviewsSection from "../../components/movie-detail/MovieReviewsSection";
 
 import useAuth from "../../hooks/useAuth";
 import useMovieLibrary from "../../hooks/useMovieLibrary";
 import useMovieRating from "../../hooks/useMovieRating";
+import useMovieReviews from "../../hooks/useMovieReviews";
 
 import type {
     TmdbCastMember,
@@ -177,6 +179,7 @@ export default function MovieDetailScreen() {
         useRouter();
 
     const {
+        user,
         isAuthenticated,
         isRestoring,
     } =
@@ -328,6 +331,28 @@ export default function MovieDetailScreen() {
         handleRatingDelete,
     } =
         useMovieRating({
+            movieId,
+            isValidMovieId,
+            isAuthenticated,
+            isRestoring,
+        });
+
+
+    const {
+        reviews,
+        totalReviews,
+        hasMoreReviews,
+        isReviewsLoading,
+        isReviewsLoadingMore,
+        isReviewMutationPending,
+        reviewError,
+        loadMovieReviews,
+        loadMoreReviews,
+        handleReviewCreate,
+        handleReviewUpdate,
+        handleReviewDelete,
+    } =
+        useMovieReviews({
             movieId,
             isValidMovieId,
             isAuthenticated,
@@ -586,12 +611,35 @@ export default function MovieDetailScreen() {
     );
 
 
+    useEffect(
+        () => {
+            const timeoutId =
+                setTimeout(
+                    () => {
+                        void loadMovieReviews();
+                    },
+                    0
+                );
+
+            return () => {
+                clearTimeout(
+                    timeoutId
+                );
+            };
+        },
+        [
+            loadMovieReviews,
+        ]
+    );
+
+
     const handleRetry =
         () => {
             void Promise.all([
                 loadMovie(),
                 loadLibraryStatus(),
                 loadMovieRating(),
+                loadMovieReviews(),
             ]);
         };
 
@@ -604,6 +652,7 @@ export default function MovieDetailScreen() {
                 ),
                 loadLibraryStatus(),
                 loadMovieRating(),
+                loadMovieReviews(),
             ]);
         };
 
@@ -1419,6 +1468,57 @@ export default function MovieDetailScreen() {
                             </ScrollView>
                         </View>
                     ) : null}
+
+                    <MovieReviewsSection
+                        isAuthenticated={
+                            isAuthenticated
+                        }
+                        isRestoring={
+                            isRestoring
+                        }
+                        currentUserId={
+                            user?.id ??
+                            null
+                        }
+                        reviews={
+                            reviews
+                        }
+                        totalReviews={
+                            totalReviews
+                        }
+                        hasMoreReviews={
+                            hasMoreReviews
+                        }
+                        isReviewsLoading={
+                            isReviewsLoading
+                        }
+                        isReviewsLoadingMore={
+                            isReviewsLoadingMore
+                        }
+                        isReviewMutationPending={
+                            isReviewMutationPending
+                        }
+                        reviewError={
+                            reviewError
+                        }
+                        onReviewCreate={
+                            handleReviewCreate
+                        }
+                        onReviewUpdate={
+                            handleReviewUpdate
+                        }
+                        onReviewDelete={
+                            handleReviewDelete
+                        }
+                        onLoadMore={
+                            loadMoreReviews
+                        }
+                        onLoginPress={() => {
+                            router.push(
+                                "/login"
+                            );
+                        }}
+                    />
 
                     {secondaryError ? (
                         <View
