@@ -8,11 +8,13 @@ import type {
 
 import type {
     AuthUser,
+    ChangePasswordInput,
     ForgotPasswordInput,
     LoginData,
     LoginInput,
     RegisterInput,
     ResetPasswordInput,
+    UpdateProfileInput,
 } from "../types/auth";
 
 
@@ -71,7 +73,8 @@ export const register =
 
 export const forgotPassword =
     async (
-        input: ForgotPasswordInput
+        input:
+            ForgotPasswordInput
     ) => {
         return apiRequest<
             ApiResponse<null>
@@ -82,10 +85,11 @@ export const forgotPassword =
 
                 auth: false,
 
-                body: JSON.stringify({
-                    email:
-                        input.email,
-                }),
+                body:
+                    JSON.stringify({
+                        email:
+                            input.email,
+                    }),
             }
         );
     };
@@ -93,7 +97,8 @@ export const forgotPassword =
 
 export const resetPassword =
     async (
-        input: ResetPasswordInput
+        input:
+            ResetPasswordInput
     ) => {
         return apiRequest<
             ApiResponse<null>
@@ -104,13 +109,14 @@ export const resetPassword =
 
                 auth: false,
 
-                body: JSON.stringify({
-                    token:
-                        input.token,
+                body:
+                    JSON.stringify({
+                        token:
+                            input.token,
 
-                    password:
-                        input.password,
-                }),
+                        password:
+                            input.password,
+                    }),
             }
         );
     };
@@ -122,5 +128,57 @@ export const getProfile =
             ApiResponse<AuthUser>
         >(
             "/users/me"
+        );
+    };
+
+
+export const updateProfile =
+    async (
+        input:
+            UpdateProfileInput
+    ) => {
+        return apiRequest<
+            ApiResponse<AuthUser>
+        >(
+            "/users/me",
+            {
+                method:
+                    "PUT",
+
+                auth: true,
+
+                body:
+                    JSON.stringify(
+                        input
+                    ),
+            }
+        );
+    };
+
+
+export const changePassword =
+    async (
+        input:
+            ChangePasswordInput
+    ) => {
+        return apiRequest<
+            ApiResponse<null>
+        >(
+            "/users/change-password",
+            {
+                method:
+                    "PUT",
+
+                auth: true,
+
+                body:
+                    JSON.stringify({
+                        currentPassword:
+                            input.currentPassword,
+
+                        newPassword:
+                            input.newPassword,
+                    }),
+            }
         );
     };
