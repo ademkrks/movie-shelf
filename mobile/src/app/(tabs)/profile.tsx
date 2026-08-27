@@ -5,6 +5,7 @@ import {
 import {
     ActivityIndicator,
     Alert,
+    Linking,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -15,6 +16,10 @@ import {
 import {
     Ionicons,
 } from "@expo/vector-icons";
+
+import {
+    SvgUri,
+} from "react-native-svg";
 
 import {
     Redirect,
@@ -45,6 +50,13 @@ import {
 import {
     typography,
 } from "../../theme/typography";
+
+
+const TMDB_URL =
+    "https://www.themoviedb.org";
+
+const TMDB_LOGO_URL =
+    "https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg";
 
 
 const formatMemberSince = (
@@ -488,6 +500,89 @@ export default function ProfileScreen() {
                     }
                 >
                     <Text
+                        style={
+                            styles.sectionEyebrow
+                        }
+                    >
+                        HAKKINDA
+                    </Text>
+
+                    <Text
+                        style={
+                            styles.sectionTitle
+                        }
+                    >
+                        Veri Kaynağı
+                    </Text>
+
+                    <View
+                        style={
+                            styles.tmdbCard
+                        }
+                    >
+                        <SvgUri
+                            uri={
+                                TMDB_LOGO_URL
+                            }
+                            width={
+                                120
+                            }
+                            height={
+                                48
+                            }
+                        />
+
+                        <Text
+                            style={
+                                styles.tmdbDescription
+                            }
+                        >
+                            MovieShelf, film verileri ve g?rselleri i?in TMDB (The Movie Database) API ?zerinden veri al?r.
+                        </Text>
+
+                        <Text
+                            style={
+                                styles.tmdbNotice
+                            }
+                        >
+                            This product uses the TMDB API but is not endorsed or certified by TMDB.
+                        </Text>
+
+                        <Pressable
+                            accessibilityRole="link"
+                            accessibilityLabel="The Movie Database sitesini aç"
+                            onPress={() => {
+                                void Linking.openURL(
+                                    TMDB_URL
+                                );
+                            }}
+                            style={({
+                                pressed,
+                            }) => [
+                                styles.tmdbLink,
+
+                                pressed
+                                    ? styles.tmdbLinkPressed
+                                    : null,
+                            ]}
+                        >
+                            <Text
+                                style={
+                                    styles.tmdbLinkText
+                                }
+                            >
+                                TMDB sitesini ziyaret et
+                            </Text>
+                        </Pressable>
+                    </View>
+                </View>
+
+                <View
+                    style={
+                        styles.section
+                    }
+                >
+                    <Text
                         style={[
                             styles.sectionEyebrow,
                             styles.dangerEyebrow,
@@ -843,6 +938,65 @@ const styles =
         sectionContent: {
             marginTop:
                 spacing.lg,
+        },
+
+        tmdbCard: {
+            gap:
+                spacing.md,
+
+            marginTop:
+                spacing.lg,
+
+            padding:
+                spacing.lg,
+
+            borderWidth: 1,
+
+            borderColor:
+                colors.border,
+
+            borderRadius:
+                radius.lg,
+
+            backgroundColor:
+                colors.surface,
+        },
+
+        tmdbDescription: {
+            ...typography.caption,
+
+            color:
+                colors.textSecondary,
+
+            lineHeight: 20,
+        },
+
+        tmdbNotice: {
+            ...typography.caption,
+
+            color:
+                colors.textMuted,
+
+            lineHeight: 20,
+        },
+
+        tmdbLink: {
+            alignSelf:
+                "flex-start",
+
+            paddingVertical:
+                spacing.xs,
+        },
+
+        tmdbLinkPressed: {
+            opacity: 0.7,
+        },
+
+        tmdbLinkText: {
+            ...typography.button,
+
+            color:
+                "#01b4e4",
         },
 
         logoutCard: {

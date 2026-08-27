@@ -957,3 +957,120 @@ span {
             20px 16px;
     }
 }
+
+/* TMDB attribution */
+
+.account-tmdb-card {
+    display: grid;
+    grid-template-columns:
+        minmax(180px, 0.45fr)
+        minmax(0, 1fr);
+
+    align-items: center;
+
+    gap: 30px;
+
+    margin-top: 18px;
+
+    border-color:
+        rgba(
+            1,
+            180,
+            228,
+            0.2
+        );
+}
+
+
+.account-tmdb-brand {
+    display: flex;
+    align-items: center;
+
+    gap: 20px;
+}
+
+
+.account-tmdb-brand a {
+    display: inline-flex;
+}
+
+
+.account-tmdb-logo {
+    display: block;
+
+    width: 116px;
+    max-width: 100%;
+    height: auto;
+}
+
+
+.account-tmdb-brand h2 {
+    margin: 5px 0 0;
+
+    color: #ededf0;
+
+    font-size: 1.35rem;
+}
+
+
+.account-tmdb-copy {
+    color: #9297a2;
+
+    font-size: 0.86rem;
+    line-height: 1.7;
+}
+
+
+.account-tmdb-copy p {
+    margin: 0;
+}
+
+
+.account-tmdb-notice {
+    margin-top: 12px !important;
+
+    color: #b9bdc6;
+}
+
+
+.account-tmdb-link {
+    display: inline-block;
+
+    margin-top: 14px;
+
+    color: #01b4e4;
+
+    font-size: 0.82rem;
+    font-weight: 750;
+
+    text-decoration: none;
+}
+
+
+.account-tmdb-link:hover {
+    text-decoration: underline;
+}
+
+
+@media (max-width: 820px) {
+    .account-tmdb-card {
+        grid-template-columns: 1fr;
+
+        gap: 22px;
+    }
+}
+
+
+@media (max-width: 560px) {
+    .account-tmdb-brand {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+
+    .account-tmdb-logo {
+        width: 105px;
+    }
+}

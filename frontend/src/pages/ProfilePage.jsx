@@ -707,6 +707,56 @@ function ProfilePage() {
                     </form>
                 </article>
             </div>
+
+
+            <article className="account-card account-tmdb-card">
+                <div className="account-tmdb-brand">
+                    <a
+                        href="https://www.themoviedb.org"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="The Movie Database sitesini aç"
+                    >
+                        <img
+                            className="account-tmdb-logo"
+                            src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg"
+                            alt="TMDB"
+                        />
+                    </a>
+
+                    <div>
+                        <p className="eyebrow">
+                            HAKKINDA
+                        </p>
+
+                        <h2>
+                            Veri Kaynağı
+                        </h2>
+                    </div>
+                </div>
+
+                <div className="account-tmdb-copy">
+                    <p>
+                        MovieShelf, film verileri ve
+                        görselleri için TMDB
+                        (The Movie Database) API'sini
+                        kullanır.
+                    </p>
+
+                    <p className="account-tmdb-notice">
+                        This product uses the TMDB API but is not endorsed or certified by TMDB.
+                    </p>
+
+                    <a
+                        className="account-tmdb-link"
+                        href="https://www.themoviedb.org"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        The Movie Database'i ziyaret et
+                    </a>
+                </div>
+            </article>
         </section>
     );
 }
