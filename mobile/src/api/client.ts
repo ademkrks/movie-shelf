@@ -22,6 +22,74 @@ type RequestOptions =
     };
 
 
+type UnauthorizedHandler =
+    () =>
+        | void
+        | Promise<void>;
+
+
+let unauthorizedHandler:
+    | UnauthorizedHandler
+    | null =
+    null;
+
+
+let unauthorizedHandlingPromise:
+    | Promise<void>
+    | null =
+    null;
+
+
+export const setUnauthorizedHandler =
+    (
+        handler:
+            | UnauthorizedHandler
+            | null
+    ) => {
+        unauthorizedHandler =
+            handler;
+    };
+
+
+const handleUnauthorized =
+    async () => {
+        if (
+            !unauthorizedHandler
+        ) {
+            return;
+        }
+
+        if (
+            !unauthorizedHandlingPromise
+        ) {
+            const handler =
+                unauthorizedHandler;
+
+            unauthorizedHandlingPromise =
+                Promise.resolve()
+                    .then(
+                        () =>
+                            handler()
+                    )
+                    .finally(
+                        () => {
+                            unauthorizedHandlingPromise =
+                                null;
+                        }
+                    );
+        }
+
+        try {
+            await unauthorizedHandlingPromise;
+        } catch {
+            /*
+             * Oturum temizleme hatası,
+             * asıl 401 API hatasını maskelemez.
+             */
+        }
+    };
+
+
 const getApiBaseUrl = () => {
     const configuredUrl =
         process.env
@@ -167,8 +235,7 @@ export const apiRequest =
                 externalSignal.aborted
             ) {
                 controller.abort();
-            }
-            else {
+            } else {
                 externalSignal
                     .addEventListener(
                         "abort",
@@ -263,12 +330,23 @@ export const apiRequest =
                             ApiErrorPayload
                         : undefined;
 
-                throw new ApiClientError(
-                    payload?.message ??
-                        `API isteği başarısız oldu (${response.status}).`,
-                    response.status,
-                    payload
-                );
+                const apiError =
+                    new ApiClientError(
+                        payload?.message ??
+                            `API isteği başarısız oldu (${response.status}).`,
+                        response.status,
+                        payload
+                    );
+
+                if (
+                    auth &&
+                    response.status ===
+                        401
+                ) {
+                    await handleUnauthorized();
+                }
+
+                throw apiError;
             }
 
             return body as T;

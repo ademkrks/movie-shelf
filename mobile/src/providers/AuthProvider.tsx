@@ -16,6 +16,7 @@ import {
 
 import {
     ApiClientError,
+    setUnauthorizedHandler,
 } from "../api/client";
 
 import {
@@ -246,37 +247,6 @@ export function AuthProvider({
         );
 
 
-    useEffect(
-        () => {
-            let isActive =
-                true;
-
-            void resolveStoredSession()
-                .then(
-                    (result) => {
-                        if (
-                            !isActive
-                        ) {
-                            return;
-                        }
-
-                        applySessionResult(
-                            result
-                        );
-                    }
-                );
-
-            return () => {
-                isActive =
-                    false;
-            };
-        },
-        [
-            applySessionResult,
-        ]
-    );
-
-
     const login =
         useCallback(
             async (
@@ -363,6 +333,55 @@ export function AuthProvider({
             },
             []
         );
+
+
+    useEffect(
+        () => {
+            setUnauthorizedHandler(
+                logout
+            );
+
+            return () => {
+                setUnauthorizedHandler(
+                    null
+                );
+            };
+        },
+        [
+            logout,
+        ]
+    );
+
+
+    useEffect(
+        () => {
+            let isActive =
+                true;
+
+            void resolveStoredSession()
+                .then(
+                    (result) => {
+                        if (
+                            !isActive
+                        ) {
+                            return;
+                        }
+
+                        applySessionResult(
+                            result
+                        );
+                    }
+                );
+
+            return () => {
+                isActive =
+                    false;
+            };
+        },
+        [
+            applySessionResult,
+        ]
+    );
 
 
     const refreshProfile =
