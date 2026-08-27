@@ -319,7 +319,7 @@ export default function ResetPasswordScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                RESET PASSWORD
+                                ŞİFRE SIFIRLAMA
                             </Text>
 
                             <Text

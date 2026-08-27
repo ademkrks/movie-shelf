@@ -673,12 +673,12 @@ function MovieActionButtons({
                     </span>
 
                     {isFavoriteChecking
-                        ? "Checking..."
+                        ? "Kontrol ediliyor..."
                         : isFavoriteLoading
-                            ? "Updating..."
+                            ? "Güncelleniyor..."
                             : isFavorite
-                                ? "Favorited"
-                                : "Add to Favorites"}
+                                ? "Favorilerde"
+                                : "Favorilere Ekle"}
                 </button>
 
                 <button
@@ -706,12 +706,12 @@ function MovieActionButtons({
                     </span>
 
                     {isWatchlistChecking
-                        ? "Checking..."
+                        ? "Kontrol ediliyor..."
                         : isWatchlistLoading
-                            ? "Updating..."
+                            ? "Güncelleniyor..."
                             : isWatchlisted
-                                ? "In Watchlist"
-                                : "Add to Watchlist"}
+                                ? "İzleme Listesinde"
+                                : "İzleme Listesine Ekle"}
                 </button>
             </div>
 
@@ -725,7 +725,7 @@ function MovieActionButtons({
 
             {favoriteStatusError && (
                 <p className="movie-action-error">
-                    Favorites:{" "}
+                    Favoriler:{" "}
                     {
                         favoriteStatusError
                     }
@@ -734,7 +734,7 @@ function MovieActionButtons({
 
             {watchlistStatusError && (
                 <p className="movie-action-error">
-                    Watchlist:{" "}
+                    İzleme Listesi:{" "}
                     {
                         watchlistStatusError
                     }

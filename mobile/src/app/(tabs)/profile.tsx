@@ -286,7 +286,7 @@ export default function ProfileScreen() {
                             styles.eyebrow
                         }
                     >
-                        ACCOUNT
+                        HESAP
                     </Text>
 
                     <Text
@@ -399,7 +399,7 @@ export default function ProfileScreen() {
                             styles.sectionEyebrow
                         }
                     >
-                        PROFILE
+                        PROFİL
                     </Text>
 
                     <Text
@@ -449,7 +449,7 @@ export default function ProfileScreen() {
                             styles.sectionEyebrow
                         }
                     >
-                        SECURITY
+                        GÜVENLİK
                     </Text>
 
                     <Text
@@ -493,7 +493,7 @@ export default function ProfileScreen() {
                             styles.dangerEyebrow,
                         ]}
                     >
-                        SESSION
+                        OTURUM
                     </Text>
 
                     <Text

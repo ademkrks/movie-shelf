@@ -29,19 +29,18 @@ function NotFoundPage() {
                 </div>
 
                 <p className="eyebrow">
-                    LOST IN THE CATALOG
+                    KATALOGDA KAYBOLDUN
                 </p>
 
                 <h1>
-                    This page didn&apos;t
-                    make the final cut.
+                    Bu sayfa final
+                    kurguda yer almadı.
                 </h1>
 
                 <p className="not-found-description">
-                    The page you&apos;re
-                    looking for doesn&apos;t
-                    exist, may have moved or
-                    is no longer available.
+                    Aradığın sayfa mevcut
+                    değil, taşınmış olabilir
+                    veya artık kullanılamıyor.
                 </p>
 
                 <div className="not-found-actions">
@@ -53,7 +52,7 @@ function NotFoundPage() {
                             ←
                         </span>
 
-                        Back to Discover
+                        Keşfe Dön
                     </Link>
                 </div>
 
@@ -68,7 +67,7 @@ function NotFoundPage() {
                     <span className="not-found-meta-dot" />
 
                     <span>
-                        Error 404
+                        Hata 404
                     </span>
                 </div>
             </div>

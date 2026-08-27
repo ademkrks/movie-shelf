@@ -9,11 +9,11 @@ import {
 function WatchlistPage() {
     return (
         <CollectionPage
-            eyebrow="YOUR WATCHLIST"
-            title="Watchlist"
-            description="Movies waiting for your next movie night."
-            emptyMessage="Add movies to your watchlist and they will appear here."
-            removeLabel="Remove"
+            eyebrow="İZLEME LİSTEN"
+            title="İzleme Listesi"
+            description="Bir sonraki film gecende izlemek için bekleyen filmler."
+            emptyMessage="Filmleri izleme listene eklediğinde burada görünecekler."
+            removeLabel="Listeden Kaldır"
             loadCollection={
                 getWatchlist
             }

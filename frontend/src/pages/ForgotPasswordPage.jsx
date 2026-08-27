@@ -71,7 +71,7 @@ function ForgotPasswordPage() {
 
             if (!normalizedEmail) {
                 setError(
-                    "Enter your email address."
+                    "E-posta adresinizi girin."
                 );
 
                 return;
@@ -82,11 +82,10 @@ function ForgotPasswordPage() {
 
 
             try {
-                const response =
-                    await forgotPassword({
-                        email:
-                            normalizedEmail,
-                    });
+                await forgotPassword({
+                    email:
+                        normalizedEmail,
+                });
 
 
                 setEmail(
@@ -95,8 +94,7 @@ function ForgotPasswordPage() {
 
 
                 setSuccessMessage(
-                    response.message ||
-                    "If an account exists for this email, a password reset link will be sent."
+                    "Bu e-posta adresine ait bir hesap varsa şifre sıfırlama bağlantısı gönderilecektir."
                 );
             } catch (
                 requestError
@@ -117,17 +115,17 @@ function ForgotPasswordPage() {
             <div className="auth-card">
                 <div className="auth-header">
                     <p className="eyebrow">
-                        PASSWORD RECOVERY
+                        ŞİFRE SIFIRLAMA
                     </p>
 
                     <h1>
-                        Forgot your password?
+                        Şifreni mi unuttun?
                     </h1>
 
                     <p>
-                        Enter your email address
-                        and we&apos;ll send you a
-                        password reset link.
+                        E-posta adresini gir,
+                        sana şifre sıfırlama
+                        bağlantısı gönderelim.
                     </p>
                 </div>
 
@@ -160,7 +158,7 @@ function ForgotPasswordPage() {
                         className="form-field"
                     >
                         <span>
-                            Email
+                            E-posta
                         </span>
 
                         <input
@@ -178,7 +176,7 @@ function ForgotPasswordPage() {
                                         .value
                                 )
                             }
-                            placeholder="you@example.com"
+                            placeholder="ornek@eposta.com"
                             autoComplete="email"
                             maxLength={
                                 255
@@ -198,16 +196,15 @@ function ForgotPasswordPage() {
                         }
                     >
                         {isSubmitting
-                            ? "Sending..."
-                            : "Send Reset Link"}
+                            ? "Gönderiliyor..."
+                            : "Sıfırlama Bağlantısı Gönder"}
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Remember your
-                    password?{" "}
+                    Şifreni hatırladın mı?{" "}
                     <Link to="/login">
-                        Back to sign in
+                        Girişe dön
                     </Link>
                 </p>
             </div>

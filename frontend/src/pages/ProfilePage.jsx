@@ -91,7 +91,7 @@ function ProfilePage() {
                             location,
 
                         message:
-                            "Your session has expired. Please sign in again.",
+                            "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
                     },
                 }
             );
@@ -167,7 +167,7 @@ function ProfilePage() {
 
             if (!name) {
                 setProfileError(
-                    "Name cannot be empty."
+                    "Ad alanı boş bırakılamaz."
                 );
 
                 return;
@@ -179,7 +179,7 @@ function ProfilePage() {
                 100
             ) {
                 setProfileError(
-                    "Name can be at most 100 characters."
+                    "Ad en fazla 100 karakter olabilir."
                 );
 
                 return;
@@ -188,7 +188,7 @@ function ProfilePage() {
 
             if (!email) {
                 setProfileError(
-                    "Email cannot be empty."
+                    "E-posta alanı boş bırakılamaz."
                 );
 
                 return;
@@ -200,7 +200,7 @@ function ProfilePage() {
                 255
             ) {
                 setProfileError(
-                    "Email is too long."
+                    "E-posta adresi çok uzun."
                 );
 
                 return;
@@ -230,8 +230,7 @@ function ProfilePage() {
 
 
                 setProfileSuccess(
-                    result.message ||
-                    "Profile updated successfully."
+                    "Profilin başarıyla güncellendi."
                 );
             } catch (
                 requestError
@@ -276,7 +275,7 @@ function ProfilePage() {
 
             if (!currentPassword) {
                 setPasswordError(
-                    "Enter your current password."
+                    "Mevcut şifreni gir."
                 );
 
                 return;
@@ -288,7 +287,7 @@ function ProfilePage() {
                 8
             ) {
                 setPasswordError(
-                    "New password must be at least 8 characters."
+                    "Yeni şifre en az 8 karakter olmalıdır."
                 );
 
                 return;
@@ -300,7 +299,7 @@ function ProfilePage() {
                 confirmPassword
             ) {
                 setPasswordError(
-                    "New passwords do not match."
+                    "Yeni şifreler eşleşmiyor."
                 );
 
                 return;
@@ -312,7 +311,7 @@ function ProfilePage() {
                 newPassword
             ) {
                 setPasswordError(
-                    "New password must be different from your current password."
+                    "Yeni şifre mevcut şifrenden farklı olmalıdır."
                 );
 
                 return;
@@ -325,11 +324,10 @@ function ProfilePage() {
 
 
             try {
-                const result =
-                    await changePassword({
-                        currentPassword,
-                        newPassword,
-                    });
+                await changePassword({
+                    currentPassword,
+                    newPassword,
+                });
 
 
                 navigate(
@@ -339,8 +337,7 @@ function ProfilePage() {
 
                         state: {
                             message:
-                                result.message ||
-                                "Password changed successfully. Please sign in again.",
+                                "Şifren başarıyla değiştirildi. Lütfen yeni şifrenle tekrar giriş yap.",
                         },
                     }
                 );
@@ -373,17 +370,16 @@ function ProfilePage() {
             <div className="account-header">
                 <div>
                     <p className="eyebrow">
-                        ACCOUNT
+                        HESAP
                     </p>
 
                     <h1>
-                        Profile & Security
+                        Profil ve Güvenlik
                     </h1>
 
                     <p>
-                        Manage your personal
-                        information and account
-                        security.
+                        Kişisel bilgilerini ve
+                        hesap güvenliğini yönet.
                     </p>
                 </div>
 
@@ -394,7 +390,7 @@ function ProfilePage() {
                                 0
                             )
                             .toUpperCase() ||
-                            "U"}
+                            "K"}
                     </div>
 
                     <div>
@@ -413,7 +409,7 @@ function ProfilePage() {
             <div className="account-summary">
                 <div>
                     <span>
-                        User ID
+                        Kullanıcı ID
                     </span>
 
                     <strong>
@@ -423,7 +419,7 @@ function ProfilePage() {
 
                 <div>
                     <span>
-                        Member since
+                        Üyelik Tarihi
                     </span>
 
                     <strong>
@@ -444,18 +440,18 @@ function ProfilePage() {
                     <div className="account-card-header">
                         <div>
                             <p className="eyebrow">
-                                PROFILE
+                                PROFİL
                             </p>
 
                             <h2>
-                                Personal information
+                                Kişisel Bilgiler
                             </h2>
                         </div>
 
                         <p>
-                            Update the name and
-                            email associated with
-                            your MovieShelf account.
+                            MovieShelf hesabınla
+                            ilişkili ad ve e-posta
+                            bilgilerini güncelle.
                         </p>
                     </div>
 
@@ -495,7 +491,7 @@ function ProfilePage() {
                             htmlFor="profile-name"
                         >
                             <span>
-                                Name
+                                Ad
                             </span>
 
                             <input
@@ -525,7 +521,7 @@ function ProfilePage() {
                             htmlFor="profile-email"
                         >
                             <span>
-                                Email
+                                E-posta
                             </span>
 
                             <input
@@ -558,8 +554,8 @@ function ProfilePage() {
                             }
                         >
                             {isProfileSubmitting
-                                ? "Saving..."
-                                : "Save Changes"}
+                                ? "Kaydediliyor..."
+                                : "Değişiklikleri Kaydet"}
                         </button>
                     </form>
                 </article>
@@ -569,18 +565,18 @@ function ProfilePage() {
                     <div className="account-card-header">
                         <div>
                             <p className="eyebrow">
-                                SECURITY
+                                GÜVENLİK
                             </p>
 
                             <h2>
-                                Change password
+                                Şifreyi Değiştir
                             </h2>
                         </div>
 
                         <p>
-                            Changing your password
-                            signs out all previously
-                            issued sessions.
+                            Şifreni değiştirdiğinde
+                            daha önce açılmış tüm
+                            oturumlar kapatılır.
                         </p>
                     </div>
 
@@ -608,7 +604,7 @@ function ProfilePage() {
                             htmlFor="current-password"
                         >
                             <span>
-                                Current password
+                                Mevcut Şifre
                             </span>
 
                             <input
@@ -636,7 +632,7 @@ function ProfilePage() {
                             htmlFor="new-password"
                         >
                             <span>
-                                New password
+                                Yeni Şifre
                             </span>
 
                             <input
@@ -661,7 +657,7 @@ function ProfilePage() {
                             />
 
                             <small>
-                                Minimum 8 characters.
+                                En az 8 karakter.
                             </small>
                         </label>
 
@@ -671,7 +667,7 @@ function ProfilePage() {
                             htmlFor="confirm-password"
                         >
                             <span>
-                                Confirm new password
+                                Yeni Şifreyi Doğrula
                             </span>
 
                             <input
@@ -705,8 +701,8 @@ function ProfilePage() {
                             }
                         >
                             {isPasswordSubmitting
-                                ? "Changing Password..."
-                                : "Change Password"}
+                                ? "Şifre değiştiriliyor..."
+                                : "Şifreyi Değiştir"}
                         </button>
                     </form>
                 </article>

@@ -105,7 +105,7 @@ function ResetPasswordPage() {
 
             if (!isValidToken) {
                 setError(
-                    "This password reset link is invalid."
+                    "Bu şifre sıfırlama bağlantısı geçersiz."
                 );
 
                 return;
@@ -117,7 +117,7 @@ function ResetPasswordPage() {
                 8
             ) {
                 setError(
-                    "New password must be at least 8 characters."
+                    "Yeni şifre en az 8 karakter olmalıdır."
                 );
 
                 return;
@@ -129,7 +129,7 @@ function ResetPasswordPage() {
                 formData.confirmPassword
             ) {
                 setError(
-                    "Passwords do not match."
+                    "Şifreler eşleşmiyor."
                 );
 
                 return;
@@ -140,13 +140,12 @@ function ResetPasswordPage() {
 
 
             try {
-                const response =
-                    await resetPassword({
-                        token,
+                await resetPassword({
+                    token,
 
-                        password:
-                            formData.password,
-                    });
+                    password:
+                        formData.password,
+                });
 
 
                 navigate(
@@ -156,8 +155,7 @@ function ResetPasswordPage() {
 
                         state: {
                             message:
-                                response.message ||
-                                "Your password was updated successfully. You can sign in with your new password.",
+                                "Şifren başarıyla güncellendi. Yeni şifrenle giriş yapabilirsin.",
                         },
                     }
                 );
@@ -180,17 +178,16 @@ function ResetPasswordPage() {
             <div className="auth-card">
                 <div className="auth-header">
                     <p className="eyebrow">
-                        RESET PASSWORD
+                        ŞİFREYİ SIFIRLA
                     </p>
 
                     <h1>
-                        Create a new password
+                        Yeni bir şifre oluştur
                     </h1>
 
                     <p>
-                        Choose a new password
-                        for your MovieShelf
-                        account.
+                        MovieShelf hesabın için
+                        yeni bir şifre belirle.
                     </p>
                 </div>
 
@@ -199,8 +196,8 @@ function ResetPasswordPage() {
                         className="form-error"
                         role="alert"
                     >
-                        This password reset
-                        link is invalid.
+                        Bu şifre sıfırlama
+                        bağlantısı geçersiz.
                     </div>
                 )}
 
@@ -225,7 +222,7 @@ function ResetPasswordPage() {
                             className="form-field"
                         >
                             <span>
-                                New Password
+                                Yeni Şifre
                             </span>
 
                             <input
@@ -239,7 +236,7 @@ function ResetPasswordPage() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="Minimum 8 characters"
+                                placeholder="En az 8 karakter"
                                 autoComplete="new-password"
                                 minLength={
                                     8
@@ -256,7 +253,7 @@ function ResetPasswordPage() {
                             className="form-field"
                         >
                             <span>
-                                Confirm Password
+                                Şifreyi Doğrula
                             </span>
 
                             <input
@@ -270,7 +267,7 @@ function ResetPasswordPage() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="Repeat your password"
+                                placeholder="Şifreni tekrar gir"
                                 autoComplete="new-password"
                                 minLength={
                                     8
@@ -290,15 +287,15 @@ function ResetPasswordPage() {
                             }
                         >
                             {isSubmitting
-                                ? "Updating..."
-                                : "Update Password"}
+                                ? "Güncelleniyor..."
+                                : "Şifreyi Güncelle"}
                         </button>
                     </form>
                 )}
 
                 <p className="auth-footer">
                     <Link to="/login">
-                        Back to sign in
+                        Girişe dön
                     </Link>
                 </p>
             </div>

@@ -98,7 +98,7 @@ function RegisterPage() {
 
             if (!normalizedName) {
                 setError(
-                    "Name cannot be empty."
+                    "Ad alanı boş bırakılamaz."
                 );
 
                 return;
@@ -110,7 +110,7 @@ function RegisterPage() {
                 100
             ) {
                 setError(
-                    "Name can be at most 100 characters."
+                    "Ad en fazla 100 karakter olabilir."
                 );
 
                 return;
@@ -119,7 +119,7 @@ function RegisterPage() {
 
             if (!normalizedEmail) {
                 setError(
-                    "Enter your email address."
+                    "E-posta adresinizi girin."
                 );
 
                 return;
@@ -131,7 +131,7 @@ function RegisterPage() {
                 255
             ) {
                 setError(
-                    "Email is too long."
+                    "E-posta adresi çok uzun."
                 );
 
                 return;
@@ -143,7 +143,7 @@ function RegisterPage() {
                 8
             ) {
                 setError(
-                    "Password must be at least 8 characters."
+                    "Şifre en az 8 karakter olmalıdır."
                 );
 
                 return;
@@ -173,7 +173,7 @@ function RegisterPage() {
 
                         state: {
                             message:
-                                "Your account was created. You can sign in now.",
+                                "Hesabın oluşturuldu. Şimdi giriş yapabilirsin.",
                         },
                     }
                 );
@@ -196,16 +196,16 @@ function RegisterPage() {
             <div className="auth-card">
                 <div className="auth-header">
                     <p className="eyebrow">
-                        JOIN MOVIESHELF
+                        MOVIESHELF&apos;E KATIL
                     </p>
 
                     <h1>
-                        Create your account
+                        Hesabını oluştur
                     </h1>
 
                     <p>
-                        Start building your own
-                        movie library.
+                        Kendi film arşivini
+                        oluşturmaya başla.
                     </p>
                 </div>
 
@@ -229,7 +229,7 @@ function RegisterPage() {
                         className="form-field"
                     >
                         <span>
-                            Name
+                            Ad
                         </span>
 
                         <input
@@ -242,7 +242,7 @@ function RegisterPage() {
                             onChange={
                                 handleChange
                             }
-                            placeholder="Your name"
+                            placeholder="Adınız"
                             autoComplete="name"
                             maxLength={
                                 100
@@ -259,7 +259,7 @@ function RegisterPage() {
                         className="form-field"
                     >
                         <span>
-                            Email
+                            E-posta
                         </span>
 
                         <input
@@ -272,7 +272,7 @@ function RegisterPage() {
                             onChange={
                                 handleChange
                             }
-                            placeholder="you@example.com"
+                            placeholder="ornek@eposta.com"
                             autoComplete="email"
                             maxLength={
                                 255
@@ -289,7 +289,7 @@ function RegisterPage() {
                         className="form-field"
                     >
                         <span>
-                            Password
+                            Şifre
                         </span>
 
                         <input
@@ -302,7 +302,7 @@ function RegisterPage() {
                             onChange={
                                 handleChange
                             }
-                            placeholder="Minimum 8 characters"
+                            placeholder="En az 8 karakter"
                             autoComplete="new-password"
                             minLength={
                                 8
@@ -322,16 +322,15 @@ function RegisterPage() {
                         }
                     >
                         {isSubmitting
-                            ? "Creating Account..."
-                            : "Create Account"}
+                            ? "Hesap oluşturuluyor..."
+                            : "Hesap Oluştur"}
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Already have an
-                    account?{" "}
+                    Zaten hesabın var mı?{" "}
                     <Link to="/login">
-                        Sign in
+                        Giriş yap
                     </Link>
                 </p>
             </div>

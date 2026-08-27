@@ -234,7 +234,7 @@ export default function LibraryScreen() {
                         styles.eyebrow
                     }
                 >
-                    YOUR COLLECTION
+                    KOLEKSİYONUN
                 </Text>
 
                 <View

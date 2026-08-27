@@ -283,7 +283,7 @@ export default function ForgotPasswordScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                PASSWORD RECOVERY
+                                ŞİFRE SIFIRLAMA
                             </Text>
 
                             <Text
@@ -331,7 +331,7 @@ export default function ForgotPasswordScreen() {
                                     onChangeText={
                                         setEmail
                                     }
-                                    placeholder="you@example.com"
+                                    placeholder="ornek@eposta.com"
                                     placeholderTextColor={
                                         colors.textMuted
                                     }

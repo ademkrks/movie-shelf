@@ -190,13 +190,13 @@ const fetchCollectionPage =
             1
         ) {
             hydrationWarning =
-                "1 saved movie could not be loaded from TMDB.";
+                "Kaydedilmiş 1 film TMDB'den yüklenemedi.";
         } else if (
             unavailableCount >
             1
         ) {
             hydrationWarning =
-                `${unavailableCount} saved movies could not be loaded from TMDB.`;
+                `${unavailableCount} kaydedilmiş film TMDB'den yüklenemedi.`;
         }
 
 
@@ -235,7 +235,7 @@ function CollectionLoading() {
     return (
         <div
             className="collection-loading"
-            aria-label="Loading movies"
+            aria-label="Filmler yükleniyor"
             aria-busy="true"
         >
             <div className="collection-grid">
@@ -324,12 +324,19 @@ function CollectionPage({
         useRef(true);
 
 
+    const normalizedEyebrow =
+        eyebrow.toLocaleLowerCase(
+            "tr-TR"
+        );
+
+
     const isFavoritesCollection =
-        eyebrow
-            .toLowerCase()
-            .includes(
-                "favorite"
-            );
+        normalizedEyebrow.includes(
+            "favorite"
+        ) ||
+        normalizedEyebrow.includes(
+            "favori"
+        );
 
 
     const totalItems =
@@ -475,7 +482,7 @@ function CollectionPage({
                     setLoadError(
                         requestError
                             .message ||
-                            "Collection could not be loaded."
+                            "Koleksiyon yüklenemedi."
                     );
                 }
             )
@@ -605,7 +612,7 @@ function CollectionPage({
                 setLoadError(
                     requestError
                         .message ||
-                        "Collection could not be refreshed."
+                        "Koleksiyon yenilenemedi."
                 );
 
 
@@ -673,7 +680,7 @@ function CollectionPage({
                 setActionError(
                     requestError
                         .message ||
-                        "Movie could not be removed."
+                        "Film kaldırılamadı."
                 );
             } finally {
                 setRemovingMovieId(
@@ -788,7 +795,7 @@ function CollectionPage({
                         </span>
 
                         <span>
-                            Personal Collection
+                            Kişisel Koleksiyon
                         </span>
                     </div>
 
@@ -808,7 +815,7 @@ function CollectionPage({
                         to="/"
                         className="collection-discover-link"
                     >
-                        Discover movies
+                        Filmleri Keşfet
 
                         <span aria-hidden="true">
                             →
@@ -819,7 +826,7 @@ function CollectionPage({
                 <div className="collection-overview">
                     <div className="collection-overview-card">
                         <span>
-                            Movies
+                            Filmler
                         </span>
 
                         <strong>
@@ -830,13 +837,13 @@ function CollectionPage({
                         </strong>
 
                         <small>
-                            in this collection
+                            bu koleksiyonda
                         </small>
                     </div>
 
                     <div className="collection-overview-card">
                         <span>
-                            Page
+                            Sayfa
                         </span>
 
                         <strong>
@@ -848,8 +855,8 @@ function CollectionPage({
 
                         <small>
                             {totalPages > 0
-                                ? `of ${totalPages}`
-                                : "of 1"}
+                                ? `toplam ${totalPages}`
+                                : "toplam 1"}
                         </small>
                     </div>
                 </div>
@@ -885,8 +892,8 @@ function CollectionPage({
                         }
                     >
                         {isLoading
-                            ? "Retrying..."
-                            : "Try Again"}
+                            ? "Tekrar deneniyor..."
+                            : "Tekrar Dene"}
                     </button>
                 </div>
             )}
@@ -914,7 +921,7 @@ function CollectionPage({
                             isLoading
                         }
                     >
-                        Retry missing movies
+                        Eksik Filmleri Tekrar Dene
                     </button>
                 </div>
             )}
@@ -934,11 +941,11 @@ function CollectionPage({
                         </div>
 
                         <p className="eyebrow">
-                            COLLECTION UNAVAILABLE
+                            KOLEKSİYON KULLANILAMIYOR
                         </p>
 
                         <h2>
-                            Movies could not be loaded
+                            Filmler yüklenemedi
                         </h2>
 
                         <p>
@@ -952,7 +959,7 @@ function CollectionPage({
                                 retryCurrentPage
                             }
                         >
-                            Try Again
+                            Tekrar Dene
                         </button>
                     </div>
                 </div>
@@ -967,11 +974,11 @@ function CollectionPage({
                         </div>
 
                         <p className="eyebrow">
-                            MOVIES UNAVAILABLE
+                            FİLMLER KULLANILAMIYOR
                         </p>
 
                         <h2>
-                            Saved movies could not be displayed
+                            Kaydedilen filmler görüntülenemedi
                         </h2>
 
                         <p>
@@ -987,7 +994,7 @@ function CollectionPage({
                                 retryCurrentPage
                             }
                         >
-                            Try Again
+                            Tekrar Dene
                         </button>
                     </div>
                 </div>
@@ -1005,13 +1012,13 @@ function CollectionPage({
                         </div>
 
                         <p className="eyebrow">
-                            EMPTY COLLECTION
+                            BOŞ KOLEKSİYON
                         </p>
 
                         <h2>
                             {isFavoritesCollection
-                                ? "No favorites yet"
-                                : "Your watchlist is empty"}
+                                ? "Henüz favori yok"
+                                : "İzleme listen boş"}
                         </h2>
 
                         <p>
@@ -1022,7 +1029,7 @@ function CollectionPage({
                             to="/"
                             className="primary-button collection-empty-button"
                         >
-                            Discover Movies
+                            Filmleri Keşfet
                         </Link>
                     </div>
                 </div>
@@ -1031,19 +1038,17 @@ function CollectionPage({
                     <div className="collection-content-heading">
                         <div>
                             <p className="collection-content-label">
-                                YOUR MOVIES
+                                FİLMLERİN
                             </p>
 
                             <h2>
-                                Saved to MovieShelf
+                                MovieShelf&apos;e Kaydettiklerin
                             </h2>
                         </div>
 
                         <span>
                             {totalItems}{" "}
-                            {totalItems === 1
-                                ? "movie"
-                                : "movies"}
+                            film
                         </span>
                     </div>
 
@@ -1089,7 +1094,7 @@ function CollectionPage({
                             1 && (
                         <nav
                             className="collection-pagination"
-                            aria-label="Collection pages"
+                            aria-label="Koleksiyon sayfaları"
                         >
                             <button
                                 type="button"
@@ -1110,7 +1115,7 @@ function CollectionPage({
                                     ←
                                 </span>
 
-                                Previous
+                                Önceki
                             </button>
 
                             <div
@@ -1124,7 +1129,7 @@ function CollectionPage({
                                 </strong>
 
                                 <span>
-                                    of{" "}
+                                    /{" "}
                                     {
                                         pagination.totalPages
                                     }
@@ -1134,7 +1139,7 @@ function CollectionPage({
                                     {
                                         pagination.totalItems
                                     }{" "}
-                                    movies
+                                    film
                                 </small>
                             </div>
 
@@ -1153,7 +1158,7 @@ function CollectionPage({
                                     )
                                 }
                             >
-                                Next
+                                Sonraki
 
                                 <span aria-hidden="true">
                                     →

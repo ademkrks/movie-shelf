@@ -591,7 +591,7 @@ export default function HomeScreen() {
                                 styles.tagline
                             }
                         >
-                            Your movies. Your shelf.
+                            Filmlerin. Senin rafın.
                         </Text>
                     </View>
 
@@ -913,7 +913,7 @@ export default function HomeScreen() {
                             styles.heroEyebrow
                         }
                     >
-                        DISCOVER
+                        KEŞFET
                     </Text>
 
                     <Text
@@ -1066,7 +1066,7 @@ export default function HomeScreen() {
                 ) : (
                     <>
                         <MovieSection
-                            eyebrow="TRENDING"
+                            eyebrow="GÜNDEMDE"
                             title="Trend Filmler"
                             description="Bu hafta izleyicilerin en çok konuştuğu filmler."
                             movies={
@@ -1075,7 +1075,7 @@ export default function HomeScreen() {
                         />
 
                         <MovieSection
-                            eyebrow="POPULAR"
+                            eyebrow="POPÜLER"
                             title="Popüler Filmler"
                             description="Şu anda dünya genelinde en çok ilgi gören yapımlar."
                             movies={
@@ -1084,7 +1084,7 @@ export default function HomeScreen() {
                         />
 
                         <MovieSection
-                            eyebrow="TOP RATED"
+                            eyebrow="EN YÜKSEK PUANLILAR"
                             title="En Yüksek Puanlılar"
                             description="İzleyicilerden yüksek puan alan güçlü yapımlar."
                             movies={
@@ -1093,7 +1093,7 @@ export default function HomeScreen() {
                         />
 
                         <MovieSection
-                            eyebrow="COMING SOON"
+                            eyebrow="YAKINDA"
                             title="Yakında Vizyonda"
                             description="Yakında izleyiciyle buluşacak filmlere göz at."
                             movies={

@@ -42,14 +42,14 @@ function MovieCard({
                         }
                         alt={
                             movie.title ||
-                            "Movie poster"
+                            "Film posteri"
                         }
                         className="movie-poster"
                         loading="lazy"
                     />
                 ) : (
                     <div className="movie-poster-placeholder">
-                        No poster
+                        Poster yok
                     </div>
                 )}
 

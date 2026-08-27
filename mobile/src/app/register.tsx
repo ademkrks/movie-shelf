@@ -330,7 +330,7 @@ export default function RegisterScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                JOIN MOVIESHELF
+                                MOVIESHELF&apos;E KATIL
                             </Text>
 
                             <Text
@@ -418,7 +418,7 @@ export default function RegisterScreen() {
                                     onChangeText={
                                         setEmail
                                     }
-                                    placeholder="you@example.com"
+                                    placeholder="ornek@eposta.com"
                                     placeholderTextColor={
                                         colors.textMuted
                                     }

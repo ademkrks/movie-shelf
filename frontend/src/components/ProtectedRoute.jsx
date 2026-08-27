@@ -47,12 +47,12 @@ function ProtectedRoute({
                     </p>
 
                     <h1>
-                        Checking your session
+                        Oturumun kontrol ediliyor
                     </h1>
 
                     <p className="route-loading-description">
-                        Preparing your personal
-                        MovieShelf experience.
+                        Kişisel MovieShelf
+                        deneyimin hazırlanıyor.
                     </p>
 
                     <div
@@ -88,12 +88,11 @@ function ProtectedRoute({
                     </div>
 
                     <p className="eyebrow">
-                        CONNECTION ISSUE
+                        BAĞLANTI SORUNU
                     </p>
 
                     <h1>
-                        We couldn&apos;t verify
-                        your session
+                        Oturumun doğrulanamadı
                     </h1>
 
                     <p className="route-loading-description">
@@ -107,7 +106,7 @@ function ProtectedRoute({
                             retrySession
                         }
                     >
-                        Try Again
+                        Tekrar Dene
                     </button>
                 </div>
             </section>

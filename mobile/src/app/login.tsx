@@ -282,7 +282,7 @@ export default function LoginScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                WELCOME BACK
+                                TEKRAR HOŞ GELDİN
                             </Text>
 
                             <Text
@@ -347,7 +347,7 @@ export default function LoginScreen() {
                                     onChangeText={
                                         setEmail
                                     }
-                                    placeholder="you@example.com"
+                                    placeholder="ornek@eposta.com"
                                     placeholderTextColor={
                                         colors.textMuted
                                     }
@@ -551,7 +551,7 @@ export default function LoginScreen() {
                                     styles.securityText
                                 }
                             >
-                                Oturum tokenı cihazın güvenli depolama alanında saklanır.
+                                Oturum bilgisi cihazın güvenli depolama alanında saklanır.
                             </Text>
                         </View>
                     </View>

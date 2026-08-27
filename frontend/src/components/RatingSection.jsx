@@ -553,7 +553,7 @@ function RatingSection({
         <section className="rating-section">
             <div className="rating-community">
                 <p className="eyebrow">
-                    MOVIESHELF RATING
+                    MOVIESHELF PUANI
                 </p>
 
                 <div className="community-rating-value">
@@ -578,7 +578,7 @@ function RatingSection({
                 {communityError ? (
                     <>
                         <p>
-                            Ratings unavailable.
+                            Puan bilgisi kullanılamıyor.
                         </p>
 
                         <p className="review-error">
@@ -591,10 +591,7 @@ function RatingSection({
                     <p>
                         {totalRatings ??
                             0}{" "}
-                        {totalRatings ===
-                        1
-                            ? "rating"
-                            : "ratings"}
+                        puan
                     </p>
                 )}
             </div>
@@ -603,20 +600,20 @@ function RatingSection({
                 <div className="rating-heading">
                     <div>
                         <h2>
-                            Your Rating
+                            Puanın
                         </h2>
 
                         <p>
                             {userRating
-                                ? `You rated this ${userRating.rating}/10.`
-                                : "Rate this movie from 1 to 10."}
+                                ? `Bu filme ${userRating.rating}/10 puan verdin.`
+                                : "Bu filme 1 ile 10 arasında puan ver."}
                         </p>
                     </div>
                 </div>
 
                 {isLoading ? (
                     <div className="rating-loading">
-                        Loading rating...
+                        Puan yükleniyor...
                     </div>
                 ) : !isAuthenticated ? (
                     <button
@@ -626,7 +623,7 @@ function RatingSection({
                             redirectToLogin
                         }
                     >
-                        Sign in to rate
+                        Puan vermek için giriş yap
                     </button>
                 ) : userRatingError ? (
                     <div>
@@ -637,9 +634,8 @@ function RatingSection({
                         </p>
 
                         <p>
-                            Your existing
-                            rating could not
-                            be verified.
+                            Mevcut puanın
+                            doğrulanamadı.
                         </p>
                     </div>
                 ) : (
@@ -705,10 +701,10 @@ function RatingSection({
                                 }
                             >
                                 {isSaving
-                                    ? "Saving..."
+                                    ? "Kaydediliyor..."
                                     : userRating
-                                        ? "Update Rating"
-                                        : "Save Rating"}
+                                        ? "Puanı Güncelle"
+                                        : "Puanı Kaydet"}
                             </button>
 
                             {userRating && (
@@ -724,8 +720,8 @@ function RatingSection({
                                     }
                                 >
                                     {isDeleting
-                                        ? "Removing..."
-                                        : "Remove Rating"}
+                                        ? "Kaldırılıyor..."
+                                        : "Puanı Kaldır"}
                                 </button>
                             )}
                         </div>

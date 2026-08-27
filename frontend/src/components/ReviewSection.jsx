@@ -711,18 +711,18 @@ function ReviewSection({
             <div className="reviews-header">
                 <div>
                     <p className="eyebrow">
-                        COMMUNITY REVIEWS
+                        TOPLULUK YORUMLARI
                     </p>
 
                     <h2>
-                        Reviews
+                        Yorumlar
                     </h2>
 
                     <p>
                         {pagination
                             ?.totalItems ??
                             0}{" "}
-                        reviews
+                        yorum
                     </p>
                 </div>
             </div>
@@ -746,7 +746,7 @@ function ReviewSection({
                                     .value
                             )
                         }
-                        placeholder="What did you think about this movie?"
+                        placeholder="Bu film hakkında ne düşünüyorsun?"
                         maxLength="1000"
                         rows="5"
                     />
@@ -765,17 +765,17 @@ function ReviewSection({
                             }
                         >
                             {isSubmitting
-                                ? "Publishing..."
-                                : "Publish Review"}
+                                ? "Yayınlanıyor..."
+                                : "Yorumu Yayınla"}
                         </button>
                     </div>
                 </form>
             ) : (
                 <div className="review-login-prompt">
                     <p>
-                        Sign in to share
-                        your thoughts about
-                        this movie.
+                        Bu film hakkındaki
+                        düşüncelerini paylaşmak
+                        için giriş yap.
                     </p>
 
                     <button
@@ -785,7 +785,7 @@ function ReviewSection({
                             redirectToLogin
                         }
                     >
-                        Sign in to review
+                        Yorum yapmak için giriş yap
                     </button>
                 </div>
             )}
@@ -821,8 +821,8 @@ function ReviewSection({
                             }
                         >
                             {isLoading
-                                ? "Retrying..."
-                                : "Try Again"}
+                                ? "Tekrar deneniyor..."
+                                : "Tekrar Dene"}
                         </button>
                     </div>
                 )}
@@ -830,14 +830,13 @@ function ReviewSection({
             {isLoading &&
             reviews.length === 0 ? (
                 <div className="reviews-loading">
-                    Loading reviews...
+                    Yorumlar yükleniyor...
                 </div>
             ) : loadError &&
               reviews.length === 0 ? (
                 <div className="reviews-empty">
                     <p>
-                        Reviews could not be
-                        loaded.
+                        Yorumlar yüklenemedi.
                     </p>
 
                     <p className="review-error">
@@ -854,16 +853,15 @@ function ReviewSection({
                             isLoading
                         }
                     >
-                        Try Again
+                        Tekrar Dene
                     </button>
                 </div>
             ) : reviews.length ===
               0 ? (
                 <div className="reviews-empty">
                     <p>
-                        No reviews yet.
-                        Be the first to
-                        share your thoughts.
+                        Henüz yorum yok.
+                        İlk yorumu sen yap.
                     </p>
                 </div>
             ) : (
@@ -941,15 +939,15 @@ function ReviewSection({
                                         isLoading
                                     }
                                 >
-                                    Previous
+                                    Önceki
                                 </button>
 
                                 <span>
-                                    Page{" "}
+                                    Sayfa{" "}
                                     {
                                         pagination.page
                                     }{" "}
-                                    of{" "}
+                                    /{" "}
                                     {
                                         pagination.totalPages
                                     }
@@ -967,7 +965,7 @@ function ReviewSection({
                                         isLoading
                                     }
                                 >
-                                    Next
+                                    Sonraki
                                 </button>
                             </div>
                         )}

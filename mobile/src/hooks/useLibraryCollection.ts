@@ -760,8 +760,22 @@ export default function useLibraryCollection() {
                                 );
 
 
+                            const nextPage =
+                                nextTotalPages ===
+                                0
+                                    ? 1
+                                    : Math.min(
+                                        currentPagination
+                                            .page,
+                                        nextTotalPages
+                                    );
+
+
                             return {
                                 ...currentPagination,
+
+                                page:
+                                    nextPage,
 
                                 totalItems:
                                     nextTotalItems,
@@ -769,9 +783,12 @@ export default function useLibraryCollection() {
                                 totalPages:
                                     nextTotalPages,
 
+                                hasPreviousPage:
+                                    nextPage >
+                                    1,
+
                                 hasNextPage:
-                                    currentPagination
-                                        .page <
+                                    nextPage <
                                     nextTotalPages,
                             };
                         }

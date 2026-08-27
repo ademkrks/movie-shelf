@@ -361,7 +361,7 @@ export default function MovieReviewsSection({
                             styles.sectionEyebrow
                         }
                     >
-                        COMMUNITY
+                        TOPLULUK
                     </Text>
 
                     <Text

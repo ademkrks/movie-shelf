@@ -46,7 +46,7 @@ function ReviewCard({
                         <strong>
                             {review.user
                                 ?.name ||
-                                "MovieShelf User"}
+                                "MovieShelf Kullanıcısı"}
                         </strong>
 
                         <span>
@@ -64,7 +64,7 @@ function ReviewCard({
                                     onStartEdit
                                 }
                             >
-                                Edit
+                                Düzenle
                             </button>
 
                             <button
@@ -78,8 +78,8 @@ function ReviewCard({
                                 }
                             >
                                 {isDeleting
-                                    ? "Deleting..."
-                                    : "Delete"}
+                                    ? "Siliniyor..."
+                                    : "Sil"}
                             </button>
                         </div>
                     )}
@@ -122,7 +122,7 @@ function ReviewCard({
                                     isSaving
                                 }
                             >
-                                Cancel
+                                İptal
                             </button>
 
                             <button
@@ -136,8 +136,8 @@ function ReviewCard({
                                 }
                             >
                                 {isSaving
-                                    ? "Saving..."
-                                    : "Save"}
+                                    ? "Kaydediliyor..."
+                                    : "Kaydet"}
                             </button>
                         </div>
                     </div>

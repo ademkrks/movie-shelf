@@ -106,7 +106,7 @@ export default function MovieLibraryActions({
                     styles.sectionEyebrow
                 }
             >
-                YOUR SHELF
+                FİLM RAFIN
             </Text>
 
             <Text

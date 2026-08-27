@@ -98,7 +98,7 @@ function LoginPage() {
                 !formData.password
             ) {
                 setError(
-                    "Enter your email and password."
+                    "E-posta adresinizi ve şifrenizi girin."
                 );
 
                 return;
@@ -154,16 +154,16 @@ function LoginPage() {
             <div className="auth-card">
                 <div className="auth-header">
                     <p className="eyebrow">
-                        WELCOME BACK
+                        TEKRAR HOŞ GELDİN
                     </p>
 
                     <h1>
-                        Sign in to MovieShelf
+                        MovieShelf&apos;e Giriş Yap
                     </h1>
 
                     <p>
-                        Continue building your
-                        personal movie collection.
+                        Kişisel film koleksiyonunu
+                        oluşturmaya devam et.
                     </p>
                 </div>
 
@@ -199,7 +199,7 @@ function LoginPage() {
                         className="form-field"
                     >
                         <span>
-                            Email
+                            E-posta
                         </span>
 
                         <input
@@ -212,7 +212,7 @@ function LoginPage() {
                             onChange={
                                 handleChange
                             }
-                            placeholder="you@example.com"
+                            placeholder="ornek@eposta.com"
                             autoComplete="email"
                             maxLength={
                                 255
@@ -229,7 +229,7 @@ function LoginPage() {
                         className="form-field"
                     >
                         <span>
-                            Password
+                            Şifre
                         </span>
 
                         <input
@@ -255,7 +255,7 @@ function LoginPage() {
                         <Link
                             to="/forgot-password"
                         >
-                            Forgot password?
+                            Şifreni mi unuttun?
                         </Link>
                     </div>
 
@@ -267,16 +267,15 @@ function LoginPage() {
                         }
                     >
                         {isSubmitting
-                            ? "Signing In..."
-                            : "Sign In"}
+                            ? "Giriş yapılıyor..."
+                            : "Giriş Yap"}
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Don&apos;t have
-                    an account?{" "}
+                    Hesabın yok mu?{" "}
                     <Link to="/register">
-                        Create one
+                        Kayıt ol
                     </Link>
                 </p>
             </div>

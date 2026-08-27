@@ -375,7 +375,7 @@ export default function SearchScreen() {
                             styles.eyebrow
                         }
                     >
-                        DISCOVER
+                        KEŞFET
                     </Text>
 
                     <Text

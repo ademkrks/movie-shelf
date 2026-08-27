@@ -12,7 +12,7 @@ function MainLayout() {
                 href="#main-content"
                 className="skip-link"
             >
-                Skip to content
+                İçeriğe geç
             </a>
 
             <Navbar />

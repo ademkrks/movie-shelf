@@ -779,7 +779,7 @@ export default function MovieDetailScreen() {
                             styles.errorEyebrow
                         }
                     >
-                        MOVIE DETAILS
+                        FİLM DETAYLARI
                     </Text>
 
                     <Text
@@ -1032,7 +1032,7 @@ export default function MovieDetailScreen() {
                                     styles.eyebrow
                                 }
                             >
-                                MOVIE DETAILS
+                                FİLM DETAYLARI
                             </Text>
 
                             <Text
@@ -1260,7 +1260,7 @@ export default function MovieDetailScreen() {
                                 styles.sectionEyebrow
                             }
                         >
-                            STORY
+                            HİKÂYE
                         </Text>
 
                         <Text
@@ -1294,7 +1294,7 @@ export default function MovieDetailScreen() {
                                     styles.sectionEyebrow
                                 }
                             >
-                                TRAILER
+                                FRAGMAN
                             </Text>
 
                             <Text
@@ -1408,7 +1408,7 @@ export default function MovieDetailScreen() {
                                             styles.sectionEyebrow
                                         }
                                     >
-                                        CAST
+                                        OYUNCULAR
                                     </Text>
 
                                     <Text

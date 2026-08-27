@@ -53,25 +53,25 @@ const fetchDiscoveryFeed =
         const results = [
             {
                 label:
-                    "Trending",
+                    "Gündemdekiler",
                 result:
                     trendingResult,
             },
             {
                 label:
-                    "Popular",
+                    "Popüler",
                 result:
                     popularResult,
             },
             {
                 label:
-                    "Top Rated",
+                    "En İyi Puanlananlar",
                 result:
                     topRatedResult,
             },
             {
                 label:
-                    "Upcoming",
+                    "Yakında",
                 result:
                     upcomingResult,
             },
@@ -117,13 +117,13 @@ const fetchDiscoveryFeed =
                     ?.result
                     ?.reason
                     ?.message ||
-                "Movie discovery could not be loaded.";
+                "Film keşif içeriği yüklenemedi.";
         } else if (
             failedSections.length >
             0
         ) {
             warning =
-                `Some movie sections could not be loaded: ${failedSections.join(
+                `Bazı film bölümleri yüklenemedi: ${failedSections.join(
                     ", "
                 )}.`;
         }
@@ -213,23 +213,22 @@ function DiscoverySkeleton() {
     return (
         <section
             className="discovery-loading"
-            aria-label="Loading movies"
+            aria-label="Filmler yükleniyor"
             aria-busy="true"
         >
             <div className="section-heading">
                 <div>
                     <p className="section-kicker">
-                        DISCOVER
+                        KEŞFET
                     </p>
 
                     <h2>
-                        Loading movies
+                        Filmler yükleniyor
                     </h2>
 
                     <p>
-                        Building your
-                        MovieShelf discovery
-                        feed.
+                        MovieShelf keşif akışın
+                        hazırlanıyor.
                     </p>
                 </div>
             </div>
@@ -529,7 +528,7 @@ function HomePage() {
                     setDiscoveryError(
                         requestError
                             .message ||
-                            "Movie discovery could not be loaded."
+                            "Film keşif içeriği yüklenemedi."
                     );
                 }
             )
@@ -616,7 +615,7 @@ function HomePage() {
                 setDiscoveryError(
                     requestError
                         .message ||
-                        "Movie discovery could not be loaded."
+                        "Film keşif içeriği yüklenemedi."
                 );
             } finally {
                 if (
@@ -705,7 +704,7 @@ function HomePage() {
                 setSearchError(
                     requestError
                         .message ||
-                        "Search could not be completed."
+                        "Arama tamamlanamadı."
                 );
 
 
@@ -740,7 +739,7 @@ function HomePage() {
                 2
             ) {
                 setSearchError(
-                    "Enter at least 2 characters to search."
+                    "Arama yapmak için en az 2 karakter girin."
                 );
 
                 return;
@@ -752,7 +751,7 @@ function HomePage() {
                 100
             ) {
                 setSearchError(
-                    "Search can be at most 100 characters."
+                    "Arama en fazla 100 karakter olabilir."
                 );
 
                 return;
@@ -857,28 +856,26 @@ function HomePage() {
                         <div className="hero-status">
                             <span className="hero-status-dot" />
 
-                            Live movie discovery
+                            Güncel film keşfi
                         </div>
 
                         <p className="eyebrow">
-                            YOUR PERSONAL MOVIE SPACE
+                            KİŞİSEL FİLM ALANIN
                         </p>
 
                         <h1>
-                            Find something
-                            worth{" "}
+                            İzlemeye değer
+                            bir şey{" "}
                             <span>
-                                watching.
+                                bul.
                             </span>
                         </h1>
 
                         <p className="movies-hero-description">
-                            Discover what&apos;s
-                            trending, explore
-                            acclaimed movies and
-                            build a collection
-                            that feels like your
-                            own.
+                            Gündemdeki filmleri keşfet,
+                            öne çıkan yapımlara göz at
+                            ve sana ait bir film
+                            koleksiyonu oluştur.
                         </p>
 
                         <form
@@ -916,8 +913,8 @@ function HomePage() {
                                                 .value
                                         )
                                     }
-                                    placeholder="Search for a movie..."
-                                    aria-label="Search movies"
+                                    placeholder="Film ara..."
+                                    aria-label="Film ara"
                                     minLength={
                                         2
                                     }
@@ -935,26 +932,26 @@ function HomePage() {
                                 }
                             >
                                 {isSearching
-                                    ? "Searching..."
-                                    : "Search"}
+                                    ? "Aranıyor..."
+                                    : "Ara"}
                             </button>
                         </form>
 
                         <div className="hero-discovery-tags">
                             <span>
-                                Trending
+                                Gündemdekiler
                             </span>
 
                             <span>
-                                Popular
+                                Popüler
                             </span>
 
                             <span>
-                                Top Rated
+                                En İyi Puanlananlar
                             </span>
 
                             <span>
-                                Upcoming
+                                Yakında
                             </span>
                         </div>
                     </div>
@@ -997,8 +994,8 @@ function HomePage() {
                             }
                         >
                             {isLoading
-                                ? "Retrying..."
-                                : "Try Again"}
+                                ? "Tekrar deneniyor..."
+                                : "Tekrar Dene"}
                         </button>
                     </div>
                 )}
@@ -1028,16 +1025,16 @@ function HomePage() {
                         <div className="search-result-heading">
                             <div>
                                 <p className="section-kicker">
-                                    SEARCH RESULTS
+                                    ARAMA SONUÇLARI
                                 </p>
 
                                 <h2>
-                                    Results for{" "}
                                     <span>
                                         &quot;{
                                             activeSearch
                                         }&quot;
-                                    </span>
+                                    </span>{" "}
+                                    için sonuçlar
                                 </h2>
 
                                 <p className="search-result-summary">
@@ -1048,9 +1045,9 @@ function HomePage() {
                                     {searchPagination
                                         .totalItems ===
                                     1
-                                        ? "movie"
-                                        : "movies"}{" "}
-                                    found
+                                        ? "film"
+                                        : "film"}{" "}
+                                    bulundu
                                 </p>
                             </div>
 
@@ -1064,7 +1061,7 @@ function HomePage() {
                                     isSearching
                                 }
                             >
-                                Clear search
+                                Aramayı Temizle
                             </button>
                         </div>
 
@@ -1099,7 +1096,7 @@ function HomePage() {
                                     1 && (
                                     <nav
                                         className="search-pagination"
-                                        aria-label="Search result pages"
+                                        aria-label="Arama sonucu sayfaları"
                                     >
                                         <button
                                             type="button"
@@ -1121,7 +1118,7 @@ function HomePage() {
                                                 ←
                                             </span>
 
-                                            Previous
+                                            Önceki
                                         </button>
 
                                         <div
@@ -1136,7 +1133,7 @@ function HomePage() {
                                             </strong>
 
                                             <span>
-                                                of{" "}
+                                                /{" "}
                                                 {
                                                     searchPagination
                                                         .totalPages
@@ -1160,7 +1157,7 @@ function HomePage() {
                                                 )
                                             }
                                         >
-                                            Next
+                                            Sonraki
 
                                             <span aria-hidden="true">
                                                 →
@@ -1179,13 +1176,13 @@ function HomePage() {
                                 </div>
 
                                 <h3>
-                                    No movies found
+                                    Film bulunamadı
                                 </h3>
 
                                 <p>
-                                    Try another
-                                    title or a
-                                    broader search.
+                                    Başka bir film adı
+                                    veya daha genel bir
+                                    arama deneyin.
                                 </p>
 
                                 <button
@@ -1195,7 +1192,7 @@ function HomePage() {
                                         clearSearch
                                     }
                                 >
-                                    Back to discover
+                                    Keşfe Dön
                                 </button>
                             </div>
                         )}
@@ -1203,36 +1200,36 @@ function HomePage() {
                 ) : (
                     <div className="discover-sections">
                         <MovieSection
-                            kicker="THIS WEEK"
-                            title="Trending Now"
-                            subtitle="The movies getting the most attention right now."
+                            kicker="BU HAFTA"
+                            title="Şimdi Gündemde"
+                            subtitle="Şu anda en çok ilgi gören filmler."
                             movies={
                                 trendingMovies
                             }
                         />
 
                         <MovieSection
-                            kicker="AUDIENCE PICKS"
-                            title="Popular"
-                            subtitle="Titles audiences are discovering and watching."
+                            kicker="İZLEYİCİ TERCİHLERİ"
+                            title="Popüler"
+                            subtitle="İzleyicilerin keşfettiği ve izlediği popüler yapımlar."
                             movies={
                                 popularMovies
                             }
                         />
 
                         <MovieSection
-                            kicker="HIGHLY RATED"
-                            title="Top Rated"
-                            subtitle="Standout films with some of the strongest ratings."
+                            kicker="YÜKSEK PUANLILAR"
+                            title="En İyi Puanlananlar"
+                            subtitle="En yüksek puanları alan öne çıkan filmler."
                             movies={
                                 topRatedMovies
                             }
                         />
 
                         <MovieSection
-                            kicker="COMING SOON"
-                            title="Upcoming"
-                            subtitle="Keep an eye on what is heading to screens next."
+                            kicker="YAKINDA"
+                            title="Yakında"
+                            subtitle="Yakında ekranlara gelecek filmlere göz at."
                             movies={
                                 upcomingMovies
                             }

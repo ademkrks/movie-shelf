@@ -9,11 +9,11 @@ import {
 function FavoritesPage() {
     return (
         <CollectionPage
-            eyebrow="YOUR FAVORITES"
-            title="Favorite Movies"
-            description="Movies you loved and want to keep close."
-            emptyMessage="Add movies to your favorites and they will appear here."
-            removeLabel="Remove Favorite"
+            eyebrow="FAVORİLERİN"
+            title="Favori Filmler"
+            description="Sevdiğin ve koleksiyonunda tutmak istediğin filmler."
+            emptyMessage="Filmleri favorilerine eklediğinde burada görünecekler."
+            removeLabel="Favorilerden Kaldır"
             loadCollection={
                 getFavorites
             }

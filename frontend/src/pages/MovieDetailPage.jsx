@@ -37,7 +37,7 @@ function MovieDetailSkeleton() {
         <article
             className="movie-detail-page movie-detail-page-loading"
             aria-busy="true"
-            aria-label="Loading movie details"
+            aria-label="Film detayları yükleniyor"
         >
             <div className="detail-loading-backdrop" />
 
@@ -190,7 +190,7 @@ function MovieDetailPage() {
                             error:
                                 movieResult.reason
                                     ?.message ||
-                                "Movie could not be loaded.",
+                                "Film yüklenemedi.",
                         });
 
 
@@ -265,7 +265,7 @@ function MovieDetailPage() {
                         error:
                             requestError
                                 .message ||
-                            "Movie could not be loaded.",
+                            "Film yüklenemedi.",
                     });
                 }
             );
@@ -297,24 +297,23 @@ function MovieDetailPage() {
                 </div>
 
                 <p className="eyebrow">
-                    MOVIE DETAILS
+                    FİLM DETAYLARI
                 </p>
 
                 <h1>
-                    Movie could not
-                    be loaded.
+                    Film yüklenemedi.
                 </h1>
 
                 <p>
                     {error ||
-                        "Movie not found."}
+                        "Film bulunamadı."}
                 </p>
 
                 <Link
                     to="/"
                     className="primary-button inline-button"
                 >
-                    Back to Home
+                    Ana Sayfaya Dön
                 </Link>
             </section>
         );
@@ -343,10 +342,10 @@ function MovieDetailPage() {
         movie.runtime
             ? `${Math.floor(
                 movie.runtime / 60
-            )}h ${
+            )} sa ${
                 movie.runtime %
                 60
-            }m`
+            } dk`
             : "—";
 
 
@@ -380,7 +379,7 @@ function MovieDetailPage() {
                             ←
                         </span>
 
-                        Back to discover
+                        Keşfe Dön
                     </Link>
 
                     <div className="movie-detail-main">
@@ -392,11 +391,11 @@ function MovieDetailPage() {
                                             POSTER_BASE_URL +
                                             movie.poster_path
                                         }
-                                        alt={`${movie.title} poster`}
+                                        alt={`${movie.title} posteri`}
                                     />
                                 ) : (
                                     <div className="movie-poster-placeholder">
-                                        No poster
+                                        Poster yok
                                     </div>
                                 )}
                             </div>
@@ -420,7 +419,7 @@ function MovieDetailPage() {
 
                         <div className="movie-detail-content">
                             <p className="eyebrow">
-                                MOVIE
+                                FİLM
                             </p>
 
                             <h1>
@@ -490,16 +489,16 @@ function MovieDetailPage() {
 
                             <div className="movie-overview">
                                 <p className="detail-section-label">
-                                    STORY
+                                    KONU
                                 </p>
 
                                 <h2>
-                                    Overview
+                                    Özet
                                 </h2>
 
                                 <p className="movie-overview-text">
                                     {movie.overview ||
-                                        "No overview available."}
+                                        "Film özeti bulunmuyor."}
                                 </p>
                             </div>
 
@@ -517,7 +516,7 @@ function MovieDetailPage() {
                                         ▶
                                     </span>
 
-                                    Watch Trailer
+                                    Fragmanı İzle
                                 </a>
                             )}
                         </div>
@@ -532,18 +531,17 @@ function MovieDetailPage() {
                             <div className="detail-section-heading">
                                 <div>
                                     <p className="detail-section-label">
-                                        CAST
+                                        OYUNCULAR
                                     </p>
 
                                     <h2>
-                                        Top Cast
+                                        Öne Çıkan Oyuncular
                                     </h2>
 
                                     <p>
-                                        Meet some of
-                                        the people
-                                        behind the
-                                        characters.
+                                        Filmin karakterlerine
+                                        hayat veren oyuncuları
+                                        keşfet.
                                     </p>
                                 </div>
                             </div>
@@ -614,18 +612,18 @@ function MovieDetailPage() {
 
                     <div className="movie-community-heading">
                         <p className="detail-section-label">
-                            YOUR MOVIESHELF
+                            SENİN MOVIESHELF&apos;İN
                         </p>
 
                         <h2>
-                            Rate & discuss
+                            Puanla ve yorumla
                         </h2>
 
                         <p>
-                            Add your rating and
-                            see what the
-                            MovieShelf community
-                            thinks.
+                            Puanını ekle ve
+                            MovieShelf topluluğunun
+                            film hakkındaki
+                            düşüncelerini gör.
                         </p>
                     </div>
 

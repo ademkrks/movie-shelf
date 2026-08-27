@@ -130,7 +130,7 @@ function Navbar() {
                 <button
                     type="button"
                     className="navbar-backdrop"
-                    aria-label="Close navigation menu"
+                    aria-label="Navigasyon menüsünü kapat"
                     onClick={
                         closeMenu
                     }
@@ -141,7 +141,7 @@ function Navbar() {
                 <NavLink
                     to="/"
                     className="brand"
-                    aria-label="MovieShelf home"
+                    aria-label="MovieShelf ana sayfa"
                     onClick={
                         closeMenu
                     }
@@ -164,8 +164,8 @@ function Navbar() {
                     }
                     aria-label={
                         isMenuOpen
-                            ? "Close navigation menu"
-                            : "Open navigation menu"
+                            ? "Navigasyon menüsünü kapat"
+                            : "Navigasyon menüsünü aç"
                     }
                     aria-expanded={
                         isMenuOpen
@@ -187,7 +187,7 @@ function Navbar() {
                             ? "nav-links open"
                             : "nav-links"
                     }
-                    aria-label="Primary navigation"
+                    aria-label="Ana navigasyon"
                 >
                     <NavLink
                         to="/"
@@ -199,7 +199,7 @@ function Navbar() {
                             closeMenu
                         }
                     >
-                        Home
+                        Ana Sayfa
                     </NavLink>
 
                     {!isLoading &&
@@ -214,7 +214,7 @@ function Navbar() {
                                         closeMenu
                                     }
                                 >
-                                    Favorites
+                                    Favoriler
                                 </NavLink>
 
                                 <NavLink
@@ -226,14 +226,14 @@ function Navbar() {
                                         closeMenu
                                     }
                                 >
-                                    Watchlist
+                                    İzleme Listesi
                                 </NavLink>
 
                                 <NavLink
                                     to="/profile"
-                                    className={({
+                                    className={( {
                                         isActive,
-                                    }) =>
+                                    } ) =>
                                         isActive
                                             ? "nav-link nav-user-link active"
                                             : "nav-link nav-user-link"
@@ -243,16 +243,16 @@ function Navbar() {
                                     }
                                     title={
                                         user?.name ||
-                                        "Profile"
+                                        "Profil"
                                     }
                                 >
                                     <span className="nav-profile-label">
-                                        Profile
+                                        Profil
                                     </span>
 
                                     <span className="nav-profile-name">
                                         {user?.name ||
-                                            "Profile"}
+                                            "Profil"}
                                     </span>
                                 </NavLink>
 
@@ -268,7 +268,7 @@ function Navbar() {
                                         handleLogout
                                     }
                                 >
-                                    Logout
+                                    Çıkış Yap
                                 </button>
                             </>
                         )}
@@ -285,14 +285,14 @@ function Navbar() {
                                         closeMenu
                                     }
                                 >
-                                    Login
+                                    Giriş Yap
                                 </NavLink>
 
                                 <NavLink
                                     to="/register"
-                                    className={({
+                                    className={( {
                                         isActive,
-                                    }) =>
+                                    } ) =>
                                         isActive
                                             ? "nav-link nav-link-primary active"
                                             : "nav-link nav-link-primary"
@@ -301,7 +301,7 @@ function Navbar() {
                                         closeMenu
                                     }
                                 >
-                                    Register
+                                    Kayıt Ol
                                 </NavLink>
                             </>
                         )}
