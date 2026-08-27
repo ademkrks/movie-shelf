@@ -1,5 +1,7 @@
 # MovieShelf
 
+[![CI](https://github.com/ademkrks/movie-shelf/actions/workflows/ci.yml/badge.svg)](https://github.com/ademkrks/movie-shelf/actions/workflows/ci.yml)
+
 MovieShelf; film keşfetmek, kişisel film koleksiyonları oluşturmak ve filmler hakkında puanlama/yorum işlemleri yapmak için geliştirilmiş, web ve mobil uygulamalardan oluşan full-stack bir film platformudur.
 
 Kullanıcılar TMDB kataloğundaki filmleri keşfedebilir, arama yapabilir, favori ve izleme listelerini yönetebilir, filmlere puan verebilir, yorum yazabilir ve hesaplarını hem web hem de mobil uygulama üzerinden kullanabilir.
@@ -786,6 +788,17 @@ MovieShelf, full-stack web ve mobil uygulama geliştirme süreçlerini bir arada
 
 ---
 
+## TMDB Atfı
+
+MovieShelf, film ve medya verilerinin bir bölümünü **TMDB (The Movie Database)** API üzerinden almaktadır.
+
+> This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+TMDB: https://www.themoviedb.org
+
+Bu proje TMDB tarafından desteklenmemekte, onaylanmamakta veya sertifikalandırılmamaktadır.
+
+---
 ## Geliştirici
 
 **Ali Adem Karakaş**
