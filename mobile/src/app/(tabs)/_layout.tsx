@@ -6,12 +6,25 @@ import {
     Tabs,
 } from "expo-router";
 
+import useAuth from "../../hooks/useAuth";
+
 import {
     colors,
 } from "../../theme/colors";
 
 
 export default function TabsLayout() {
+    const {
+        isAuthenticated,
+        isRestoring,
+    } =
+        useAuth();
+
+    const showProtectedTabs =
+        !isRestoring &&
+        isAuthenticated;
+
+
     return (
         <Tabs
             screenOptions={{
@@ -115,6 +128,11 @@ export default function TabsLayout() {
                     title:
                         "Listem",
 
+                    href:
+                        showProtectedTabs
+                            ? undefined
+                            : null,
+
                     tabBarIcon: ({
                         color,
                         size,
@@ -142,6 +160,11 @@ export default function TabsLayout() {
                 options={{
                     title:
                         "Profil",
+
+                    href:
+                        showProtectedTabs
+                            ? undefined
+                            : null,
 
                     tabBarIcon: ({
                         color,
